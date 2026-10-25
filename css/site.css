@@ -210,12 +210,12 @@ section { padding: 64px 0; }
 .info { list-style: none; padding: 0; margin: 20px 0 0; max-width: 560px; }
 .info li {
   display: flex; gap: 16px; align-items: center;
-  min-height: 60px; padding: 14px 0;
+  min-height: 54px; padding: 12px 0;
   border-bottom: 1px solid var(--red-20);
-  font-size: 17px; font-weight: 500; line-height: 1.4;
+  font-size: 16px; font-weight: 500; line-height: 1.4;
 }
 .info li:last-child { border-bottom: 0; }
-.info svg { width: 24px; height: 24px; flex: none; color: var(--red); }
+.info svg { width: 22px; height: 22px; flex: none; color: var(--red); }
 .info a { color: inherit; text-decoration: underline; text-decoration-color: var(--red-50); text-underline-offset: 3px; }
 .info small { display: block; margin-top: 2px; font-size: 14px; font-weight: 400; color: var(--ink-600); }
 
@@ -356,7 +356,7 @@ footer { padding: 64px 0 32px; }
     .rule { width: 72px; margin: 26px 0 24px; }
   .script { font-size: 54px; }
 
-  .info li { font-size: 19px; }
+  .info li { font-size: 17px; }
 
   .overlay .bg {
     position: absolute; top: 0; right: 0; bottom: 0; width: 60%; height: 100%; aspect-ratio: auto;
