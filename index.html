@@ -6,7 +6,7 @@
 <title>Bachata Niš – Časovi plesa za odrasle | Anita & Nikola</title>
 <meta name="description" content="Časovi bachate u Nišu, utorkom i četvrtkom od 18:30. Ples u paru uz promenu partnera, dolazite i sami. Prijave preko Instagrama @anitainikola.">
 <link rel="canonical" href="https://bachatanis.rs/">
-<meta name="theme-color" content="#EFE9E0">
+<meta name="theme-color" content="#1F1A17">
 
 <meta property="og:type" content="website">
 <meta property="og:locale" content="sr_RS">
@@ -23,7 +23,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Sacramento&display=swap" rel="stylesheet">
 <link rel="preload" href="fonts/SequelSans-HeavyBody.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/Northwell.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="img/hero.jpg" as="image">
+<link rel="preload" href="img/hero-poster.jpg" as="image">
 
 <script type="application/ld+json">
 {
@@ -33,6 +33,7 @@
   "description": "Časovi bachate za odrasle u Nišu. Ples u paru uz promenu partnera.",
   "url": "https://bachatanis.rs/",
   "image": "https://bachatanis.rs/img/og.jpg",
+  "logo": "https://bachatanis.rs/img/logo.png",
   "priceRange": "500–2.000 RSD",
   "address": {
     "@type": "PostalAddress",
@@ -50,7 +51,7 @@
 </script>
 
 <style>
-  /* Weight 100–600 → Bold Head (eyebrows), 601–800 → Heavy Body (titles) */
+  /* Weight 100–600 → Bold Head, 601–800 → Heavy Body */
   @font-face {
     font-family: "Sequel";
     src: url("fonts/SequelSans-BoldHead.woff2") format("woff2");
@@ -78,9 +79,8 @@
     --red-50: rgba(165, 7, 28, 0.5);
     --red-20: rgba(165, 7, 28, 0.2);
     --cream: #EFE9E0;
-    --cream-100: #F7F3EC;
-    --ink-900: #1C1917;
-    --ink-800: #1F1A17;
+    --paper: #F7F3EC;
+    --ink: #1F1A17;
     --ink-600: #4A423C;
 
     --font-display: "Sequel", "Archivo", system-ui, sans-serif;
@@ -100,7 +100,7 @@
   body {
     margin: 0;
     background: var(--cream);
-    color: var(--ink-800);
+    color: var(--ink);
     font-family: var(--font-body);
     font-size: 17px;
     line-height: 1.6;
@@ -115,19 +115,11 @@
   .wrap { max-width: var(--max); margin: 0 auto; padding: 0 var(--pad); }
 
   /* Type */
-  .eyebrow {
-    font-family: var(--font-display);
-    font-weight: 500;
-    font-size: 13px;
-    letter-spacing: 0.44em;
-    text-transform: uppercase;
-    color: var(--ink-900);
-    margin: 0 0 12px;
-  }
   /* line-height ostavlja mesta za kvačice (Č, Š) iznad velikih slova */
-  h1, h2 {
+  h2 {
     font-family: var(--font-display);
     font-weight: 800;
+    font-size: 36px;
     text-transform: uppercase;
     letter-spacing: -0.028em;
     line-height: 1.04;
@@ -135,15 +127,21 @@
     margin: 0;
     padding-top: 0.08em;
   }
-  h1 { font-size: 46px; }
-  h2 { font-size: 36px; }
+  h2.hand {
+    font-family: var(--font-script);
+    font-weight: 400;
+    font-size: 64px;
+    text-transform: none;
+    letter-spacing: 0;
+    line-height: 1;
+    padding-top: 0;
+  }
   h3 {
     font-family: var(--font-display);
     font-weight: 700;
     font-size: 18px;
     line-height: 1.3;
     margin: 0 0 4px;
-    color: var(--ink-900);
   }
   .rule { width: 64px; height: 3px; background: var(--red); margin: 20px 0; }
   .lead { font-size: 17px; max-width: 34em; margin: 0; }
@@ -162,72 +160,87 @@
     justify-content: center;
     min-height: 56px;
     margin-top: 26px;
-    padding: 0 26px;
+    padding: 0 28px;
     background: var(--red);
-    color: var(--cream-100);
+    color: var(--paper);
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 14px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
+    font-size: 15px;
+    letter-spacing: 0.04em;
     text-decoration: none;
     text-align: center;
-    transition: background var(--dur) var(--ease);
+    transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
   }
   .cta:hover { background: var(--red-hover); }
   .cta:active { background: var(--red-press); }
 
-  /* Header */
-  .top { position: absolute; top: 0; left: 0; right: 0; z-index: 3; }
-  .top .wrap { display: flex; justify-content: space-between; align-items: center; height: 64px; }
-  .wordmark {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 16px;
-    letter-spacing: -0.01em;
-    text-transform: uppercase;
-    color: var(--red);
-    text-decoration: none;
-  }
-  .top nav { display: none; }
-  .top .ig {
-    font-size: 14px; font-weight: 600; color: var(--ink-800); text-decoration: none;
-    padding: 10px 0;
-  }
-
-  /* Hero: tekst gore, fotografija ispod koja se utapa u pozadinu (kao na storiju) */
+  /* ---------- Hero: video preko celog ekrana ---------- */
   .hero {
     position: relative;
-    overflow: hidden;
     min-height: 100svh;
     display: flex;
     flex-direction: column;
+    justify-content: flex-end;
+    overflow: hidden;
+    background: var(--ink) url("img/hero-poster.jpg") center / cover no-repeat;
+    color: var(--paper);
   }
-  .hero .wrap { position: relative; z-index: 2; width: 100%; padding-top: 84px; }
-  .hero h1 { font-size: 44px; }
-  .hero .lead { font-size: 16px; }
-  .facts {
-    display: flex; flex-wrap: wrap; gap: 6px 14px;
-    margin: 16px 0 0; padding: 0; list-style: none;
-    font-size: 14px; font-weight: 600; color: var(--ink-900);
+  .hero-media {
+    position: absolute; inset: 0;
   }
-  .facts li + li::before {
-    content: ""; display: inline-block; width: 4px; height: 4px; margin-right: 14px;
-    vertical-align: middle; background: var(--red); border-radius: 50%;
+  .hero-media video {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: center 40%;
   }
-  .hero-photo {
-    position: relative;
-    flex: 1 0 300px;
-    margin-top: -40px;
-    background: url("img/hero.jpg") center 72% / cover no-repeat;
-    -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0,0,0,.5) 12%, #000 30%);
-            mask-image: linear-gradient(180deg, transparent 0%, rgba(0,0,0,.5) 12%, #000 30%);
+  .hero-media::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg,
+      rgba(31, 26, 23, 0.35) 0%,
+      rgba(31, 26, 23, 0) 22%,
+      rgba(31, 26, 23, 0) 42%,
+      rgba(31, 26, 23, 0.72) 72%,
+      rgba(31, 26, 23, 0.9) 100%);
   }
-  .hero .script { font-size: 40px; }
+  .hero-top {
+    position: absolute; z-index: 2; top: 0; left: 0; right: 0;
+  }
+  .hero-top .wrap { display: flex; justify-content: flex-end; align-items: center; height: 64px; }
+  .hero-top nav { display: none; }
+  .hero-top a {
+    color: var(--paper); text-decoration: none; font-size: 14px; font-weight: 600;
+    padding: 10px 0;
+  }
+  .hero .wrap.content { position: relative; z-index: 2; width: 100%; padding-bottom: 36px; }
+
+  /* Logo: BACHATA + rukopisno "Anita i Nikola" */
+  .logo { margin: 0; line-height: 1; }
+  .logo .word {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 64px;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    line-height: 0.9;
+  }
+  .logo .hand {
+    display: block;
+    font-family: var(--font-script);
+    font-weight: 400;
+    font-size: 62px;
+    line-height: 1;
+    margin: -0.2em 0 0 0.14em;
+    white-space: nowrap;
+  }
+  .hero .tagline { margin: 22px 0 0; font-size: 17px; line-height: 1.5; max-width: 22em; }
+  .hero .cta { background: var(--paper); color: var(--red); }
+  .hero .cta:hover { background: #fff; }
+  .hero .cta:active { background: var(--cream); }
 
   /* Sections */
-  section { padding: 56px 0; }
-  .alt { background: var(--cream-100); }
+  section { padding: 64px 0; }
+  .alt { background: var(--paper); }
 
   .notice {
     border-left: 3px solid var(--red);
@@ -236,7 +249,6 @@
     max-width: 36em;
     font-size: 16px;
   }
-  .notice strong { color: var(--ink-900); }
 
   /* Termini i cene */
   .info { list-style: none; padding: 0; margin: 28px 0 0; max-width: 640px; }
@@ -246,12 +258,8 @@
     border-bottom: 1px solid var(--red-20);
   }
   .info li:first-child { border-top: 1px solid var(--red-20); }
-  .info .k {
-    font-family: var(--font-display); font-weight: 500;
-    font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-600);
-    padding-top: 5px;
-  }
-  .info .v { font-size: 17px; font-weight: 600; line-height: 1.4; color: var(--ink-900); }
+  .info .k { font-size: 14px; color: var(--ink-600); padding-top: 2px; }
+  .info .v { font-size: 17px; font-weight: 600; line-height: 1.4; }
   .info .v a { color: inherit; text-decoration: underline; text-decoration-color: var(--red-50); text-underline-offset: 3px; }
   .info .v small { display: block; margin-top: 2px; font-size: 14px; font-weight: 400; color: var(--ink-600); }
 
@@ -262,10 +270,11 @@
     width: calc(100% + var(--pad) * 2);
     max-width: none;
     height: auto;
-    aspect-ratio: 4 / 4.6;
+    aspect-ratio: 4 / 4.8;
     object-fit: cover;
-    object-position: center 72%;
   }
+  #casovi .photo { object-position: center 62%; }
+  #o-nama .photo { object-position: center 40%; }
 
   .points { list-style: none; padding: 0; margin: 24px 0 0; display: grid; gap: 20px; }
   .points li { padding-left: 18px; border-left: 2px solid var(--red-20); }
@@ -287,7 +296,7 @@
     cursor: pointer; list-style: none;
     min-height: 60px; display: flex; align-items: center;
     padding: 14px 40px 14px 0; position: relative;
-    font-family: var(--font-display); font-weight: 700; font-size: 17px; line-height: 1.3; color: var(--ink-900);
+    font-family: var(--font-display); font-weight: 700; font-size: 17px; line-height: 1.3;
   }
   .faq summary::-webkit-details-marker { display: none; }
   .faq summary::after {
@@ -300,11 +309,14 @@
   .faq details p { margin: 0 0 20px; max-width: 40em; font-size: 16px; }
 
   /* Kontakt */
-  footer { padding: 56px 0 32px; }
+  footer { padding: 64px 0 32px; }
   .contact { display: grid; gap: 20px; margin-top: 24px; }
   .contact a { text-decoration: none; }
   .contact p { margin: 0; }
-  .fine { margin-top: 48px; font-size: 13px; color: var(--ink-600); }
+  .sign { margin-top: 56px; color: var(--red); }
+  .sign .logo .word { font-size: 40px; }
+  .sign .logo .hand { font-size: 40px; }
+  .fine { margin-top: 20px; font-size: 13px; color: var(--ink-600); }
 
   /* Traka sa dugmetom na dnu ekrana (samo telefon) */
   .bar {
@@ -318,11 +330,18 @@
   .bar.show { transform: none; }
   .bar .cta { margin: 0; }
 
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .hero-media video { display: none; }
+  }
+
   /* ---------- Veći telefoni i tableti ---------- */
   @media (min-width: 600px) {
     :root { --pad: 40px; }
-    h1, .hero h1 { font-size: 64px; }
     h2 { font-size: 46px; }
+    h2.hand { font-size: 80px; }
+    .logo .word { font-size: 96px; }
+    .logo .hand { font-size: 92px; }
     .cta { display: inline-flex; }
     .bar .cta { display: flex; }
     .stats { display: flex; flex-wrap: wrap; gap: 26px 40px; }
@@ -333,95 +352,88 @@
     .contact { grid-template-columns: repeat(3, 1fr); }
   }
 
-  /* ---------- Desktop ---------- */
+  /* ---------- Desktop: logo levo, video desno ---------- */
   @media (min-width: 960px) {
     :root { --pad: 64px; --bar-h: 0px; }
     body { padding-bottom: 0; }
     .bar { display: none; }
 
-    .top .wrap { height: 84px; }
-    .top nav { display: flex; gap: 28px; }
-    .top nav a {
-      font-size: 14px; font-weight: 500; color: var(--ink-800); text-decoration: none;
-      transition: color var(--dur) var(--ease);
+    .hero {
+      min-height: min(100vh, 900px);
+      justify-content: center;
+      background: var(--cream);
+      color: var(--red);
     }
-    .top nav a:hover { color: var(--red); }
-    .top .ig { display: none; }
-
-    .hero { min-height: min(100vh, 860px); flex-direction: row; align-items: center; }
-    .hero .wrap { padding-top: 110px; padding-bottom: 80px; }
-    .hero-text { max-width: 46%; }
-    .hero h1 { font-size: clamp(64px, 6.6vw, 92px); }
-    .hero .lead { font-size: 19px; }
-    .facts { font-size: 15px; margin-top: 22px; }
-    .hero-photo {
-      position: absolute; top: 0; bottom: 0; right: 0; width: 50%;
-      margin: 0;
-      background-position: 30% 62%;
-      -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.5) 14%, #000 34%);
-              mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.5) 14%, #000 34%);
-    }
-    .hero .script { margin-top: 22px; font-size: 54px; }
-    .about { font-size: 17px; }
+    .hero-media { left: auto; width: 44%; background: var(--ink) url("img/hero-poster.jpg") center / cover no-repeat; }
+    .hero-media::after { display: none; }
+    .hero-top .wrap { justify-content: flex-start; height: 84px; }
+    .hero-top nav { display: flex; gap: 30px; }
+    .hero-top nav a { color: var(--ink); font-weight: 500; transition: color var(--dur) var(--ease); }
+    .hero-top nav a:hover { color: var(--red); }
+    .hero-top .ig { display: none; }
+    .hero .wrap.content { padding-top: 84px; padding-bottom: 84px; }
+    .hero .wrap.content > div { max-width: 50%; }
+    .logo .word { font-size: clamp(84px, 6.6vw, 108px); }
+    .logo .hand { font-size: clamp(80px, 6.3vw, 104px); }
+    .hero .tagline { color: var(--ink); font-size: 19px; margin-top: 30px; }
+    .hero .cta { background: var(--red); color: var(--paper); }
+    .hero .cta:hover { background: var(--red-hover); }
+    .hero .cta:active { background: var(--red-press); }
 
     section { padding: 110px 0; }
     h2 { font-size: 60px; }
+    h2.hand { font-size: 104px; }
     .rule { width: 72px; margin: 26px 0 24px; }
     .script { font-size: 54px; }
 
     .info { margin-top: 36px; }
     .info li { grid-template-columns: 180px 1fr; gap: 16px; padding: 18px 0; }
-    .info .k { font-size: 13px; padding-top: 4px; }
+    .info .k { font-size: 15px; }
     .info .v { font-size: 19px; }
 
     .split { grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
     .split .photo { margin: 0; width: 100%; aspect-ratio: 4 / 5; }
     .split.flip .photo { order: -1; }
+    .about { font-size: 17px; }
 
     .faq summary { font-size: 18px; }
     footer { padding: 100px 0 40px; }
-    .fine { margin-top: 70px; }
   }
 </style>
 </head>
 <body>
 
-<header class="top">
-  <div class="wrap">
-    <a class="wordmark" href="#">Anita i Nikola</a>
-    <nav aria-label="Glavni meni">
-      <a href="#termini">Termini i cene</a>
-      <a href="#casovi">Časovi</a>
-      <a href="#o-nama">O nama</a>
-      <a href="#pitanja">Pitanja</a>
-    </nav>
-    <a class="ig" href="https://www.instagram.com/anitainikola/">Instagram</a>
-  </div>
-</header>
-
 <main>
   <div class="hero">
-    <div class="wrap">
-      <div class="hero-text">
-        <p class="eyebrow">Bachata</p>
-        <h1>Časovi<br>plesa<br>u Nišu</h1>
-        <div class="rule"></div>
-        <p class="lead">Učimo bachatu u paru, uz promenu partnera, u opuštenoj atmosferi. Većina polaznika dolazi sama.</p>
-        <ul class="facts">
-          <li>Utorak i četvrtak</li>
-          <li>18:30</li>
-          <li>Bulevar dr Zorana Đinđića 38</li>
-        </ul>
+    <div class="hero-media" aria-hidden="true">
+      <video id="hero-video" autoplay muted loop playsinline preload="auto" poster="img/hero-poster.jpg">
+        <source src="video/hero.mp4" type="video/mp4">
+      </video>
+    </div>
+
+    <header class="hero-top">
+      <div class="wrap">
+        <nav aria-label="Glavni meni">
+          <a href="#termini">Termini i cene</a>
+          <a href="#casovi">Časovi</a>
+          <a href="#o-nama">O nama</a>
+          <a href="#pitanja">Pitanja</a>
+        </nav>
+        <a class="ig" href="https://www.instagram.com/anitainikola/">Instagram</a>
+      </div>
+    </header>
+
+    <div class="wrap content">
+      <div>
+        <h1 class="logo"><span class="word">Bachata</span><span class="hand">Anita i Nikola</span></h1>
+        <p class="tagline">Časovi plesa u Nišu, utorkom i četvrtkom od 18:30. Dođi sam ili sa društvom, partnere menjamo na času.</p>
         <a class="cta" id="hero-cta" href="https://ig.me/m/anitainikola">Piši nam na Instagramu</a>
-        <p class="script">vidimo se na plesu</p>
       </div>
     </div>
-    <div class="hero-photo" role="img" aria-label="Anita i Nikola plešu bachatu"></div>
   </div>
 
   <section id="termini" class="alt">
     <div class="wrap">
-      <p class="eyebrow">Termini</p>
       <h2>Kada i gde</h2>
       <div class="rule"></div>
       <ul class="info">
@@ -430,7 +442,7 @@
         <li><span class="k">Članarina</span><span class="v">2.000 din mesečno<small>8 časova, naplata po kalendarskom mesecu</small></span></li>
         <li><span class="k">Jedan čas</span><span class="v">500 din</span></li>
       </ul>
-      <p class="notice"><strong>Informacije o upisu objavljujemo na Instagramu.</strong> Zaprati nas na <a href="https://www.instagram.com/anitainikola/">@anitainikola</a> i javi nam se u DM.</p>
+      <p class="notice">Informacije o upisu objavljujemo na Instagramu. Zaprati nas na <a href="https://www.instagram.com/anitainikola/">@anitainikola</a> i javi nam se u DM.</p>
       <a class="cta" href="https://ig.me/m/anitainikola">Prijavi se u DM</a>
     </div>
   </section>
@@ -438,7 +450,6 @@
   <section id="casovi">
     <div class="wrap split">
       <div>
-        <p class="eyebrow">Časovi</p>
         <h2>Kako izgleda čas</h2>
         <div class="rule"></div>
         <ul class="points">
@@ -454,10 +465,9 @@
 
   <section id="o-nama" class="alt">
     <div class="wrap split flip">
-      <img class="photo" src="img/par.jpg" alt="Anita i Nikola, instruktori bachate" loading="lazy" width="675" height="1200">
+      <img class="photo" src="img/par.jpg" alt="Anita i Nikola, instruktori bachate" loading="lazy" width="1050" height="1400">
       <div>
-        <p class="eyebrow">Mi smo</p>
-        <h2>Anita<br>i Nikola</h2>
+        <h2 class="hand">Anita i Nikola</h2>
         <div class="rule"></div>
         <p class="lead">Plesni i životni partneri koje povezuje ljubav prema bachati i latino kulturi.</p>
         <div class="stats">
@@ -474,7 +484,6 @@
 
   <section id="pitanja">
     <div class="wrap">
-      <p class="eyebrow">Pitanja</p>
       <h2>Česta pitanja</h2>
       <div class="rule"></div>
       <div class="faq">
@@ -505,7 +514,6 @@
 
 <footer class="alt">
   <div class="wrap">
-    <p class="eyebrow">Kontakt</p>
     <h2>Pridruži se</h2>
     <div class="rule"></div>
     <div class="contact">
@@ -522,8 +530,10 @@
         <p>Utorak i četvrtak od 18:30</p>
       </div>
     </div>
-    <p class="script">vidimo se na plesu</p>
-    <p class="fine">© 2026 Anita i Nikola · Bachata Niš</p>
+    <div class="sign">
+      <p class="logo"><span class="word">Bachata</span><span class="hand">Anita i Nikola</span></p>
+    </div>
+    <p class="fine">© 2026 Anita i Nikola, Niš</p>
   </div>
 </footer>
 
@@ -544,6 +554,13 @@
       bar.querySelector("a").tabIndex = hidden ? 0 : -1;
     }).observe(heroCta);
   })();
+
+  // Bez automatskog videa za one koji su isključili animacije
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    var v = document.getElementById("hero-video");
+    v.removeAttribute("autoplay");
+    v.pause();
+  }
 </script>
 
 </body>
