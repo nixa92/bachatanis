@@ -239,8 +239,7 @@
     white-space: nowrap;
     color: var(--red);
   }
-  /* Na tamnom videu crvena mora biti svetlija da bi se videla */
-  .hero .logo .hand { color: #E3304A; text-shadow: 0 2px 16px rgba(31, 26, 23, 0.5); }
+  .hero .logo .hand { text-shadow: 0 0 2px rgba(247, 243, 236, 0.35), 0 2px 18px rgba(31, 26, 23, 0.6); }
   .hero .tagline { margin: 22px 0 0; font-size: 17px; line-height: 1.55; max-width: 24em; }
   .hero .tagline strong { display: block; font-weight: 600; }
   .hero .cta { background: var(--paper); color: var(--red); }
@@ -277,10 +276,11 @@
   .overlay .bg {
     width: 100%; height: auto; aspect-ratio: 1125 / 1350;
     object-fit: cover; object-position: center 60%;
-    -webkit-mask-image: linear-gradient(180deg, #000 62%, rgba(0,0,0,.5) 84%, transparent 100%);
-            mask-image: linear-gradient(180deg, #000 62%, rgba(0,0,0,.5) 84%, transparent 100%);
+    -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 38%, rgba(0,0,0,.72) 56%, rgba(0,0,0,.3) 76%, transparent 96%);
+            mask-image: linear-gradient(180deg, #000 0%, #000 38%, rgba(0,0,0,.72) 56%, rgba(0,0,0,.3) 76%, transparent 96%);
   }
-  .overlay .wrap { position: relative; z-index: 2; margin-top: -72px; padding-bottom: 64px; }
+  /* Naslov i tekst počinju preko parketa, gde fotografija već prelazi u tamnu pozadinu */
+  .overlay .wrap { position: relative; z-index: 2; margin-top: -58vw; padding-bottom: 64px; }
   .overlay h2, .overlay h3 { color: var(--paper); }
   .overlay .rule { background: var(--paper); }
 
