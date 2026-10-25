@@ -20,7 +20,9 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Montserrat:wght@400;500;600&family=Sacramento&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Sacramento&display=swap" rel="stylesheet">
+<link rel="preload" href="fonts/SequelSans-HeavyBody.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/Northwell.woff2" as="font" type="font/woff2" crossorigin>
 
 <script type="application/ld+json">
 {
@@ -47,6 +49,27 @@
 </script>
 
 <style>
+  /* Weight 100–600 → Bold Head (eyebrows), 601–800 → Heavy Body (titles) */
+  @font-face {
+    font-family: "Sequel";
+    src: url("fonts/SequelSans-BoldHead.woff2") format("woff2");
+    font-weight: 100 600;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Sequel";
+    src: url("fonts/SequelSans-HeavyBody.woff2") format("woff2");
+    font-weight: 601 800;
+    font-display: swap;
+  }
+  /* Northwell nema č, ć, đ — ta slova padaju na Sacramento */
+  @font-face {
+    font-family: "Northwell";
+    src: url("fonts/Northwell.woff2") format("woff2");
+    font-weight: 400;
+    font-display: swap;
+  }
+
   :root {
     --red: #A5071C;
     --red-hover: #C4152C;
@@ -60,9 +83,9 @@
     --ink-800: #1F1A17;
     --ink-600: #4A423C;
 
-    --font-display: "Archivo", system-ui, sans-serif;
+    --font-display: "Sequel", "Archivo", system-ui, sans-serif;
     --font-body: "Montserrat", system-ui, sans-serif;
-    --font-script: "Sacramento", cursive;
+    --font-script: "Northwell", "Sacramento", cursive;
 
     --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
     --dur: 220ms;
@@ -287,8 +310,8 @@
   <div class="hero">
     <div class="wrap">
       <div class="hero-text">
-        <p class="eyebrow">Bachata Niš</p>
-        <h1>Časovi<br>bachate<br>u Nišu</h1>
+        <p class="eyebrow">Bachata</p>
+        <h1>Časovi<br>plesa<br>u Nišu</h1>
         <div class="rule"></div>
         <p class="lead">Učimo bachatu u paru, uz promenu partnera, u opuštenoj atmosferi. Većina polaznika dolazi sama, pa ti ne treba partner da bi počeo.</p>
         <a class="cta" href="https://ig.me/m/anitainikola">Piši nam na Instagramu</a>
@@ -309,7 +332,7 @@
         <li><span class="k">Članarina</span><span class="v">2.000 din mesečno<small>8 časova, naplata po kalendarskom mesecu</small></span></li>
         <li><span class="k">Pojedinačni čas</span><span class="v">500 din</span></li>
       </ul>
-      <p class="notice"><strong>Upis je trenutno otvoren za polaznike koji su već plesali bachatu 1–3 meseca.</strong> Nova grupa za potpune početnike biće najavljena na našem Instagramu.</p>
+      <p class="notice"><strong>Informacije o upisu objavljujemo na Instagramu.</strong> Zaprati nas na <a href="https://www.instagram.com/anitainikola/">@anitainikola</a> i javi nam se u DM.</p>
       <a class="cta" href="https://ig.me/m/anitainikola">Prijavi se u DM</a>
     </div>
   </section>
@@ -361,8 +384,8 @@
           <p>Ne. Većina polaznika dolazi sama, a na časovima menjamo partnere, tako da svako uvek ima s kim da pleše.</p>
         </details>
         <details>
-          <summary>Nikad nisam plesao, mogu li da dođem?</summary>
-          <p>Trenutno primamo polaznike koji su već plesali bachatu 1–3 meseca. Za potpune početnike otvaramo novu grupu, a datum objavljujemo na Instagramu @anitainikola.</p>
+          <summary>Kada je sledeći upis?</summary>
+          <p>Sve informacije o upisu i novim grupama objavljujemo na Instagramu. Zaprati <a href="https://www.instagram.com/anitainikola/">@anitainikola</a> i javi nam se u DM.</p>
         </details>
         <details>
           <summary>Koliko košta?</summary>
@@ -370,11 +393,11 @@
         </details>
         <details>
           <summary>Kako da se prijavim?</summary>
-          <p>Pošalji nam poruku na Instagramu <a href="https://ig.me/m/anitainikola">@anitainikola</a>, napiši koliko dugo plešeš i sačekaj potvrdu mesta.</p>
+          <p>Pošalji nam poruku na Instagramu <a href="https://ig.me/m/anitainikola">@anitainikola</a> i sačekaj potvrdu mesta.</p>
         </details>
         <details>
           <summary>Šta da obučem?</summary>
-          <p>Udobnu odeću u kojoj se slobodno krećeš i čistu obuću, najbolje sa glatkim đonom koji ne lepi za pod.</p>
+          <p>Udobnu odeću u kojoj se slobodno krećeš i rezervne patike koje nosiš samo u sali, ne one u kojima dolaziš spolja.</p>
         </details>
       </div>
     </div>
