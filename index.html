@@ -239,7 +239,8 @@
     white-space: nowrap;
     color: var(--red);
   }
-  .hero .logo .hand { text-shadow: 0 0 2px rgba(247, 243, 236, 0.35), 0 2px 18px rgba(31, 26, 23, 0.6); }
+  /* Na tamnom videu crvena mora biti svetlija da bi se videla */
+  .hero .logo .hand { color: #E3304A; font-size: 56px; text-shadow: 0 2px 14px rgba(31, 26, 23, 0.35); }
   .hero .tagline { margin: 22px 0 0; font-size: 17px; line-height: 1.55; max-width: 24em; }
   .hero .tagline strong { display: block; font-weight: 600; }
   .hero .cta { background: var(--paper); color: var(--red); }
@@ -361,6 +362,7 @@
     h2 { font-size: 46px; }
       .logo .word { font-size: 96px; }
     .logo .hand { font-size: 92px; }
+    .hero .logo .hand { font-size: 84px; }
     .cta { display: inline-flex; }
     .bar .cta { display: flex; }
     .stats { display: flex; flex-wrap: wrap; gap: 26px 40px; }
@@ -383,7 +385,7 @@
       background: var(--cream);
       color: var(--ink);
     }
-    .hero .logo .hand { color: var(--red); text-shadow: none; }
+    .hero .logo .hand { color: var(--red); text-shadow: none; font-size: clamp(80px, 6.3vw, 104px); }
     .hero-media { left: auto; width: 44%; }
     .hero-media::after { display: none; }
     .hero-top { right: 44%; }
