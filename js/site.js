@@ -1,4 +1,3 @@
-// Traka sa dugmetom se pojavljuje kad dugme iz uvodnog dela izađe sa ekrana
 (function () {
   var bar = document.getElementById("bar");
   var heroCta = document.getElementById("hero-cta");
@@ -11,7 +10,6 @@
   }).observe(heroCta);
 })();
 
-// Kad video stvarno krene, crno-beli kadar dobija boju i video se pojavljuje
 (function () {
   var v = document.getElementById("hero-video");
   var media = v.parentNode;
@@ -20,7 +18,6 @@
   v.addEventListener("playing", live, { once: true });
 })();
 
-// Bez automatskog videa za one koji su isključili animacije
 if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
   var v = document.getElementById("hero-video");
   v.removeAttribute("autoplay");
