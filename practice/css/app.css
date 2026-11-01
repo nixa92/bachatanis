@@ -1,3 +1,4 @@
+html { touch-action: manipulation; } /* no double-tap zoom on iPhone */
 @font-face {
   font-family: "Sequel";
   src: url("../fonts/SequelSans-BoldHead.woff2") format("woff2");
@@ -470,9 +471,9 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 .game-card small { font-size: 13px; color: var(--ink-600); }
 .intro-steps { margin: 12px 0 20px; padding-left: 22px; font-size: 16px; line-height: 1.5; }
 .intro-steps li { margin-bottom: 6px; }
-.numera-field { margin: 0; padding: 14px; min-width: 0; background: var(--paper); box-shadow: inset 0 0 0 1px var(--red-20); }
-.numera-field .field-label { font-size: 13px; margin-bottom: 4px; }
-.numera-field .pick { max-width: none; min-height: 40px; padding-top: 6px; padding-bottom: 6px; font-size: 15px; }
+.numera-field { margin: 0 14px 8px; }
+.numera-field .field-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.numera-field .pick { max-width: none; min-height: 36px; padding: 6px 30px 6px 14px; font-size: 14px; border-radius: 999px !important; background-position: right 10px center; }
 .history { margin-top: 44px; max-width: 640px; }
 .history-list { list-style: none; margin: 0; padding: 0; display: grid; }
 .history-list li {
@@ -505,12 +506,10 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
   display: flex; align-items: center; justify-content: center;
 }
 .bar-num { font-family: var(--font-display); font-weight: 800; font-size: 18px; letter-spacing: -0.03em; color: rgba(247, 243, 236, 0.35); }
-.bar-cell.is-one .bar-num, .bar-cell.is-five .bar-num { color: rgba(255, 138, 152, 0.55); }
-.bar-tap { position: absolute; left: calc(100% - 3px); top: -2px; font-family: var(--font-script); font-size: 15px; line-height: 1; color: rgba(255, 138, 152, 0.7); }
+.bar-cell.is-tap .bar-num { color: #FF5A6E; }
 /* no transition: the highlight must switch exactly on the beat */
 .bar-cell.is-now .bar-num { color: var(--paper); transform: scale(1.35); }
-.bar-cell.is-now.is-one .bar-num, .bar-cell.is-now.is-five .bar-num { color: #FF5A6E; }
-.bar-cell.is-now .bar-tap { color: #FF5A6E; }
+.bar-cell.is-now.is-tap .bar-num { color: #FF5A6E; }
 
 /* ------------------------------------------------------------ transport */
 .transport {
@@ -526,37 +525,38 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
   margin: 0 auto;
   padding: 4px var(--pad) 8px;
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: minmax(72px, 1fr) auto;
   grid-template-areas: "play tempo";
   gap: 6px 16px;
   align-items: center;
 }
 .play {
   grid-area: play;
+  touch-action: manipulation;
   display: grid; place-items: center;
-  width: 48px; height: 48px;
+  width: 100%; max-width: 240px; height: 48px;
   border: 0;
-  border-radius: 50%;
+  border-radius: 999px;
   background: var(--red);
   color: var(--paper);
   padding: 0;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
   transition: background var(--dur) var(--ease), transform 120ms var(--ease);
 }
-.play svg { width: 26px; height: 26px; fill: currentColor; }
+.play svg { width: 28px; height: 28px; fill: currentColor; }
 .play .ico-pause { display: none; }
 .play[aria-pressed="true"] .ico-play { display: none; }
 .play[aria-pressed="true"] .ico-pause { display: block; }
 .play:hover { background: var(--red-hover); }
 .play:active { transform: scale(0.94); }
 .play[aria-pressed="true"] { background: var(--paper); color: var(--red); }
-.tempo { grid-area: tempo; display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
-.tempo-value { display: grid; justify-items: center; min-width: 104px; font-size: 13px; line-height: 1.2; color: rgba(247, 243, 236, 0.75); }
+.tempo { grid-area: tempo; display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+.tempo-value { display: grid; justify-items: center; min-width: 92px; font-size: 12px; line-height: 1.2; color: rgba(247, 243, 236, 0.75); }
 .tempo-value b { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--paper); }
-#bpm-val { font-family: var(--font-display); font-weight: 800; font-size: 24px; color: var(--paper); margin-right: 2px; }
-.tempo-btn { width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; font-family: var(--font-display); font-weight: 700; font-size: 26px; line-height: 1; color: var(--paper); background: transparent; box-shadow: inset 0 0 0 1px rgba(247, 243, 236, 0.35); cursor: pointer; }
-.tempo-btn:hover:not(:disabled) { box-shadow: inset 0 0 0 1px var(--paper); }
+#bpm-val { font-family: var(--font-display); font-weight: 800; font-size: 22px; color: var(--paper); margin-right: 2px; }
+.tempo-btn { width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; font-family: var(--font-display); font-weight: 700; font-size: 20px; line-height: 1; color: rgba(247, 243, 236, 0.75); background: transparent; box-shadow: inset 0 0 0 1px rgba(247, 243, 236, 0.2); cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .tempo-btn:active:not(:disabled) { background: rgba(247, 243, 236, 0.15); }
+.tempo-btn:focus:not(:focus-visible) { outline: none; }
 .tempo-btn:disabled { opacity: 0.3; cursor: default; }
 
 
@@ -575,7 +575,7 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
   .lang button { height: 32px; }
 }
 @media (min-width: 760px) {
-  .transport-inner { grid-template-columns: auto 1fr; grid-template-areas: "play tempo"; gap: 24px; }
+  .transport-inner { grid-template-columns: minmax(72px, 1fr) auto; grid-template-areas: "play tempo"; gap: 24px; }
   :root { --transport-h: 110px; }
   .ritam-grid { grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr); gap: 40px; align-items: start; }
   .bar-cell { height: 36px; }

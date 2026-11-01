@@ -1,16 +1,16 @@
-import { Engine, CHANNELS } from './engine.js?v=20261101235738';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261101235738';
-import { KORACI } from './steps.js?v=20261101235738';
-import { FeetView } from './feet.js?v=20261101235738';
-import { EarTest, MODES, LEVELS, roundMs, feedback } from './game.js?v=20261101235738';
-import * as store from './storage.js?v=20261101235738';
-import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261101235738';
-import { ICONS } from './icons.js?v=20261101235738';
+import { Engine, CHANNELS } from './engine.js?v=20261102000533';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261102000533';
+import { KORACI } from './steps.js?v=20261102000533';
+import { FeetView } from './feet.js?v=20261102000533';
+import { EarTest, MODES, LEVELS, roundMs, feedback } from './game.js?v=20261102000533';
+import * as store from './storage.js?v=20261102000533';
+import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261102000533';
+import { ICONS } from './icons.js?v=20261102000533';
 
 const $ = (id) => document.getElementById(id);
 const engine = new Engine();
 engine.prepare();
-const state = { screen: 'ritam', step: KORACI[0], view: 'vodja', mode: 'puls', level: 1, voiceOn: false };
+const state = { screen: 'ritam', step: KORACI[0], view: 'vodja', mode: 'puls', level: 1, voiceOn: true };
 const BPM_MIN = 80, BPM_MAX = 200;
 
 // ------------------------------------------------------------ language (SR / EN, like the site)
@@ -155,8 +155,8 @@ function buildCounts(container, cls) {
   const cells = [];
   for (let i = 1; i <= 8; i++) {
     const c = document.createElement('div');
-    c.className = `${cls}-cell` + (i % 4 === 0 ? ' is-tap' : '') + (i === 1 ? ' is-one' : '') + (i === 5 ? ' is-five' : '');
-    c.innerHTML = `<span class="${cls}-num">${i}</span>` + (i % 4 === 0 ? `<span class="${cls}-tap">tap</span>` : '');
+    c.className = `${cls}-cell` + (i % 4 === 0 ? ' is-tap' : '');
+    c.innerHTML = `<span class="${cls}-num">${i}</span>`;
     container.appendChild(c);
     cells.push(c);
   }
@@ -219,10 +219,10 @@ for (const tile of TILES) {
   // the switch toggles; tapping the icon or name does the same
   el.querySelector('.tile-head').addEventListener('click', () => { tile.toggle(); renderTiles(); drawLanes(currentSection); });
   el.querySelector('.tile-vol').addEventListener('input', (e) => { tile.setVol(Number(e.target.value)); drawLanes(currentSection); });
+  if (tile.id === 'requinto') el.insertBefore($('numera-field'), el.querySelector('.tile-vol'));
   $(tile.box).appendChild(el);
   tile.el = el;
 }
-$('mixer').appendChild($('numera-field')); // beside the lead guitar, the last tile
 function renderTiles() {
   for (const tile of TILES) {
     const iconId = tile.id;
