@@ -561,9 +561,12 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 
 
 /* ------------------------------------------------------------ rounded corners */
-.tile, .game-card, .stage, .pick, .text-input { border-radius: 12px; }
-.tap-pad { border-radius: 16px; }
+.tile, .game-card, .stage { border-radius: 20px; }
+.tap-pad { border-radius: 28px; }
+.text-input { border-radius: 16px; }
+.pick { border-radius: 999px; }
 .cta { border-radius: 999px; }
+.legend-foot { border-radius: 50%; }
 .progress, .progress-bar { border-radius: 3px; }
 
 /* ------------------------------------------------------------ larger screens */

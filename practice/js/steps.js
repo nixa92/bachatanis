@@ -109,14 +109,14 @@ export const KORACI = [
     opis: 'Pun okret ulevo na brojeve 1, 2 i 3, tap na 4, pa osnovni udesno.',
     opis_en: 'A full turn to the left on counts 1, 2 and 3, a tap on 4, then the basic to the right.',
     brojevi: [
-      { noga: 'L', x: -1.1, y: 0, ugao: -120 },            // 1 leva ulevo, trećina okreta
-      { noga: 'D', x: -1.6, y: -0.35, ugao: -240 },        // 2 desna, dve trećine
-      { noga: 'L', x: -2.3, y: 0, ugao: -360 },            // 3 leva, ravno napred
-      { noga: 'D', x: -1.7, y: 0, tap: true },             // 4 tap desnom, bez okretanja
-      { noga: 'D', x: -0.7, y: 0 },             // 5 desna u stranu
-      { noga: 'L', x: -1.3, y: 0 },             // 6 leva prilazi desnoj
-      { noga: 'D', x: 0.3, y: 0 },              // 7 desna u stranu
-      { noga: 'L', x: -0.3, y: 0, tap: true },  // 8 tap levom
+      { noga: 'L', x: -1.1, y: 0, ugao: -120 },  // 1 leva ulevo, trećina okreta
+      { noga: 'D', x: -1.9, y: 0, ugao: -240 },  // 2 desna prolazi levu, dve trećine
+      { noga: 'L', x: -2.7, y: 0, ugao: -360 },  // 3 leva prolazi desnu, ravno napred
+      { noga: 'D', x: -2.1, y: 0, tap: true },   // 4 tap desnom, bez okretanja
+      { noga: 'D', x: -1.1, y: 0 },              // 5 desna u stranu
+      { noga: 'L', x: -1.7, y: 0 },              // 6 leva prilazi desnoj
+      { noga: 'D', x: 0.3, y: 0 },               // 7 desna u stranu
+      { noga: 'L', x: -0.3, y: 0, tap: true },   // 8 tap levom
     ],
   },
   {
@@ -127,14 +127,14 @@ export const KORACI = [
     opis: 'Osnovni ulevo, pa pun okret udesno na brojeve 5, 6 i 7, tap na 8.',
     opis_en: 'The basic to the left, then a full turn to the right on counts 5, 6 and 7, a tap on 8.',
     brojevi: [
-      { noga: 'L', x: -1.3, y: 0 },             // 1 leva u stranu
-      { noga: 'D', x: -0.7, y: 0 },             // 2 desna prilazi levoj
-      { noga: 'L', x: -2.3, y: 0 },             // 3 leva u stranu
-      { noga: 'D', x: -1.7, y: 0, tap: true },  // 4 tap desnom
-      { noga: 'D', x: -0.9, y: 0, ugao: 120 },             // 5 desna udesno, trećina okreta
-      { noga: 'L', x: -0.4, y: -0.35, ugao: 240 },         // 6 leva, dve trećine
-      { noga: 'D', x: 0.3, y: 0, ugao: 360 },              // 7 desna, ravno napred
-      { noga: 'L', x: -0.3, y: 0, tap: true },             // 8 tap levom, bez okretanja
+      { noga: 'L', x: -1.4, y: 0 },              // 1 leva u stranu
+      { noga: 'D', x: -0.8, y: 0 },              // 2 desna prilazi levoj
+      { noga: 'L', x: -2.7, y: 0 },              // 3 leva u stranu
+      { noga: 'D', x: -2.1, y: 0, tap: true },   // 4 tap desnom
+      { noga: 'D', x: -1.3, y: 0, ugao: 120 },   // 5 desna udesno, trećina okreta
+      { noga: 'L', x: -0.5, y: 0, ugao: 240 },   // 6 leva prolazi desnu, dve trećine
+      { noga: 'D', x: 0.3, y: 0, ugao: 360 },    // 7 desna prolazi levu, ravno napred
+      { noga: 'L', x: -0.3, y: 0, tap: true },   // 8 tap levom, bez okretanja
     ],
   },
 ];

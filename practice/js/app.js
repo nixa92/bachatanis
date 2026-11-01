@@ -1,11 +1,11 @@
-import { Engine, CHANNELS } from './engine.js?v=20261102001003';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261102001003';
-import { KORACI } from './steps.js?v=20261102001003';
-import { FeetView } from './feet.js?v=20261102001003';
-import { EarTest, MODES, LEVELS, roundMs, feedback } from './game.js?v=20261102001003';
-import * as store from './storage.js?v=20261102001003';
-import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261102001003';
-import { ICONS } from './icons.js?v=20261102001003';
+import { Engine, CHANNELS } from './engine.js?v=20261102001915';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261102001915';
+import { KORACI } from './steps.js?v=20261102001915';
+import { FeetView } from './feet.js?v=20261102001915';
+import { EarTest, MODES, LEVELS, roundMs, feedback } from './game.js?v=20261102001915';
+import * as store from './storage.js?v=20261102001915';
+import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261102001915';
+import { ICONS } from './icons.js?v=20261102001915';
 
 const $ = (id) => document.getElementById(id);
 const engine = new Engine();

@@ -3,9 +3,9 @@
 // and get the step that is sounding right now, so sound and picture stay locked
 // even when the tempo changes mid-play.
 
-import * as I from './instruments.js?v=20261102001003';
-import * as P from './patterns.js?v=20261102001003';
-import { SampleBank } from './samples.js?v=20261102001003';
+import * as I from './instruments.js?v=20261102001915';
+import * as P from './patterns.js?v=20261102001915';
+import { SampleBank } from './samples.js?v=20261102001915';
 
 export const STEPS_PER_PHRASE = 16;
 const LOOKAHEAD = 0.12;    // schedule this far ahead (s)
