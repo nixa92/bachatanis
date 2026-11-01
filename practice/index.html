@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Vežbe | Anita &amp; Nikola</title>
-  <meta name="description" content="Vežbaj osnovne korake i ritam bachate: muzika sa brojanjem, animirani koraci i test sluha.">
+  <meta name="description" content="Vežbaj osnovne korake i ritam bachate: muzika sa brojanjem, animirani koraci i igra sluha.">
   <meta name="theme-color" content="#EFE9E0">
   <meta name="robots" content="noindex">
   <link rel="icon" href="../favicon.ico?v=3" sizes="any">
@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Sacramento&display=swap" rel="stylesheet">
   <link rel="preload" href="fonts/Northwell.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/app.css?v=20261101235018">
+  <link rel="stylesheet" href="css/app.css?v=20261101235738">
 </head>
 <body>
   <header class="top">
@@ -31,7 +31,7 @@
       <nav class="tabs" role="tablist" data-i18n-aria="tabs" aria-label="Ekrani">
         <button role="tab" id="tab-ritam" aria-controls="ritam" aria-selected="true" data-i18n="tab.ritam">Ritam</button>
         <button role="tab" id="tab-koraci" aria-controls="koraci" aria-selected="false" data-i18n="tab.koraci">Koraci</button>
-        <button role="tab" id="tab-test" aria-controls="test" aria-selected="false" data-i18n="tab.test">Test sluha</button>
+        <button role="tab" id="tab-test" aria-controls="test" aria-selected="false" data-i18n="tab.test">Igra sluha</button>
       </nav>
     </div>
   </header>
@@ -161,13 +161,14 @@
     <div class="bar-counts" id="bar-counts" aria-hidden="true"></div>
     <div class="transport-inner">
       <button class="play" id="play" type="button" aria-pressed="false" aria-label="Pusti"><svg class="ico-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg><svg class="ico-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5.5" width="4" height="13" rx="1"/><rect x="13.5" y="5.5" width="4" height="13" rx="1"/></svg></button>
-      <div class="tempo">
-        <label class="tempo-label" for="bpm"><span><span id="bpm-val">120</span> BPM</span><b id="bpm-name"></b></label>
-        <input type="range" id="bpm" min="80" max="200" step="5" value="125">
+      <div class="tempo" role="group" data-i18n-aria="tempo.aria" aria-label="Tempo">
+        <button class="tempo-btn" id="bpm-down" type="button" data-i18n-aria="tempo.down" aria-label="Sporije">−</button>
+        <div class="tempo-value" aria-live="polite"><span><span id="bpm-val">125</span> BPM</span><b id="bpm-name"></b></div>
+        <button class="tempo-btn" id="bpm-up" type="button" data-i18n-aria="tempo.up" aria-label="Brže">+</button>
       </div>
     </div>
   </footer>
 
-  <script type="module" src="js/app.js?v=20261101235018"></script>
+  <script type="module" src="js/app.js?v=20261101235738"></script>
 </body>
 </html>

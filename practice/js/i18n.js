@@ -13,7 +13,7 @@ const DICT = {
     'tabs': 'Ekrani',
     'tab.ritam': 'Ritam',
     'tab.koraci': 'Koraci',
-    'tab.test': 'Test sluha',
+    'tab.test': 'Igra sluha',
 
     'numera.label': 'Numera',
     'section.label': 'Ritam',
@@ -52,7 +52,7 @@ const DICT = {
     'foot.D': 'desna noga',
     'foot.tapL': 'tap levom',
     'foot.tapD': 'tap desnom',
-    'hint.koraci': 'Tempo je isti kao na ekranu Ritam. Za sporije vežbanje pomeri klizač ulevo.',
+    'hint.koraci': 'Tempo je isti kao na ekranu Ritam. Za sporije vežbanje tapni − u donjoj traci.',
 
     'mode.puls': 'Prati ritam',
     'mode.jedan': 'Nađi jedinicu',
@@ -134,6 +134,9 @@ const DICT = {
 
     'play': 'Pusti',
     'pause': 'Pauza',
+    'tempo.aria': 'Tempo',
+    'tempo.down': 'Sporije',
+    'tempo.up': 'Brže',
     'preset.slow': 'Sporo',
     'preset.mid': 'Srednje',
     'preset.fast': 'Brzo',
@@ -149,7 +152,7 @@ const DICT = {
     'tabs': 'Screens',
     'tab.ritam': 'Rhythm',
     'tab.koraci': 'Steps',
-    'tab.test': 'Ear test',
+    'tab.test': 'Ear game',
 
     'numera.label': 'Track',
     'section.label': 'Rhythm',
@@ -188,7 +191,7 @@ const DICT = {
     'foot.D': 'right foot',
     'foot.tapL': 'tap left',
     'foot.tapD': 'tap right',
-    'hint.koraci': 'The tempo is shared with the Rhythm screen. Move the slider left to practice slower.',
+    'hint.koraci': 'The tempo is shared with the Rhythm screen. Tap − in the bottom bar to practice slower.',
 
     'mode.puls': 'Follow the beat',
     'mode.jedan': 'Find the 1',
@@ -270,6 +273,9 @@ const DICT = {
 
     'play': 'Play',
     'pause': 'Pause',
+    'tempo.aria': 'Tempo',
+    'tempo.down': 'Slower',
+    'tempo.up': 'Faster',
     'preset.slow': 'Slow',
     'preset.mid': 'Medium',
     'preset.fast': 'Fast',

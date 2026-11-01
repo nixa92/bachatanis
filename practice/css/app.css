@@ -470,8 +470,7 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 .game-card small { font-size: 13px; color: var(--ink-600); }
 .intro-steps { margin: 12px 0 20px; padding-left: 22px; font-size: 16px; line-height: 1.5; }
 .intro-steps li { margin-bottom: 6px; }
-.tile[data-id="requinto"] { grid-column: 1 / -1; }
-.numera-field { margin: 0 14px 8px; }
+.numera-field { margin: 0; padding: 14px; min-width: 0; background: var(--paper); box-shadow: inset 0 0 0 1px var(--red-20); }
 .numera-field .field-label { font-size: 13px; margin-bottom: 4px; }
 .numera-field .pick { max-width: none; min-height: 40px; padding-top: 6px; padding-bottom: 6px; font-size: 15px; }
 .history { margin-top: 44px; max-width: 640px; }
@@ -551,11 +550,14 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 .play:hover { background: var(--red-hover); }
 .play:active { transform: scale(0.94); }
 .play[aria-pressed="true"] { background: var(--paper); color: var(--red); }
-.tempo { grid-area: tempo; display: grid; gap: 0; }
-.tempo-label { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; color: rgba(247, 243, 236, 0.75); }
-.tempo-label b { font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--paper); }
-#bpm-val { font-family: var(--font-display); font-weight: 800; font-size: 22px; color: var(--paper); margin-right: 2px; }
-.transport input[type="range"] { accent-color: var(--paper); }
+.tempo { grid-area: tempo; display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.tempo-value { display: grid; justify-items: center; min-width: 104px; font-size: 13px; line-height: 1.2; color: rgba(247, 243, 236, 0.75); }
+.tempo-value b { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--paper); }
+#bpm-val { font-family: var(--font-display); font-weight: 800; font-size: 24px; color: var(--paper); margin-right: 2px; }
+.tempo-btn { width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; font-family: var(--font-display); font-weight: 700; font-size: 26px; line-height: 1; color: var(--paper); background: transparent; box-shadow: inset 0 0 0 1px rgba(247, 243, 236, 0.35); cursor: pointer; }
+.tempo-btn:hover:not(:disabled) { box-shadow: inset 0 0 0 1px var(--paper); }
+.tempo-btn:active:not(:disabled) { background: rgba(247, 243, 236, 0.15); }
+.tempo-btn:disabled { opacity: 0.3; cursor: default; }
 
 
 /* ------------------------------------------------------------ larger screens */
@@ -573,7 +575,7 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
   .lang button { height: 32px; }
 }
 @media (min-width: 760px) {
-  .transport-inner { grid-template-columns: auto minmax(180px, 1fr); grid-template-areas: "play tempo"; gap: 24px; }
+  .transport-inner { grid-template-columns: auto 1fr; grid-template-areas: "play tempo"; gap: 24px; }
   :root { --transport-h: 110px; }
   .ritam-grid { grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr); gap: 40px; align-items: start; }
   .bar-cell { height: 36px; }

@@ -1,11 +1,11 @@
-import { Engine, CHANNELS } from './engine.js?v=20261101235018';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261101235018';
-import { KORACI } from './steps.js?v=20261101235018';
-import { FeetView } from './feet.js?v=20261101235018';
-import { EarTest, MODES, LEVELS, roundMs, feedback } from './game.js?v=20261101235018';
-import * as store from './storage.js?v=20261101235018';
-import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261101235018';
-import { ICONS } from './icons.js?v=20261101235018';
+import { Engine, CHANNELS } from './engine.js?v=20261101235738';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261101235738';
+import { KORACI } from './steps.js?v=20261101235738';
+import { FeetView } from './feet.js?v=20261101235738';
+import { EarTest, MODES, LEVELS, roundMs, feedback } from './game.js?v=20261101235738';
+import * as store from './storage.js?v=20261101235738';
+import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261101235738';
+import { ICONS } from './icons.js?v=20261101235738';
 
 const $ = (id) => document.getElementById(id);
 const engine = new Engine();
@@ -122,18 +122,19 @@ try { setNumera(localStorage.getItem(NUMERA_KEY)); } catch (e) { /* private mode
 numeraSel.value = numeraId();
 numeraSel.addEventListener('change', () => {
   setNumera(numeraSel.value); // takes effect from the next step, even while playing
-  if (engine.mix.requinto.mute) { engine.setMix('requinto', { mute: false }); renderTiles(); }
   try { localStorage.setItem(NUMERA_KEY, numeraSel.value); } catch (e) { /* private mode */ }
   if (!engine.playing) drawLanes(currentSection);
 });
 
 function setBpm(v) {
   engine.bpm = Math.max(BPM_MIN, Math.min(BPM_MAX, Math.round(v / 5) * 5));
-  $('bpm').value = engine.bpm;
+  $('bpm-down').disabled = engine.bpm <= BPM_MIN;
+  $('bpm-up').disabled = engine.bpm >= BPM_MAX;
   $('bpm-val').textContent = engine.bpm;
   $('bpm-name').textContent = engine.bpm <= 100 ? t('preset.slow') : engine.bpm >= 150 ? t('preset.fast') : t('preset.mid');
 }
-$('bpm').addEventListener('input', (e) => setBpm(Number(e.target.value)));
+$('bpm-down').addEventListener('click', () => setBpm(engine.bpm - 5));
+$('bpm-up').addEventListener('click', () => setBpm(engine.bpm + 5));
 setBpm(125);
 
 document.addEventListener('keydown', (e) => {
@@ -218,11 +219,10 @@ for (const tile of TILES) {
   // the switch toggles; tapping the icon or name does the same
   el.querySelector('.tile-head').addEventListener('click', () => { tile.toggle(); renderTiles(); drawLanes(currentSection); });
   el.querySelector('.tile-vol').addEventListener('input', (e) => { tile.setVol(Number(e.target.value)); drawLanes(currentSection); });
-  // the track is mostly its lead melody, so it is picked on the lead guitar tile
-  if (tile.id === 'requinto') el.insertBefore($('numera-field'), el.querySelector('.tile-vol'));
   $(tile.box).appendChild(el);
   tile.el = el;
 }
+$('mixer').appendChild($('numera-field')); // beside the lead guitar, the last tile
 function renderTiles() {
   for (const tile of TILES) {
     const iconId = tile.id;
