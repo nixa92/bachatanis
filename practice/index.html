@@ -37,6 +37,10 @@
   </header>
 
   <main>
+    <div class="field numera-field">
+      <label class="field-label" for="numera" data-i18n="numera.label">Numera</label>
+      <select class="pick" id="numera"></select>
+    </div>
     <!-- ============================================================ RITAM -->
     <section id="ritam" class="screen" role="tabpanel" aria-labelledby="tab-ritam">
       <div class="ritam-grid">
@@ -169,18 +173,9 @@
     <div class="bar-counts" id="bar-counts" aria-hidden="true"></div>
     <div class="transport-inner">
       <button class="play" id="play" type="button" aria-pressed="false" aria-label="Pusti"><svg class="ico-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg><svg class="ico-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5.5" width="4" height="13" rx="1"/><rect x="13.5" y="5.5" width="4" height="13" rx="1"/></svg></button>
-      <label class="numera">
-        <span class="numera-label" data-i18n="numera.label">Numera</span>
-        <select id="numera"></select>
-      </label>
       <div class="tempo">
-        <label class="tempo-label" for="bpm"><span id="bpm-val">120</span> BPM</label>
-        <input type="range" id="bpm" min="80" max="200" step="1" value="125">
-      </div>
-      <div class="presets seg-dark" role="group" data-i18n-aria="tempo.group" aria-label="Tempo">
-        <button type="button" data-bpm="100" data-i18n="preset.slow">Sporo</button>
-        <button type="button" data-bpm="125" data-i18n="preset.mid">Srednje</button>
-        <button type="button" data-bpm="150" data-i18n="preset.fast">Brzo</button>
+        <label class="tempo-label" for="bpm"><span><span id="bpm-val">120</span> BPM</span><b id="bpm-name"></b></label>
+        <input type="range" id="bpm" min="80" max="200" step="5" value="125">
       </div>
     </div>
   </footer>

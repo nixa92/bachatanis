@@ -19,6 +19,7 @@ for (const b of document.querySelectorAll('.lang button')) b.addEventListener('c
 onLangChange((l) => {
   if (state.voiceOn && !test.running) engine.voice = l;
   renderPlay();
+  setBpm(engine.bpm);
   renderTiles();
   renderStepList();
   setupFeet();
@@ -51,7 +52,7 @@ function placeInd(group, animate = true) {
   ind.style.transform = `translate(${b.offsetLeft}px, ${b.offsetTop}px)`;
   if (!animate) { void ind.offsetWidth; ind.style.transition = ''; }
 }
-for (const g of document.querySelectorAll('.seg, .presets')) initSeg(g);
+for (const g of document.querySelectorAll('.seg')) initSeg(g);
 
 function bindSeg(group, onChange) {
   group.addEventListener('click', (e) => {
@@ -125,16 +126,12 @@ numeraSel.addEventListener('change', () => {
 });
 
 function setBpm(v) {
-  engine.bpm = Math.max(BPM_MIN, Math.min(BPM_MAX, Math.round(v)));
+  engine.bpm = Math.max(BPM_MIN, Math.min(BPM_MAX, Math.round(v / 5) * 5));
   $('bpm').value = engine.bpm;
   $('bpm-val').textContent = engine.bpm;
-  for (const b of document.querySelectorAll('.presets button')) {
-    b.setAttribute('aria-pressed', String(Number(b.dataset.bpm) === engine.bpm));
-  }
-  placeInd(document.querySelector('.presets'));
+  $('bpm-name').textContent = engine.bpm <= 100 ? t('preset.slow') : engine.bpm >= 150 ? t('preset.fast') : '';
 }
 $('bpm').addEventListener('input', (e) => setBpm(Number(e.target.value)));
-for (const b of document.querySelectorAll('.presets button')) b.addEventListener('click', () => setBpm(Number(b.dataset.bpm)));
 setBpm(125);
 
 document.addEventListener('keydown', (e) => {

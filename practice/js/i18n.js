@@ -52,7 +52,7 @@ const DICT = {
     'foot.D': 'desna noga',
     'foot.tapL': 'tap levom',
     'foot.tapD': 'tap desnom',
-    'hint.koraci': 'Tempo je isti kao na ekranu Ritam. Za sporije vežbanje izaberi Sporo.',
+    'hint.koraci': 'Tempo je isti kao na ekranu Ritam. Za sporije vežbanje pomeri klizač ulevo.',
 
     'mode.label': 'Zadatak',
     'mode.puls': 'Prati ritam',
@@ -128,9 +128,7 @@ const DICT = {
 
     'play': 'Pusti',
     'pause': 'Pauza',
-    'tempo.group': 'Tempo',
     'preset.slow': 'Sporo',
-    'preset.mid': 'Srednje',
     'preset.fast': 'Brzo',
     'copyright': '© 2026 Anita i Nikola, Niš. Sva prava zadržana.',
   },
@@ -183,7 +181,7 @@ const DICT = {
     'foot.D': 'right foot',
     'foot.tapL': 'tap left',
     'foot.tapD': 'tap right',
-    'hint.koraci': 'The tempo is shared with the Rhythm screen. Pick Slow to practice slower.',
+    'hint.koraci': 'The tempo is shared with the Rhythm screen. Move the slider left to practice slower.',
 
     'mode.label': 'Task',
     'mode.puls': 'Follow the beat',
@@ -259,9 +257,7 @@ const DICT = {
 
     'play': 'Play',
     'pause': 'Pause',
-    'tempo.group': 'Tempo',
     'preset.slow': 'Slow',
-    'preset.mid': 'Medium',
     'preset.fast': 'Fast',
     'copyright': '© 2026 Anita & Nikola, Niš. All rights reserved.',
   },
