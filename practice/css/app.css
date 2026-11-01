@@ -546,7 +546,6 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 #bpm-val { font-family: var(--font-display); font-weight: 800; font-size: 22px; color: var(--paper); margin-right: 2px; }
 .transport input[type="range"] { accent-color: var(--paper); }
 
-body[data-screen="test"] .numera-field { display: none; }
 
 /* ------------------------------------------------------------ larger screens */
 /* 600 and 960 are the site's breakpoints */
