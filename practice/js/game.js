@@ -1,4 +1,4 @@
-import { t } from './i18n.js?v=20261101231537';
+import { t } from './i18n.js?v=20261101235018';
 
 // Test sluha: the music starts at once and every tap counts. A level ends when the player
 // lands enough hits in a row; the faster that happens, the more points.
@@ -17,16 +17,15 @@ const TIMING_WEIGHT = 0.3; // share of the points that depends on timing
 // The test runs through these levels in order. Tempo rises every level, and every two levels a rhythm is added.
 const MAJAO = ['majao'];
 const MAJAO_DERECHO = ['majao', 'derecho'];
-const ALL_RHYTHMS = ['majao', 'derecho', 'mambo'];
+// hitMs: tolerance in Prati ritam. Nađi tap and Nađi jedinicu only ask for the tap to be closest to the right beat.
 export const LEVELS = [
-  { bpm: 100, sections: MAJAO },
-  { bpm: 120, sections: MAJAO },
-  { bpm: 140, sections: MAJAO_DERECHO },
-  { bpm: 160, sections: MAJAO_DERECHO },
-  { bpm: 180, sections: ALL_RHYTHMS },
-  { bpm: 200, sections: ALL_RHYTHMS },
+  { bpm: 100, sections: MAJAO, hitMs: 120 },
+  { bpm: 120, sections: MAJAO, hitMs: 110 },
+  { bpm: 140, sections: MAJAO_DERECHO, hitMs: 100 },
+  { bpm: 160, sections: MAJAO_DERECHO, hitMs: 90 },
+  { bpm: 180, sections: MAJAO_DERECHO, hitMs: 80 },
+  { bpm: 200, sections: MAJAO_DERECHO, hitMs: 75 },
 ];
-const HIT_WINDOW = 0.075; // seconds from the beat that still count as a hit
 export const MAX_POINTS = 100;
 // timing is shown to the nearest 50 ms: finer numbers would suggest more accuracy than a phone can measure
 export const roundMs = (ms) => Math.round(ms / 50) * 50;
@@ -66,7 +65,7 @@ export class EarTest {
     this.endTime = null;
     e.start();
     this.beatDur = 60 / e.bpm;
-    this.hitWindow = HIT_WINDOW;
+    this.hitWindow = mode.step > 1 ? this.beatDur / 2 : level.hitMs / 1000;
     this.running = true;
   }
 
@@ -84,7 +83,7 @@ export class EarTest {
       this._miss();
       const count = ((Math.round(fromStart / this.beatDur) % 8) + 8) % 8 + 1;
       this.wrongCounts[count] = (this.wrongCounts[count] || 0) + 1;
-      return result('wrong');
+      return { ...result('wrong'), count };
     }
     if (index === this.lastUsed) {
       this._miss();
@@ -100,6 +99,16 @@ export class EarTest {
     this.lastHit = index;
     if (this.streak >= this.mode.need) this.endTime = time;
     return result('hit', err);
+  }
+
+  // True once, when the next target went by without a tap: the streak is over.
+  checkMissed() {
+    if (!this.running || this.streak === 0) return false;
+    const { first, step } = this.mode;
+    const nextBeat = this.engine.startTime + (first + (this.lastHit + 1) * step) * this.beatDur;
+    if (this.engine.heardTime() <= nextBeat + this.hitWindow) return false;
+    this._miss();
+    return true;
   }
 
   _miss() {

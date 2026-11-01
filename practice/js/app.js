@@ -1,14 +1,15 @@
-import { Engine, CHANNELS } from './engine.js?v=20261101231537';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261101231537';
-import { KORACI } from './steps.js?v=20261101231537';
-import { FeetView } from './feet.js?v=20261101231537';
-import { EarTest, MODES, LEVELS, roundMs, feedback } from './game.js?v=20261101231537';
-import * as store from './storage.js?v=20261101231537';
-import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261101231537';
-import { ICONS } from './icons.js?v=20261101231537';
+import { Engine, CHANNELS } from './engine.js?v=20261101235018';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261101235018';
+import { KORACI } from './steps.js?v=20261101235018';
+import { FeetView } from './feet.js?v=20261101235018';
+import { EarTest, MODES, LEVELS, roundMs, feedback } from './game.js?v=20261101235018';
+import * as store from './storage.js?v=20261101235018';
+import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261101235018';
+import { ICONS } from './icons.js?v=20261101235018';
 
 const $ = (id) => document.getElementById(id);
 const engine = new Engine();
+engine.prepare();
 const state = { screen: 'ritam', step: KORACI[0], view: 'vodja', mode: 'puls', level: 1, voiceOn: false };
 const BPM_MIN = 80, BPM_MAX = 200;
 
@@ -21,10 +22,10 @@ onLangChange((l) => {
   renderPlay();
   setBpm(engine.bpm);
   renderTiles();
+  renderGames();
+  renderIntro();
   renderStepList();
   setupFeet();
-  describeTest();
-  renderHistory();
   drawLanes(currentSection);
   describeSection();
 });
@@ -121,6 +122,7 @@ try { setNumera(localStorage.getItem(NUMERA_KEY)); } catch (e) { /* private mode
 numeraSel.value = numeraId();
 numeraSel.addEventListener('change', () => {
   setNumera(numeraSel.value); // takes effect from the next step, even while playing
+  if (engine.mix.requinto.mute) { engine.setMix('requinto', { mute: false }); renderTiles(); }
   try { localStorage.setItem(NUMERA_KEY, numeraSel.value); } catch (e) { /* private mode */ }
   if (!engine.playing) drawLanes(currentSection);
 });
@@ -216,6 +218,8 @@ for (const tile of TILES) {
   // the switch toggles; tapping the icon or name does the same
   el.querySelector('.tile-head').addEventListener('click', () => { tile.toggle(); renderTiles(); drawLanes(currentSection); });
   el.querySelector('.tile-vol').addEventListener('input', (e) => { tile.setVol(Number(e.target.value)); drawLanes(currentSection); });
+  // the track is mostly its lead melody, so it is picked on the lead guitar tile
+  if (tile.id === 'requinto') el.insertBefore($('numera-field'), el.querySelector('.tile-vol'));
   $(tile.box).appendChild(el);
   tile.el = el;
 }
@@ -307,11 +311,6 @@ setupFeet();
 
 // ------------------------------------------------------------ TEST
 const test = new EarTest(engine);
-bindSeg(seg('mode'), (v) => { state.mode = v; describeTest(); });
-function describeTest() {
-  $('mode-help').textContent = t(`mode.${state.mode}.how`);
-}
-describeTest();
 $('player-name').value = store.getName();
 $('player-name').addEventListener('change', (e) => store.setName(e.target.value.trim()));
 
@@ -337,6 +336,7 @@ function showTestPart(part) {
   if (part !== 'run') setNumera(numeraSel.value); // back to the player's own pick
   setGameView(part === 'run');
   $('test-setup').hidden = part !== 'setup';
+  $('test-intro').hidden = part !== 'intro';
   $('test-run').hidden = part !== 'run';
   $('test-result').hidden = part !== 'result';
   if (part === 'run') window.scrollTo(0, 0);
@@ -390,14 +390,15 @@ $('test-start').addEventListener('click', () => {
 });
 $('res-next').addEventListener('click', () => { state.level++; startTest(state.mode); });
 $('res-back').addEventListener('click', () => showTestPart('setup'));
+$('intro-back').addEventListener('click', () => showTestPart('setup'));
 $('test-abort').addEventListener('click', abortTest);
 function abortTest() { test.abort(); showTestPart('setup'); }
 
-function tapText({ kind, ms, late }) {
+function tapText({ kind, ms, late, count }) {
   if (kind === 'hit') return ms <= 50 ? t('tap.hit') : t(late ? 'tap.hitLate' : 'tap.hitEarly');
   if (kind === 'early' || kind === 'late') return t(`tap.${kind}`, { ms: roundMs(ms) });
   if (kind === 'extra') return t('tap.extra');
-  return t(`tap.wrong.${state.mode}`);
+  return t(`tap.wrong.${state.mode}`, { c: count });
 }
 
 function onTap(e) {
@@ -437,7 +438,7 @@ function finishTest() {
   $('res-next').hidden = last;
   $('res-msg').innerHTML = lines.map((l) => `<p>${escapeHtml(l)}</p>`).join('');
   showTestPart('result');
-  renderHistory();
+  renderGames();
 }
 function offsetText(ms) {
   const a = roundMs(Math.abs(ms));
@@ -445,34 +446,32 @@ function offsetText(ms) {
   return t(ms < 0 ? 'off.early' : 'off.late', { ms: a });
 }
 
-function renderBest(list) {
-  $('best').innerHTML = Object.keys(MODES).map((mode) => {
-    const runs = list.filter((r) => r.mode === mode);
-    const top = runs.length ? runs.reduce((a, b) => (b.total > a.total ? b : a)) : null;
-    return `<li><span class="h-score">${top ? top.total : '–'}</span><span class="h-what">${t(`mode.${mode}`)}</span><span class="h-meta">${top ? levelText(top.level) : t('hist.none')}</span></li>`;
+function renderGames() {
+  const runs = store.getRuns();
+  $('history-clear').hidden = runs.length === 0;
+  $('game-list').innerHTML = Object.keys(MODES).map((mode) => {
+    const mine = runs.filter((r) => r.mode === mode);
+    const top = mine.length ? mine.reduce((a, b) => (b.total > a.total ? b : a)) : null;
+    return `<button type="button" class="game-card" data-mode="${mode}"><b>${t(`mode.${mode}`)}</b><span>${t(`goal.${mode}`)}</span><small>${top ? t('games.record', { total: top.total, level: top.level }) : t('hist.none')}</small></button>`;
   }).join('');
 }
-
-function renderHistory() {
-  const list = store.getRuns();
-  renderBest(list);
-  const ol = $('history');
-  $('history-clear').hidden = list.length === 0;
-  if (!list.length) {
-    ol.innerHTML = `<li class="history-empty">${t('hist.empty')}</li>`;
-    return;
-  }
-  ol.innerHTML = list.slice(0, 20).map((r) => {
-    const d = new Date(r.date);
-    const when = `${d.getDate()}. ${d.getMonth() + 1}. ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-    const what = `${MODES[r.mode] ? t(`mode.${r.mode}`) : r.mode}, ${levelText(r.level)}`;
-    return `<li><span class="h-score">${r.total}</span><span class="h-what">${what}${r.name ? `<em>${escapeHtml(r.name)}</em>` : ''}</span><span class="h-meta">${when}</span></li>`;
-  }).join('');
+$('game-list').addEventListener('click', (e) => {
+  const card = e.target.closest('.game-card');
+  if (!card) return;
+  state.mode = card.dataset.mode;
+  renderIntro();
+  showTestPart('intro');
+  window.scrollTo(0, 0);
+});
+function renderIntro() {
+  $('intro-title').textContent = t(`mode.${state.mode}`);
+  $('intro-steps').innerHTML = [t('intro.music'), t(`mode.${state.mode}.how`), t(`goal.${state.mode}`), t('intro.miss'), t('intro.speed', { total: LEVELS.length })]
+    .map((l) => `<li>${l}</li>`).join('');
 }
 $('history-clear').addEventListener('click', () => {
-  if (confirm(t('hist.confirm'))) { store.clearResults(); renderHistory(); }
+  if (confirm(t('hist.confirm'))) { store.clearResults(); renderGames(); }
 });
-renderHistory();
+renderGames();
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -510,6 +509,11 @@ function frameBody() {
     lightCells(barCells, pos ? fci : -1);
   } else if (state.screen === 'test' && test.running) {
     $('run-time').textContent = seconds(test.elapsed());
+    if (test.checkMissed()) {
+      showStreak(0);
+      $('tap-fb').textContent = t(`tap.missed.${state.mode}`);
+      $('tap-fb').className = 'tap-fb is-miss';
+    }
   }
 }
 requestAnimationFrame(frame);

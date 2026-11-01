@@ -189,15 +189,6 @@ function renderString(ctx, midi, { damp = 0.994, bright = 0.6, seconds = 1.4 } =
   return entry;
 }
 
-export function prerenderGuitar(ctx, midis) {
-  for (const m of midis) {
-    renderString(ctx, m, GUITAR_OPEN);
-    renderString(ctx, m, GUITAR_MUTED);
-  }
-}
-export function prerenderRequinto(ctx, midis) {
-  for (const m of midis) renderString(ctx, m, REQUINTO);
-}
 
 const GUITAR_OPEN = { damp: 0.995, bright: 0.55, seconds: 1.2 };
 const GUITAR_MUTED = { damp: 0.97, bright: 0.35, seconds: 0.25 };

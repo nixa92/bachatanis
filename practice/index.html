@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Sacramento&display=swap" rel="stylesheet">
   <link rel="preload" href="fonts/Northwell.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/app.css?v=20261101231537">
+  <link rel="stylesheet" href="css/app.css?v=20261101235018">
 </head>
 <body>
   <header class="top">
@@ -39,7 +39,7 @@
   <main>
     <!-- ============================================================ RITAM -->
     <section id="ritam" class="screen" role="tabpanel" aria-labelledby="tab-ritam">
-      <div class="field numera-field">
+      <div class="field numera-field" id="numera-field">
         <label class="field-label" for="numera" data-i18n="numera.label">Numera</label>
         <select class="pick" id="numera"></select>
       </div>
@@ -62,7 +62,6 @@
             <div class="seg" role="radiogroup" aria-labelledby="lbl-section" data-name="section">
               <button role="radio" data-value="derecho" aria-checked="false">Derecho</button>
               <button role="radio" data-value="majao" aria-checked="true">Majao</button>
-              <button role="radio" data-value="mambo" aria-checked="false">Mambo</button>
             </div>
             <p class="field-help" id="section-help"></p>
           </div>
@@ -88,8 +87,8 @@
           <div class="field">
             <span class="field-label" id="lbl-view" data-i18n="view.label">Prikaz</span>
             <div class="seg" role="radiogroup" aria-labelledby="lbl-view" data-name="view">
-              <button role="radio" data-value="vodja" aria-checked="true" data-i18n="role.vodja">Vođa</button>
-              <button role="radio" data-value="pratilja" aria-checked="false" data-i18n="role.pratilja">Pratilja</button>
+              <button role="radio" data-value="vodja" aria-checked="true" data-i18n="role.vodja">Muškarac</button>
+              <button role="radio" data-value="pratilja" aria-checked="false" data-i18n="role.pratilja">Žena</button>
               <button role="radio" data-value="oboje" aria-checked="false" data-i18n="role.oboje">Oboje</button>
             </div>
           </div>
@@ -109,24 +108,21 @@
     <!-- ============================================================ TEST -->
     <section id="test" class="screen" role="tabpanel" aria-labelledby="tab-test" hidden>
       <div class="test-setup" id="test-setup">
+        <p class="field-label" data-i18n="games.pick">Izaberi igru</p>
+        <div class="game-list" id="game-list"></div>
+        <button class="btn-quiet" id="history-clear" type="button" hidden data-i18n="hist.clear">Obriši rezultate</button>
+      </div>
 
-        <div class="field">
-          <span class="field-label" id="lbl-mode" data-i18n="mode.label">Zadatak</span>
-          <div class="seg" role="radiogroup" aria-labelledby="lbl-mode" data-name="mode">
-            <button role="radio" data-value="puls" aria-checked="true" data-i18n="mode.puls">Prati ritam</button>
-            <button role="radio" data-value="tap" aria-checked="false" data-i18n="mode.tap">Nađi tap</button>
-            <button role="radio" data-value="jedan" aria-checked="false" data-i18n="mode.jedan">Nađi jedinicu</button>
-          </div>
-          <p class="field-help" id="mode-help"></p>
-        </div>
-
+      <div class="test-intro" id="test-intro" hidden>
+        <p class="run-title" id="intro-title"></p>
+        <ol class="intro-steps" id="intro-steps"></ol>
         <div class="field">
           <label class="field-label" for="player-name" data-i18n="name.label">Tvoje ime</label>
           <input type="text" id="player-name" class="text-input" maxlength="40" autocomplete="given-name" placeholder="Nije obavezno" data-i18n-placeholder="name.placeholder">
         </div>
-
-        <button class="cta" id="test-start" type="button" data-i18n="test.start">Počni test</button>
+        <button class="cta" id="test-start" type="button" data-i18n="test.start">Kreni</button>
         <p class="hint" data-i18n="hint.test">Bluetooth slušalice kasne, pa rezultat neće biti tačan. Koristi zvučnik telefona ili slušalice na žicu.</p>
+        <button class="btn-quiet" id="intro-back" type="button" data-i18n="res.back">Izaberi drugu igru</button>
       </div>
 
       <div class="test-run" id="test-run" hidden>
@@ -152,18 +148,10 @@
         <div class="result-msg" id="res-msg"></div>
         <div class="result-actions">
           <button class="cta" id="res-next" type="button" data-i18n="res.next">Sledeći nivo</button>
-          <button class="btn-quiet" id="res-back" type="button" data-i18n="res.back">Nazad</button>
+          <button class="btn-quiet" id="res-back" type="button" data-i18n="res.back">Izaberi drugu igru</button>
         </div>
       </div>
 
-      <div class="history">
-        <h2 class="h2" data-i18n="hist.title">Moji rezultati</h2>
-        <h3 class="field-label" data-i18n="hist.best">Rekordi</h3>
-        <ol class="history-list" id="best"></ol>
-        <h3 class="field-label" data-i18n="hist.recent">Poslednje igre</h3>
-        <ol class="history-list" id="history"></ol>
-        <button class="btn-quiet" id="history-clear" type="button" hidden data-i18n="hist.clear">Obriši rezultate</button>
-      </div>
     </section>
     <p class="fine" data-i18n="copyright">© 2026 Anita i Nikola, Niš. Sva prava zadržana.</p>
   </main>
@@ -180,6 +168,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/app.js?v=20261101231537"></script>
+  <script type="module" src="js/app.js?v=20261101235018"></script>
 </body>
 </html>

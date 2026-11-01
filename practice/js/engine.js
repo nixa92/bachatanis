@@ -3,9 +3,9 @@
 // and get the step that is sounding right now, so sound and picture stay locked
 // even when the tempo changes mid-play.
 
-import * as I from './instruments.js?v=20261101231537';
-import * as P from './patterns.js?v=20261101231537';
-import { SampleBank } from './samples.js?v=20261101231537';
+import * as I from './instruments.js?v=20261101235018';
+import * as P from './patterns.js?v=20261101235018';
+import { SampleBank } from './samples.js?v=20261101235018';
 
 export const STEPS_PER_PHRASE = 16;
 const LOOKAHEAD = 0.12;    // schedule this far ahead (s)
@@ -45,8 +45,9 @@ export class Engine {
     this.samples = new SampleBank(); // sample variants; falls back to the synth per instrument
   }
 
-  // Must be called from inside a user gesture (tap/click) the first time — iOS rule.
-  unlock() {
+  // Called when the page opens: creates the audio context (it stays suspended) and loads all sounds,
+  // so that the first press of play starts at once.
+  prepare() {
     if (!this.ctx) {
       const AC = window.AudioContext || window.webkitAudioContext;
       this.ctx = new AC({ latencyHint: 'interactive' });
@@ -60,11 +61,14 @@ export class Engine {
       this.master = ctx.createGain();
       this.master.gain.value = 0.7;
       this.master.connect(this.comp).connect(ctx.destination);
-      I.prerenderGuitar(ctx, new Set(P.allGuitarNotes()));
-      I.prerenderRequinto(ctx, new Set(P.allLeadNotes()));
       this._loadVoices();
       this.samples.attach(ctx);
     }
+  }
+
+  // Must be called from inside a user gesture (tap/click) the first time — iOS rule.
+  unlock() {
+    this.prepare();
     // a silent buffer started inside the gesture fully unlocks iOS output
     const b = this.ctx.createBuffer(1, 1, this.ctx.sampleRate);
     const s = this.ctx.createBufferSource();

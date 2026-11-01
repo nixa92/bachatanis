@@ -335,9 +335,9 @@ input[type="range"] { accent-color: var(--red); width: 100%; min-height: 32px; }
 
 /* lanes */
 .lanes-wrap { margin-top: 28px; overflow-x: auto; }
-.lanes { display: grid; gap: 2px; min-width: 520px; }
-.lane { display: grid; grid-template-columns: 72px repeat(16, 1fr); gap: 2px; align-items: stretch; }
-.lane-name { font-size: 13px; font-weight: 600; align-self: center; }
+.lanes { display: grid; gap: 2px; }
+.lane { display: grid; grid-template-columns: 46px repeat(16, minmax(0, 1fr)); gap: 2px; align-items: stretch; }
+.lane-name { font-size: 11px; font-weight: 600; align-self: center; }
 .lane-cell {
   height: 26px;
   background: var(--paper);
@@ -346,9 +346,9 @@ input[type="range"] { accent-color: var(--red); width: 100%; min-height: 32px; }
   justify-content: center;
 }
 .lane-cell:nth-child(8n+2) { box-shadow: inset 2px 0 0 var(--ink-15); }
-.lane-head .lane-cell { background: none; height: 22px; font-family: var(--font-display); font-weight: 700; font-size: 13px; }
-.lane-head .lane-cell.is-and { color: var(--ink-600); font-weight: 600; }
-.lane-head .lane-cell:nth-child(9), .lane-head .lane-cell:nth-child(17) { color: var(--red); }
+.lane-head .lane-cell { background: none; height: 22px; font-family: var(--font-display); font-weight: 700; font-size: 12px; }
+.lane-head .lane-cell.is-and { color: var(--ink-15); font-size: 8px; font-weight: 500; }
+.lane-head .lane-cell:nth-child(8), .lane-head .lane-cell:nth-child(16) { color: var(--red); }
 .lane-cell i { display: block; width: 52%; height: 52%; background: var(--ink); }
 .lane-cell i.is-accent { background: var(--red); }
 .lane-cell.is-now { background: var(--ink-15); }
@@ -463,6 +463,17 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 .result-msg p { margin: 0 0 10px; }
 .result-actions { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: center; margin-top: 14px; }
 
+.game-list { display: grid; gap: 10px; margin-bottom: 16px; }
+.game-card { display: grid; gap: 4px; width: 100%; padding: 16px 18px; text-align: left; font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--red-50); cursor: pointer; }
+.game-card:hover { border-color: var(--red); }
+.game-card b { font-family: var(--font-display); font-weight: 800; font-size: 20px; color: var(--red); }
+.game-card small { font-size: 13px; color: var(--ink-600); }
+.intro-steps { margin: 12px 0 20px; padding-left: 22px; font-size: 16px; line-height: 1.5; }
+.intro-steps li { margin-bottom: 6px; }
+.tile[data-id="requinto"] { grid-column: 1 / -1; }
+.numera-field { margin: 0 14px 8px; }
+.numera-field .field-label { font-size: 13px; margin-bottom: 4px; }
+.numera-field .pick { max-width: none; min-height: 40px; padding-top: 6px; padding-bottom: 6px; font-size: 15px; }
 .history { margin-top: 44px; max-width: 640px; }
 .history-list { list-style: none; margin: 0; padding: 0; display: grid; }
 .history-list li {
@@ -569,7 +580,7 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
   .bar-num { font-size: 24px; }
   .koraci-grid { grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.2fr); gap: 40px; align-items: start; }
   .koraci-controls { order: 0; }
-  .test-setup, .test-run, .test-result { max-width: 640px; }
+  .test-setup, .test-intro, .test-run, .test-result { max-width: 640px; }
   .tabs button { font-size: 18px; }
 }
 

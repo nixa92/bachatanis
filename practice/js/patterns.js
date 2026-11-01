@@ -96,9 +96,6 @@ export const leadBarAt = (g, section) => {
   const bars = current.leads[section] || current.leads.derecho;
   return bars[barOf(g) % bars.length];
 };
-// every guitar and lead note, so the synth fallback can prepare them
-export const allGuitarNotes = () => NUMERE.flatMap((n) => n.chords.flatMap((c) => c.guitar));
-export const allLeadNotes = () => NUMERE.flatMap((n) => [...n.lead, ...n.leads.mambo].flat(2).filter((x) => x !== null));
 
 // Three bachata rhythms (song sections):
 //   derecho — verses: bongo (martillo) and güira play every eighth; the low drum on 4
