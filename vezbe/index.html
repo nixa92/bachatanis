@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="sr-Latn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Vežbe | Anita &amp; Nikola</title>
+  <meta name="description" content="Vežbaj osnovne korake i ritam bachate: muzika sa brojanjem, animirani koraci i test sluha.">
+  <meta name="theme-color" content="#EFE9E0">
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="../favicon.ico?v=3" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png?v=3">
+  <link rel="apple-touch-icon" href="../img/apple-touch-icon.png?v=3">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Sacramento&display=swap" rel="stylesheet">
+  <link rel="preload" href="fonts/Northwell.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <header class="top">
+    <div class="top-inner">
+      <div class="top-row">
+        <a class="wordmark" href="/" data-i18n="wordmark" data-i18n-aria="wordmark.aria" data-i18n-href="wordmark.href" aria-label="Anita i Nikola, početna strana sajta">Anita i Nikola</a>
+        <div class="lang" role="group" data-i18n-aria="lang.group" aria-label="Jezik">
+          <button type="button" data-lang="sr" lang="sr" aria-pressed="true">SR</button>
+          <button type="button" data-lang="en" lang="en" aria-pressed="false">EN</button>
+        </div>
+      </div>
+      <h1 class="title" data-i18n="title">Vežbe</h1>
+      <div class="rule"></div>
+      <nav class="tabs" role="tablist" data-i18n-aria="tabs" aria-label="Ekrani">
+        <button role="tab" id="tab-ritam" aria-controls="ritam" aria-selected="true" data-i18n="tab.ritam">Ritam</button>
+        <button role="tab" id="tab-koraci" aria-controls="koraci" aria-selected="false" data-i18n="tab.koraci">Koraci</button>
+        <button role="tab" id="tab-test" aria-controls="test" aria-selected="false" data-i18n="tab.test">Test sluha</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============================================================ RITAM -->
+    <section id="ritam" class="screen" role="tabpanel" aria-labelledby="tab-ritam">
+      <div class="ritam-grid">
+        <div class="ritam-main">
+        <div class="field">
+          <span class="field-label" data-i18n="ch.brojanje">Brojanje</span>
+          <div class="tiles" id="count-tiles"></div>
+        </div>
+        <div class="field">
+          <span class="field-label" data-i18n="instr.label">Instrumenti</span>
+          <div class="tiles" id="mixer"></div>
+        </div>
+
+        </div>
+
+        <div class="ritam-side">
+          <div class="field">
+            <span class="field-label" id="lbl-section" data-i18n="section.label">Ritam</span>
+            <div class="seg" role="radiogroup" aria-labelledby="lbl-section" data-name="section">
+              <button role="radio" data-value="derecho" aria-checked="false">Derecho</button>
+              <button role="radio" data-value="majao" aria-checked="true">Majao</button>
+              <button role="radio" data-value="mambo" aria-checked="false">Mambo</button>
+            </div>
+            <p class="field-help" id="section-help"></p>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="lanes-wrap">
+        <span class="field-label" data-i18n="lanes.label">Ko svira kada</span>
+        <div class="lanes" id="lanes" aria-hidden="true"></div>
+      </div>
+
+    </section>
+
+    <!-- ============================================================ KORACI -->
+    <section id="koraci" class="screen" role="tabpanel" aria-labelledby="tab-koraci" hidden>
+      <div class="koraci-grid">
+        <div class="koraci-controls">
+          <div class="field">
+            <span class="field-label" id="lbl-step" data-i18n="step.label">Korak</span>
+            <select class="pick" id="step-list" aria-labelledby="lbl-step"></select>
+          </div>
+          <div class="field">
+            <span class="field-label" id="lbl-view" data-i18n="view.label">Prikaz</span>
+            <div class="seg" role="radiogroup" aria-labelledby="lbl-view" data-name="view">
+              <button role="radio" data-value="vodja" aria-checked="true" data-i18n="role.vodja">Vođa</button>
+              <button role="radio" data-value="pratilja" aria-checked="false" data-i18n="role.pratilja">Pratilja</button>
+              <button role="radio" data-value="oboje" aria-checked="false" data-i18n="role.oboje">Oboje</button>
+            </div>
+          </div>
+          <p class="legend">
+            <span class="legend-foot legend-L">L</span> <span data-i18n="legend.L">leva noga</span>
+            <span class="legend-foot legend-D">D</span> <span data-i18n="legend.D">desna noga</span>
+            <span class="legend-note" data-i18n="legend.note">Puna boja je noga na kojoj je težina.</span>
+          </p>
+        </div>
+
+        <div class="stage">
+          <svg class="feet" id="feet" role="img" data-i18n-aria="feet.aria" aria-label="Animacija koraka, pogled odozgo"></svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ TEST -->
+    <section id="test" class="screen" role="tabpanel" aria-labelledby="tab-test" hidden>
+      <div class="test-setup" id="test-setup">
+
+        <div class="field">
+          <span class="field-label" id="lbl-mode" data-i18n="mode.label">Zadatak</span>
+          <div class="seg" role="radiogroup" aria-labelledby="lbl-mode" data-name="mode">
+            <button role="radio" data-value="puls" aria-checked="true" data-i18n="mode.puls">Prati ritam</button>
+            <button role="radio" data-value="tap" aria-checked="false" data-i18n="mode.tap">Nađi tap</button>
+            <button role="radio" data-value="jedan" aria-checked="false" data-i18n="mode.jedan">Nađi jedinicu</button>
+          </div>
+          <p class="field-help" id="mode-help"></p>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="player-name" data-i18n="name.label">Tvoje ime</label>
+          <input type="text" id="player-name" class="text-input" maxlength="40" autocomplete="given-name" placeholder="Nije obavezno" data-i18n-placeholder="name.placeholder">
+        </div>
+
+        <button class="cta" id="test-start" type="button" data-i18n="test.start">Počni test</button>
+        <p class="hint" data-i18n="hint.test">Bluetooth slušalice kasne, pa rezultat neće biti tačan. Koristi zvučnik telefona ili slušalice na žicu.</p>
+      </div>
+
+      <div class="test-run" id="test-run" hidden>
+        <p class="run-title" id="run-title"></p>
+        <p class="run-instr" id="run-instr"></p>
+        <div class="progress" aria-hidden="true"><div class="progress-bar" id="progress-bar"></div></div>
+        <p class="run-status"><span id="run-streak"></span><span id="run-time"></span></p>
+        <p class="tap-fb" id="tap-fb" role="status"></p>
+        <button class="tap-pad" id="tap-pad" type="button"><b data-i18n="pad.tap">Tapni</b><span data-i18n="pad.sub">ili pritisni razmak</span></button>
+        <button class="btn-quiet" id="test-abort" type="button" data-i18n="test.abort">Prekini</button>
+      </div>
+
+      <div class="test-result" id="test-result" hidden>
+        <p class="run-title" id="res-level"></p>
+        <p class="result-score"><span id="res-score"></span></p>
+        <p class="result-run" id="res-run"></p>
+        <dl class="result-stats">
+          <div><dt data-i18n="res.time">Vreme</dt><dd id="res-time"></dd></div>
+          <div><dt data-i18n="res.misses">Promašaji</dt><dd id="res-misses"></dd></div>
+          <div><dt data-i18n="res.avg">Prosek</dt><dd id="res-offset"></dd></div>
+          <div><dt data-i18n="res.tempo">Tempo</dt><dd id="res-bpm"></dd></div>
+        </dl>
+        <div class="result-msg" id="res-msg"></div>
+        <div class="result-actions">
+          <button class="cta" id="res-next" type="button" data-i18n="res.next">Sledeći nivo</button>
+          <button class="btn-quiet" id="res-back" type="button" data-i18n="res.back">Nazad</button>
+        </div>
+      </div>
+
+      <div class="history">
+        <h2 class="h2" data-i18n="hist.title">Moji rezultati</h2>
+        <h3 class="field-label" data-i18n="hist.best">Rekordi</h3>
+        <ol class="history-list" id="best"></ol>
+        <h3 class="field-label" data-i18n="hist.recent">Poslednje igre</h3>
+        <ol class="history-list" id="history"></ol>
+        <button class="btn-quiet" id="history-clear" type="button" hidden data-i18n="hist.clear">Obriši rezultate</button>
+      </div>
+    </section>
+    <p class="fine" data-i18n="copyright">© 2026 Anita i Nikola, Niš. Sva prava zadržana.</p>
+  </main>
+
+  <!-- ============================================================ TRANSPORT -->
+  <footer class="transport" id="transport">
+    <div class="bar-counts" id="bar-counts" aria-hidden="true"></div>
+    <div class="transport-inner">
+      <button class="play" id="play" type="button" aria-pressed="false" aria-label="Pusti"><svg class="ico-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg><svg class="ico-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5.5" width="4" height="13" rx="1"/><rect x="13.5" y="5.5" width="4" height="13" rx="1"/></svg></button>
+      <label class="numera">
+        <span class="numera-label" data-i18n="numera.label">Numera</span>
+        <select id="numera"></select>
+      </label>
+      <div class="tempo">
+        <label class="tempo-label" for="bpm"><span id="bpm-val">120</span> BPM</label>
+        <input type="range" id="bpm" min="80" max="200" step="1" value="125">
+      </div>
+      <div class="presets seg-dark" role="group" data-i18n-aria="tempo.group" aria-label="Tempo">
+        <button type="button" data-bpm="100" data-i18n="preset.slow">Sporo</button>
+        <button type="button" data-bpm="125" data-i18n="preset.mid">Srednje</button>
+        <button type="button" data-bpm="150" data-i18n="preset.fast">Brzo</button>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{
+  "id": "vcsl",
+  "name": "VCSL güiro + cabasa",
+  "source": "https://github.com/sgossner/VCSL",
+  "license": "CC0 1.0",
+  "attribution": "Versilian Community Sample Library (VCSL), Versilian Studios LLC",
+  "gain": 1.0,
+  "notes": "VCSL has no metal güira: gourd güiro (high-passed) layered with cabasa beads, premixed. Less metallic than a real güira.",
+  "slots": {
+    "long": [
+      "long_1.wav",
+      "long_2.wav"
+    ],
+    "short": [
+      "short_1.wav",
+      "short_2.wav"
+    ]
+  },
+  "source_files": {
+    "guiro_scrape1.wav": "https://github.com/sgossner/VCSL/blob/master/Idiophones/Struck%20Idiophones/Guiro/Guiro_Hit_rr1_Mid.wav",
+    "guiro_scrape2.wav": "https://github.com/sgossner/VCSL/blob/master/Idiophones/Struck%20Idiophones/Guiro/Guiro_Hit_rr2_Mid.wav",
+    "cabasa_rub.wav": "https://github.com/sgossner/VCSL/blob/master/Idiophones/Struck%20Idiophones/Cabasa/Cabasa1_Rub_v2_rr1_Mid.wav",
+    "cabasa_hit1.wav": "https://github.com/sgossner/VCSL/blob/master/Idiophones/Struck%20Idiophones/Cabasa/Cabasa1_Hit_rr1_Mid.wav",
+    "cabasa_hit2.wav": "https://github.com/sgossner/VCSL/blob/master/Idiophones/Struck%20Idiophones/Cabasa/Cabasa1_Hit_rr2_Mid.wav",
+    "guiro_short.wav": "https://github.com/sgossner/VCSL/blob/master/Idiophones/Struck%20Idiophones/Guiro/Legacy/guiro_short.wav",
+    "guiro_short2.wav": "https://github.com/sgossner/VCSL/blob/master/Idiophones/Struck%20Idiophones/Guiro/Legacy/guiro_short3.wav"
+  },
+  "order": -1
+}
