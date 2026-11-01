@@ -337,6 +337,7 @@ window.addEventListener('popstate', () => {
 });
 
 function showTestPart(part) {
+  if (part !== 'run') setNumera(numeraSel.value); // back to the player's own pick
   setGameView(part === 'run');
   $('test-setup').hidden = part !== 'setup';
   $('test-run').hidden = part !== 'run';
@@ -356,6 +357,7 @@ const levelText = (n) => t('level.of', { n, total: LEVELS.length });
 async function startTest(modeId) {
   await engine.unlock();
   await engine.samples.whenReady();
+  setNumera(run.tracks[state.level - 1]);
   test.begin(modeId, state.level);
   $('run-title').textContent = `${t(`mode.${modeId}`)}, ${levelText(state.level)}`;
   $('run-instr').textContent = t(`mode.${modeId}.how`);
@@ -365,7 +367,15 @@ async function startTest(modeId) {
   showTestPart('run');
   $('tap-pad').focus();
 }
-// one play through the levels
+const shuffled = (list) => {
+  const out = [...list];
+  for (let i = out.length - 1; i > 0; i--) {
+    const k = Math.floor(Math.random() * (i + 1));
+    [out[i], out[k]] = [out[k], out[i]];
+  }
+  return out;
+};
+// one play through the levels; every level has its own track, in a new order each game
 let run = null;
 function addToRun(r) {
   run.points[r.level] = r.points;
@@ -378,7 +388,7 @@ function addToRun(r) {
 }
 $('test-start').addEventListener('click', () => {
   state.level = 1;
-  run = { id: Date.now(), mode: state.mode, points: {} };
+  run = { id: Date.now(), mode: state.mode, points: {}, tracks: shuffled(NUMERE.map((n) => n.id)) };
   startTest(state.mode);
 });
 $('res-next').addEventListener('click', () => { state.level++; startTest(state.mode); });
