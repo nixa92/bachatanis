@@ -1,11 +1,11 @@
-import { Engine, CHANNELS } from './engine.js?v=20261101231123';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261101231123';
-import { KORACI } from './steps.js?v=20261101231123';
-import { FeetView } from './feet.js?v=20261101231123';
-import { EarTest, MODES, LEVELS, roundMs, feedback } from './game.js?v=20261101231123';
-import * as store from './storage.js?v=20261101231123';
-import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261101231123';
-import { ICONS } from './icons.js?v=20261101231123';
+import { Engine, CHANNELS } from './engine.js?v=20261101231304';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261101231304';
+import { KORACI } from './steps.js?v=20261101231304';
+import { FeetView } from './feet.js?v=20261101231304';
+import { EarTest, MODES, LEVELS, roundMs, feedback } from './game.js?v=20261101231304';
+import * as store from './storage.js?v=20261101231304';
+import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261101231304';
+import { ICONS } from './icons.js?v=20261101231304';
 
 const $ = (id) => document.getElementById(id);
 const engine = new Engine();
@@ -129,7 +129,7 @@ function setBpm(v) {
   engine.bpm = Math.max(BPM_MIN, Math.min(BPM_MAX, Math.round(v / 5) * 5));
   $('bpm').value = engine.bpm;
   $('bpm-val').textContent = engine.bpm;
-  $('bpm-name').textContent = engine.bpm <= 100 ? t('preset.slow') : engine.bpm >= 150 ? t('preset.fast') : '';
+  $('bpm-name').textContent = engine.bpm <= 100 ? t('preset.slow') : engine.bpm >= 150 ? t('preset.fast') : t('preset.mid');
 }
 $('bpm').addEventListener('input', (e) => setBpm(Number(e.target.value)));
 setBpm(125);
