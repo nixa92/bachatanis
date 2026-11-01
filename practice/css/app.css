@@ -525,9 +525,9 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
   margin: 0 auto;
   padding: 4px var(--pad) 8px;
   display: grid;
-  grid-template-columns: minmax(72px, 1fr) auto;
+  grid-template-columns: minmax(60px, 1fr) auto;
   grid-template-areas: "play tempo";
-  gap: 6px 16px;
+  gap: 6px clamp(16px, 7vw, 32px);
   align-items: center;
 }
 .play {
@@ -581,7 +581,7 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
   .lang button { height: 32px; }
 }
 @media (min-width: 760px) {
-  .transport-inner { grid-template-columns: minmax(72px, 1fr) auto; grid-template-areas: "play tempo"; gap: 24px; }
+  .transport-inner { grid-template-columns: minmax(60px, 1fr) auto; grid-template-areas: "play tempo"; gap: 32px; }
   :root { --transport-h: 110px; }
   .ritam-grid { grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr); gap: 40px; align-items: start; }
   .bar-cell { height: 36px; }
