@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Sacramento&display=swap" rel="stylesheet">
   <link rel="preload" href="fonts/Northwell.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/app.css?v=20261102001915">
+  <link rel="stylesheet" href="css/app.css?v=20261102004425">
 </head>
 <body>
   <header class="top">
@@ -45,12 +45,13 @@
       </div>
       <div class="ritam-grid">
         <div class="ritam-main">
+        <p class="play-hint" data-i18n="playhint">Pritisni dugme ▶︎ dole da pustiš muziku.</p>
         <div class="field">
-          <span class="field-label" data-i18n="ch.brojanje">Brojanje</span>
+          <span class="field-label" data-i18n="count.label">Uključi brojanje</span>
           <div class="tiles" id="count-tiles"></div>
         </div>
         <div class="field">
-          <span class="field-label" data-i18n="instr.label">Instrumenti</span>
+          <span class="field-label" data-i18n="instr.label">Uključi instrumente</span>
           <div class="tiles" id="mixer"></div>
         </div>
 
@@ -58,7 +59,7 @@
 
         <div class="ritam-side">
           <div class="field">
-            <span class="field-label" id="lbl-section" data-i18n="section.label">Ritam</span>
+            <span class="field-label" id="lbl-section" data-i18n="section.label">Izaberi ritam</span>
             <div class="seg" role="radiogroup" aria-labelledby="lbl-section" data-name="section">
               <button role="radio" data-value="derecho" aria-checked="false">Derecho</button>
               <button role="radio" data-value="majao" aria-checked="true">Majao</button>
@@ -81,11 +82,11 @@
       <div class="koraci-grid">
         <div class="koraci-controls">
           <div class="field">
-            <span class="field-label" id="lbl-step" data-i18n="step.label">Korak</span>
+            <span class="field-label" id="lbl-step" data-i18n="step.label">Izaberi korak</span>
             <select class="pick" id="step-list" aria-labelledby="lbl-step"></select>
           </div>
           <div class="field">
-            <span class="field-label" id="lbl-view" data-i18n="view.label">Prikaz</span>
+            <span class="field-label" id="lbl-view" data-i18n="view.label">Izaberi prikaz</span>
             <div class="seg" role="radiogroup" aria-labelledby="lbl-view" data-name="view">
               <button role="radio" data-value="vodja" aria-checked="true" data-i18n="role.vodja">Muškarac</button>
               <button role="radio" data-value="pratilja" aria-checked="false" data-i18n="role.pratilja">Žena</button>
@@ -169,6 +170,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/app.js?v=20261102001915"></script>
+  <script type="module" src="js/app.js?v=20261102004425"></script>
 </body>
 </html>

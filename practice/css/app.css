@@ -154,6 +154,7 @@ main { max-width: var(--max); margin: 0 auto; padding: 18px var(--pad) 0; }
   color: var(--ink);
 }
 .field-help { margin: 8px 0 0; font-size: 14px; color: var(--ink-600); max-width: 36em; }
+.play-hint { margin: 0 0 20px; font-size: 16px; color: var(--ink); }
 
 .seg {
   position: relative;

@@ -3,9 +3,9 @@
 // and get the step that is sounding right now, so sound and picture stay locked
 // even when the tempo changes mid-play.
 
-import * as I from './instruments.js?v=20261102001915';
-import * as P from './patterns.js?v=20261102001915';
-import { SampleBank } from './samples.js?v=20261102001915';
+import * as I from './instruments.js?v=20261102004425';
+import * as P from './patterns.js?v=20261102004425';
+import { SampleBank } from './samples.js?v=20261102004425';
 
 export const STEPS_PER_PHRASE = 16;
 const LOOKAHEAD = 0.12;    // schedule this far ahead (s)
@@ -148,13 +148,19 @@ export class Engine {
   get stepDur() { return 30 / this.bpm; } // eighth note = 60 / bpm / 2
 
   // leadIn: seconds of silence before count 1, so the feet can move into it
-  start({ leadIn = 0 } = {}) {
+  // fromStep: eighth to start on instead of count 1 (the ear game starts mid-bar)
+  // fadeIn: seconds to fade the music in, so the first note heard does not sound like a 1
+  start({ leadIn = 0, fromStep = 0, fadeIn = 0 } = {}) {
     if (this.playing || !this.ctx) return;
     this._buildRun();
     this.playing = true;
-    this.g = this.pausedPos ? this.pausedPos.entry.g + 1 : 0;
+    this.g = this.pausedPos ? this.pausedPos.entry.g + 1 : fromStep;
     this.nextTime = this.ctx.currentTime + START_DELAY + (this.pausedPos ? 0 : leadIn);
     this.startTime = this.nextTime;
+    if (fadeIn > 0) {
+      this.run.out.gain.setValueAtTime(0, this.startTime);
+      this.run.out.gain.linearRampToValueAtTime(1, this.startTime + fadeIn);
+    }
     this.queue = [];
     this._tick();
   }

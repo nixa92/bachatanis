@@ -1,4 +1,4 @@
-import { t } from './i18n.js?v=20261102001915';
+import { t } from './i18n.js?v=20261102004425';
 
 // Test sluha: the music starts at once and every tap counts. A level ends when the player
 // lands enough hits in a row; the faster that happens, the more points.
@@ -8,22 +8,26 @@ import { t } from './i18n.js?v=20261102001915';
 // Points: fastest possible time / your time, reduced for timing error. A full score needs a hit
 // from the very first target and every tap dead on the beat, so it is close to impossible.
 export const MODES = {
-  puls:  { first: 0, step: 1, need: 16 },
+  puls:  { first: 0, step: 1, need: 8 },
   tap:   { first: 3, step: 4, need: 4 },
   jedan: { first: 0, step: 8, need: 2 },
 };
+const START_COUNTS = [2, 3, 4, 6, 7, 8]; // where Nađi tap and Nađi jedinicu may start
 const TIMING_WEIGHT = 0.3; // share of the points that depends on timing
 
-// The test runs through these levels in order. Tempo rises every level, and every two levels a rhythm is added.
+// The test runs through these levels in order. Tempo rises every level; derecho joins majao from level 4.
 const MAJAO = ['majao'];
 const MAJAO_DERECHO = ['majao', 'derecho'];
 // hitMs: tolerance in Prati ritam. Nađi tap and Nađi jedinicu only ask for the tap to be closest to the right beat.
 export const LEVELS = [
   { bpm: 100, sections: MAJAO, hitMs: 120 },
+  { bpm: 110, sections: MAJAO, hitMs: 115 },
   { bpm: 120, sections: MAJAO, hitMs: 110 },
+  { bpm: 130, sections: MAJAO_DERECHO, hitMs: 105 },
   { bpm: 140, sections: MAJAO_DERECHO, hitMs: 100 },
-  { bpm: 160, sections: MAJAO_DERECHO, hitMs: 90 },
-  { bpm: 180, sections: MAJAO_DERECHO, hitMs: 80 },
+  { bpm: 155, sections: MAJAO_DERECHO, hitMs: 95 },
+  { bpm: 170, sections: MAJAO_DERECHO, hitMs: 90 },
+  { bpm: 185, sections: MAJAO_DERECHO, hitMs: 80 },
   { bpm: 200, sections: MAJAO_DERECHO, hitMs: 75 },
 ];
 export const MAX_POINTS = 100;
@@ -63,8 +67,14 @@ export class EarTest {
     this.errs = [];
     this.wrongCounts = {};
     this.endTime = null;
-    e.start();
+    // Nađi tap and Nađi jedinicu start on a random count and fade in over two beats: a hard start
+    // would sound like a 1 and give the answer away. Not on 5: each bar repeats, so 5 sounds like 1.
+    this.offset = mode.step > 1 ? START_COUNTS[Math.floor(Math.random() * START_COUNTS.length)] - 1 : 0;
+    e.start({ fromStep: this.offset * 2, fadeIn: mode.step > 1 ? 2 * 60 / e.bpm : 0 });
     this.beatDur = 60 / e.bpm;
+    this.origin = e.startTime - this.offset * this.beatDur; // where count 1 would have been
+    // first target the player can hear
+    this.firstTarget = Math.max(0, Math.ceil((this.offset - mode.first) / mode.step));
     this.hitWindow = mode.step > 1 ? this.beatDur / 2 : level.hitMs / 1000;
     this.running = true;
   }
@@ -74,7 +84,7 @@ export class EarTest {
     if (!this.running) return null;
     const time = this.engine.heardTime(perfMs);
     const { first, step } = this.mode;
-    const fromStart = time - this.engine.startTime;
+    const fromStart = time - this.origin;
     const index = Math.max(0, Math.round((fromStart / this.beatDur - first) / step));
     const err = fromStart - (first + index * step) * this.beatDur;
     const result = (kind, ms = 0) => ({ kind, ms: Math.round(Math.abs(ms) * 1000), late: ms > 0, streak: this.streak, done: this.streak >= this.mode.need });
@@ -105,7 +115,7 @@ export class EarTest {
   checkMissed() {
     if (!this.running || this.streak === 0) return false;
     const { first, step } = this.mode;
-    const nextBeat = this.engine.startTime + (first + (this.lastHit + 1) * step) * this.beatDur;
+    const nextBeat = this.origin + (first + (this.lastHit + 1) * step) * this.beatDur;
     if (this.engine.heardTime() <= nextBeat + this.hitWindow) return false;
     this._miss();
     return true;
@@ -124,7 +134,7 @@ export class EarTest {
   finish() {
     const seconds = this.endTime - this.engine.startTime;
     const { first, step, need } = this.mode;
-    const fastest = (first + (need - 1) * step) * this.beatDur;
+    const fastest = (first + (this.firstTarget + need - 1) * step - this.offset) * this.beatDur;
     const avgError = mean(this.errs.map((x) => Math.min(Math.abs(x), this.hitWindow))) / this.hitWindow;
     this._teardown();
     return {
