@@ -560,6 +560,12 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 .tempo-btn:disabled { opacity: 0.3; cursor: default; }
 
 
+/* ------------------------------------------------------------ rounded corners */
+.tile, .game-card, .stage, .pick, .text-input { border-radius: 12px; }
+.tap-pad { border-radius: 16px; }
+.cta { border-radius: 999px; }
+.progress, .progress-bar { border-radius: 3px; }
+
 /* ------------------------------------------------------------ larger screens */
 /* 600 and 960 are the site's breakpoints */
 @media (min-width: 600px) {
