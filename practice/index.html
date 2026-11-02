@@ -14,9 +14,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Sacramento&display=swap" rel="stylesheet">
   <link rel="preload" href="fonts/Northwell.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/app.css?v=20261102190458">
+  <link rel="stylesheet" href="css/app.css?v=20261102192037">
 </head>
-<body>
+<body class="is-locked">
   <header class="top">
     <div class="top-inner">
       <div class="top-row">
@@ -35,6 +35,21 @@
       </nav>
     </div>
   </header>
+
+  <!-- ============================================================ CLUB GATE -->
+  <section class="gate" id="gate" hidden>
+    <p class="gate-lead" data-i18n="gate.lead">Aplikacija je za polaznike kluba. Upiši šifru iz Viber grupe.</p>
+    <form class="gate-form" id="gate-form" autocomplete="off">
+      <label class="field-label" for="gate-code" data-i18n="gate.label">Šifra kluba</label>
+      <div class="gate-row">
+        <input type="text" id="gate-code" class="text-input" autocapitalize="none" autocorrect="off" spellcheck="false" required>
+        <button class="cta" type="submit" data-i18n="gate.enter">Uđi</button>
+      </div>
+      <p class="gate-error" id="gate-error" role="alert"></p>
+    </form>
+    <p class="field-help" data-i18n="gate.help">Šifra se menja početkom meseca i stiže u Viber grupu.</p>
+    <p class="gate-links"><a href="/practice/about/" data-i18n="gate.about">Šta je ova aplikacija?</a><a href="https://ig.me/m/anitainikola" data-i18n="gate.join">Nisi polaznik? Piši nam na Instagramu</a></p>
+  </section>
 
   <main>
     <!-- ============================================================ RITAM -->
@@ -207,6 +222,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/app.js?v=20261102190458"></script>
+  <script type="module" src="js/app.js?v=20261102192037"></script>
 </body>
 </html>

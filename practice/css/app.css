@@ -657,3 +657,14 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 }
 
 .fine { margin: 40px 0 8px; font-size: 13px; color: var(--ink-600); }
+
+/* ------------------------------------------------------------ club gate */
+body.is-locked .tabs, body.is-locked main, body.is-locked .transport, body.is-locked .lang { display: none; }
+.gate { max-width: var(--max); margin: 0 auto; padding: 8px var(--pad) 48px; }
+.gate > * { max-width: 560px; }
+.gate-lead { margin: 0 0 22px; font-size: 17px; }
+.gate-row { display: flex; gap: 10px; align-items: center; }
+.gate-row .text-input { flex: 1; min-width: 0; }
+.gate-row .cta { flex: none; min-height: 50px; }
+.gate-error { min-height: 1.4em; margin: 8px 0 0; font-size: 14px; color: var(--red); }
+.gate-links { display: grid; gap: 10px; margin: 28px 0 0; }
