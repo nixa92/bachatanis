@@ -1,11 +1,11 @@
-import { Engine, CHANNELS } from './engine.js?v=20261102171018';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261102171018';
-import { KORACI } from './steps.js?v=20261102171018';
-import { FeetView } from './feet.js?v=20261102171018';
-import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261102171018';
-import * as store from './storage.js?v=20261102171018';
-import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261102171018';
-import { ICONS } from './icons.js?v=20261102171018';
+import { Engine, CHANNELS } from './engine.js?v=20261102171523';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261102171523';
+import { KORACI } from './steps.js?v=20261102171523';
+import { FeetView } from './feet.js?v=20261102171523';
+import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261102171523';
+import * as store from './storage.js?v=20261102171523';
+import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261102171523';
+import { ICONS } from './icons.js?v=20261102171523';
 
 const $ = (id) => document.getElementById(id);
 const engine = new Engine();
@@ -792,6 +792,33 @@ function leadInPos() {
   const frac = 1 - (engine.startTime - engine.heardTime()) / half;
   return { entry: { s: 15 }, frac: Math.max(0, Math.min(1, frac)) };
 }
+// Koraci with a real song: which pattern the feet show. It is decided once per phrase, by the beat on
+// count 1, so the feet never switch in the middle of an 8-count; every pattern starts and ends in the
+// same place, so a switch on count 1 is smooth:
+//   intro: weight shifts (if the switch is on), short: korak tap for a 4-beat bar (counts 1-4, then 1 again),
+//   step: the picked step.
+// The next beat's pattern is given too, so on the last beat the foot already travels to the next pattern's spot.
+function feetMode(pos) {
+  if (!engine.song) return {};
+  const beats = engine.song.meta.beats;
+  const patternAt = (i) => {
+    let k = i; // back to the phrase's count 1 (or the song's first beat)
+    while (k > 0 && i - k < 8 && beats[k][0] !== 1) k--;
+    if (introShift && beats[k][3] === 'intro') return 'intro';
+    if (beats[k][0] === 1 && beats[k + 3] && beats[k + 3][0] === 4 && beats[k + 4] && beats[k + 4][0] === 1) return 'short';
+    return 'step';
+  };
+  if (!pos) { // the lead-in before the song's first beat
+    const first = patternAt(0);
+    return { pattern: first, nextPattern: first, nextCount: beats[0][0] - 1 };
+  }
+  const b = pos.entry.phrase;
+  if (!beats[b]) return {};
+  const pattern = patternAt(b);
+  const nb = beats[b + 1];
+  if (!nb) return { pattern };
+  return { pattern, nextPattern: nb[0] === 1 ? patternAt(b + 1) : pattern, nextCount: nb[0] - 1 };
+}
 function frameBody() {
   // fall back to the scheduler clock if the output-latency estimate is off (some browsers)
   // while paused, and just after resuming, the picture holds the paused position
@@ -807,8 +834,7 @@ function frameBody() {
     lightLanes(pos ? pos.entry.s : -1);
     if (engine.playing && !engine.song && pos && pos.entry.section !== currentSection) drawLanes(pos.entry.section);
   } else if (state.screen === 'koraci') {
-    const intro = !!(engine.song && pos && pos.entry.section === 'intro' && introShift);
-    const fci = feet.render(pos || leadInPos(), { intro });
+    const fci = feet.render(pos || leadInPos(), feetMode(pos));
     lightCells(barCells, pos ? fci : -1);
   } else if (state.screen === 'test' && test.running) {
     $('run-time').textContent = seconds(test.elapsed());

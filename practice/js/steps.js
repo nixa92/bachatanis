@@ -150,13 +150,14 @@ export const KORACI = [
     naziv_en: 'Cross back',
     opis: 'Kao osnovni, samo na 2 desna staje iza leve, a na 6 leva iza desne.',
     opis_en: 'Like the basic, but on 2 the right foot steps behind the left, and on 6 the left behind the right.',
+    // manji prvi korak (1 i 5), da ukrštena noga stane iza bez preklapanja (stopala su 0.4 razmaknuta)
     brojevi: [
-      { noga: 'L', x: -1.0, y: 0 },                     // 1 leva u stranu
-      { noga: 'D', x: -1.25, y: -0.4, iza: true },      // 2 desna iza leve, ukršteno
-      { noga: 'L', x: -1.7, y: 0 },                     // 3 leva u stranu
-      { noga: 'D', x: -1.1, y: 0, tap: true },          // 4 tap desnom
-      { noga: 'D', x: -0.4, y: 0 },                     // 5 desna u stranu
-      { noga: 'L', x: -0.15, y: -0.4, iza: true },      // 6 leva iza desne, ukršteno
+      { noga: 'L', x: -0.85, y: 0 },                    // 1 leva u stranu, manji korak
+      { noga: 'D', x: -1.25, y: -0.45, iza: true },     // 2 desna iza leve, ukršteno
+      { noga: 'L', x: -1.65, y: 0 },                    // 3 leva u stranu
+      { noga: 'D', x: -1.05, y: 0, tap: true },         // 4 tap desnom
+      { noga: 'D', x: -0.5, y: 0 },                     // 5 desna u stranu, manji korak
+      { noga: 'L', x: -0.1, y: -0.45, iza: true },      // 6 leva iza desne, ukršteno
       { noga: 'D', x: 0.3, y: 0 },                      // 7 desna u stranu
       { noga: 'L', x: -0.3, y: 0, tap: true },          // 8 tap levom
     ],

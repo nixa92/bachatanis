@@ -302,7 +302,7 @@ input[type="range"] { accent-color: var(--red); width: 100%; min-height: 32px; }
 .tile .tile-vol { margin: auto 14px 4px; width: auto; min-width: 0; }
 
 /* a setting with its switch on the right */
-.switch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; padding: 12px 14px; background: var(--paper); box-shadow: inset 0 0 0 1px var(--red-20); font-size: 16px; color: var(--ink); cursor: pointer; user-select: none; -webkit-user-select: none; }
+.switch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 6px 10px; border-bottom: 1px solid var(--red-20); font-size: 16px; color: var(--ink); cursor: pointer; user-select: none; -webkit-user-select: none; }
 .switch-row:active .switch-thumb { width: 26px; height: 26px; margin-top: -13px; }
 
 /* Material-style switch */
@@ -602,7 +602,7 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 
 
 /* ------------------------------------------------------------ rounded corners */
-.tile, .game-card, .stage, .switch-row { border-radius: 20px; }
+.tile, .game-card, .stage { border-radius: 20px; }
 .tap-pad { border-radius: 28px; }
 .text-input { border-radius: 16px; }
 .pick { border-radius: 999px; }

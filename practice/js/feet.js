@@ -1,5 +1,5 @@
-import { t } from './i18n.js?v=20261102171018';
-import { KORACI, NOGA_NA_NOGU } from './steps.js?v=20261102171018';
+import { t } from './i18n.js?v=20261102171523';
+import { KORACI, NOGA_NA_NOGU } from './steps.js?v=20261102171523';
 // Top-down feet animation for the Koraci screen.
 // Positions come from steps.js; time comes from the audio engine (positionAt),
 // so the feet land exactly on the counts you hear.
@@ -100,6 +100,7 @@ export class FeetView {
     const add = (role, place, source = step) => {
       const data = buildStates(source, role);
       data.intro = buildStates(NOGA_NA_NOGU, role); // shown in a song's intro when the option is on
+      data.short = buildStates(KORACI.find((k) => k.id === 'korak-tap'), role); // a song's 4-beat bar
       const g = el('g', { class: `person person-${role}` });
       this.svg.appendChild(g);
       const feet = {};
@@ -141,9 +142,13 @@ export class FeetView {
   }
 
   // pos: {entry, frac} from engine.positionAt, or null when stopped.
-  // intro: true to show the weight shifts of a song's intro instead of the step.
+  // pattern: 'step' (the picked step), 'intro' (the weight shifts of a song's intro) or 'short'
+  // (korak tap, for a song's 4-beat bar: it takes 4 counts and ends where it started).
+  // nextPattern, nextCount: the pattern and count (0..7) of the next beat, when it is not simply the
+  // next count of the same pattern (a new phrase with another pattern, or a 4-beat bar);
+  // the foot then already travels to where the next pattern puts it, so it never jumps.
   // Returns the current count index (0..7) or -1.
-  render(pos, { intro = false } = {}) {
+  render(pos, { pattern = 'step', nextPattern = pattern, nextCount = null } = {}) {
     let ci = 7, f = 0, idle = true;
     if (pos) {
       const b = (pos.entry.s + pos.frac) / 2; // beats into the phrase, 0..8
@@ -152,10 +157,12 @@ export class FeetView {
       idle = false;
     }
     for (const person of this.persons) {
-      const p = intro ? { ...person, ...person.intro } : person;
+      const pick = (name) => (name === 'step' ? person : person[name]);
+      const p = { ...person, ...pick(pattern) };
+      const nextMoves = pick(nextPattern).moves;
       const st = p.states[ci];
       const cur = p.moves[ci];
-      const next = p.moves[(ci + 1) % 8];
+      const next = nextMoves[nextCount ?? (ci + 1) % 8];
       for (const foot of ['L', 'D']) {
         let [x, y] = st.pos[foot];
         let angle = st.footAngle[foot];
@@ -173,7 +180,7 @@ export class FeetView {
           y += (next.y - y) * k;
           lift = Math.sin(Math.PI * k);
           angle += next.spin * k; // the foot turns only in the air
-          onBall = next.tap;
+          onBall = false; // a foot in the air touches nothing, so it is drawn empty (e.g. between the two taps of dupli tap)
         }
         // no flash in the middle of a slide, only where it ends
         const sliding = next && next.vuci && cur && next.noga === cur.noga;
