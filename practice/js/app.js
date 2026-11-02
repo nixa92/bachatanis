@@ -1,11 +1,11 @@
-import { Engine, CHANNELS } from './engine.js?v=20261102171523';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261102171523';
-import { KORACI } from './steps.js?v=20261102171523';
-import { FeetView } from './feet.js?v=20261102171523';
-import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261102171523';
-import * as store from './storage.js?v=20261102171523';
-import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261102171523';
-import { ICONS } from './icons.js?v=20261102171523';
+import { Engine, CHANNELS } from './engine.js?v=20261102171646';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261102171646';
+import { KORACI } from './steps.js?v=20261102171646';
+import { FeetView } from './feet.js?v=20261102171646';
+import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261102171646';
+import * as store from './storage.js?v=20261102171646';
+import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261102171646';
+import { ICONS } from './icons.js?v=20261102171646';
 
 const $ = (id) => document.getElementById(id);
 const engine = new Engine();
@@ -397,7 +397,6 @@ async function pickMusic(id) {
   }
   status.textContent = t('song.loading', { done: 0, total: meta.tracks.length });
   setLoading(true);
-  const t0 = performance.now();
   try {
     const song = await engine.loadSong(meta, (done, total) => {
       if (load === songLoad) status.textContent = t('song.loading', { done, total });
@@ -416,8 +415,7 @@ async function pickMusic(id) {
     setBpm(genBpm);
     return;
   }
-  // for testing on phones: how long the song took to load (remove before launch)
-  status.textContent = t('song.loadedIn', { s: `${((performance.now() - t0) / 1000).toFixed(1).replace('.', t('decimal'))} s` });
+  status.textContent = '';
   const box = $('song-mixer');
   box.textContent = '';
   songTiles = meta.tracks.map((tr, n) => ({
