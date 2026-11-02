@@ -102,6 +102,7 @@ h3 {
   text-decoration: none;
   text-align: center;
   transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+  border-radius: 999px; /* pill, like the app */
 }
 .cta:hover { background: var(--red-hover); }
 .cta:active { background: var(--red-press); }

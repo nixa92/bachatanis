@@ -668,3 +668,4 @@ body.is-locked .tabs, body.is-locked main, body.is-locked .transport, body.is-lo
 .gate-row .cta { flex: none; min-height: 50px; }
 .gate-error { min-height: 1.4em; margin: 8px 0 0; font-size: 14px; color: var(--red); }
 .gate-links { display: grid; gap: 10px; margin: 28px 0 0; }
+.gate-links a { color: var(--red); font-weight: 600; text-underline-offset: 3px; }

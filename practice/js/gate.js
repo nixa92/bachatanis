@@ -1,8 +1,8 @@
 // Club gate: the app opens only after the player types the club code (shared in the club's Viber group).
 // The code changes about once a month; a phone that knows the current code is let in at once.
 // This only stops casual visitors (the site is static); real accounts may come later.
-import { CODE_HASH } from './access.js?v=20261102193147';
-import { applyStatic, t } from './i18n.js?v=20261102193147';
+import { CODE_HASH } from './access.js?v=20261102194158';
+import { applyStatic, t } from './i18n.js?v=20261102194158';
 
 const KEY = 'vezbaj.pristup';
 const $ = (id) => document.getElementById(id);
