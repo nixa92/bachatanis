@@ -1,11 +1,11 @@
-import { Engine, CHANNELS } from './engine.js?v=20261102181249';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261102181249';
-import { KORACI } from './steps.js?v=20261102181249';
-import { FeetView } from './feet.js?v=20261102181249';
-import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261102181249';
-import * as store from './storage.js?v=20261102181249';
-import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261102181249';
-import { ICONS } from './icons.js?v=20261102181249';
+import { Engine, CHANNELS } from './engine.js?v=20261102181819';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261102181819';
+import { KORACI } from './steps.js?v=20261102181819';
+import { FeetView } from './feet.js?v=20261102181819';
+import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261102181819';
+import * as store from './storage.js?v=20261102181819';
+import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261102181819';
+import { ICONS } from './icons.js?v=20261102181819';
 
 const $ = (id) => document.getElementById(id);
 const engine = new Engine();
