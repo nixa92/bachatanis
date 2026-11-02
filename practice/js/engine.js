@@ -3,9 +3,9 @@
 // and get the step that is sounding right now, so sound and picture stay locked
 // even when the tempo changes mid-play.
 
-import * as I from './instruments.js?v=20261102181819';
-import * as P from './patterns.js?v=20261102181819';
-import { SampleBank } from './samples.js?v=20261102181819';
+import * as I from './instruments.js?v=20261102190458';
+import * as P from './patterns.js?v=20261102190458';
+import { SampleBank } from './samples.js?v=20261102190458';
 
 export const STEPS_PER_PHRASE = 16;
 const LOOKAHEAD = 0.18;    // schedule this far ahead (s); a count word may start up to 0.15 s before its beat

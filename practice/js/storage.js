@@ -11,6 +11,7 @@ const NAME_KEY = 'vezbaj.ime';
 export function saveRun(run) {
   const clean = {
     id: run.id,
+    docId: run.docId, // the game's document in the online leaderboard
     name: String(run.name || '').trim().slice(0, 40),
     mode: run.mode,
     level: run.level,
@@ -36,9 +37,6 @@ export function getRuns() {
   return readAll();
 }
 
-export function clearResults() {
-  try { localStorage.removeItem(RESULTS_KEY); } catch (e) { /* ignore */ }
-}
 
 export function getName() {
   try { return localStorage.getItem(NAME_KEY) || ''; } catch (e) { return ''; }

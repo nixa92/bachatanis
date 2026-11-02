@@ -186,9 +186,9 @@ main { max-width: var(--max); margin: 0 auto; padding: 18px var(--pad) 0; }
   border: 0;
   background: none;
   border-radius: 999px;
-  padding: 8px 16px;
-  min-height: 40px;
-  font-size: 15px;
+  padding: 6px 14px;
+  min-height: 34px; /* compact: as wide as the labels, not the screen (owner) */
+  font-size: 14px;
   font-weight: 600;
   line-height: 1.2;
   color: var(--ink);
@@ -336,9 +336,6 @@ input[type="range"] { accent-color: var(--red); width: 100%; min-height: 32px; }
   .tile-head .switch { grid-area: switch; }
   .tile-name { grid-area: name; overflow-wrap: normal; }
   .tile .tile-vol { margin-left: 12px; margin-right: 12px; }
-  /* three long labels must fit the phone width */
-  .seg { display: grid; width: 100%; }
-  .seg button { padding: 8px 6px; font-size: 14px; }
 }
 .tile.is-off { background: rgba(247, 243, 236, 0.5); box-shadow: inset 0 0 0 1px var(--ink-15); }
 .tile.is-off .tile-icon { color: var(--ink-600); opacity: 0.45; }
@@ -412,9 +409,9 @@ input[type="range"] { accent-color: var(--red); width: 100%; min-height: 32px; }
   width: 100%;
   max-width: 360px;
   border: 0;
-  border-bottom: 1px solid var(--red-50);
+  box-shadow: inset 0 0 0 1px var(--red-20); /* the same outline as the pickers */
   background: var(--paper);
-  padding: 12px 12px 10px;
+  padding: 12px 12px 11px;
   font-size: 17px;
 }
 .text-input:focus-visible { outline-offset: 2px; }
@@ -475,6 +472,21 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 .result-actions { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: center; margin-top: 14px; }
 
 .game-list { display: grid; gap: 10px; margin-bottom: 16px; }
+/* leaderboard: under the game cards */
+.board { display: grid; justify-items: start; gap: 10px; margin: 28px 0 20px; }
+.board .field-label { margin-bottom: 0; }
+/* the title with the period picker on its right */
+.board-head { justify-self: stretch; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.pick.pick-small { width: auto; min-height: 0; height: 36px; font-size: 14px; padding: 7px 38px 7px 14px; background-position: right 14px center; }
+.board-list { justify-self: stretch; list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.board-row { display: grid; grid-template-columns: 2em minmax(0, 1fr) auto auto; align-items: baseline; gap: 10px; padding: 10px 14px; border-radius: 14px; background: var(--paper); box-shadow: inset 0 0 0 1px var(--red-20); font-variant-numeric: tabular-nums; }
+.board-row.is-me { box-shadow: inset 0 0 0 2px var(--red); }
+.board-rank { font-family: var(--font-display); font-weight: 800; color: var(--red); }
+.board-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.board-level { font-size: 13px; color: var(--ink-600); }
+.board-total { font-family: var(--font-display); font-weight: 800; }
+.board-note { padding: 10px 2px; color: var(--ink-600); }
+.board-me { justify-self: stretch; margin: 0; font-size: 14px; color: var(--ink-600); }
 .game-card { display: grid; gap: 4px; width: 100%; padding: 16px 18px; text-align: left; font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--red-50); cursor: pointer; }
 .game-card:hover { border-color: var(--red); }
 .game-card b { font-family: var(--font-display); font-weight: 800; font-size: 20px; color: var(--red); }
@@ -607,7 +619,7 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 /* ------------------------------------------------------------ rounded corners */
 .tile, .game-card, .stage { border-radius: 20px; }
 .tap-pad { border-radius: 28px; }
-.text-input { border-radius: 16px; }
+.text-input { border-radius: 999px; padding-left: 20px; padding-right: 20px; } /* pill, like the pickers */
 .pick { border-radius: 999px; }
 .cta { border-radius: 999px; }
 .legend-foot { border-radius: 50%; }

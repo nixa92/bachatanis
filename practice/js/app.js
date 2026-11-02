@@ -1,11 +1,12 @@
-import { Engine, CHANNELS } from './engine.js?v=20261102181819';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261102181819';
-import { KORACI } from './steps.js?v=20261102181819';
-import { FeetView } from './feet.js?v=20261102181819';
-import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261102181819';
-import * as store from './storage.js?v=20261102181819';
-import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261102181819';
-import { ICONS } from './icons.js?v=20261102181819';
+import { Engine, CHANNELS } from './engine.js?v=20261102190458';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261102190458';
+import { KORACI } from './steps.js?v=20261102190458';
+import { FeetView } from './feet.js?v=20261102190458';
+import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261102190458';
+import * as store from './storage.js?v=20261102190458';
+import * as board from './leaderboard.js?v=20261102190458';
+import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261102190458';
+import { ICONS } from './icons.js?v=20261102190458';
 
 const $ = (id) => document.getElementById(id);
 const engine = new Engine();
@@ -27,6 +28,7 @@ onLangChange((l) => {
   showSongMode(!!engine.song);
   buildSeek();
   renderGames();
+  renderBoard();
   renderIntro();
   renderStepList();
   setupFeet();
@@ -607,6 +609,7 @@ function showTestPart(part) {
   $('test-result').hidden = part !== 'result';
   if (part === 'run') window.scrollTo(0, 0);
   if (part === 'result') $('test-result').scrollIntoView();
+  if (part === 'intro') renderBoard();
 }
 
 const showStreak = (n) => {
@@ -676,14 +679,20 @@ function addToRun(r) {
   run.points[r.level] = r.points;
   run.total = Object.values(run.points).reduce((sum, p) => sum + p, 0);
   store.saveRun({
-    id: run.id, name: r.name, mode: run.mode, date: r.date,
+    id: run.id, docId: run.docId, name: run.name, mode: run.mode, date: r.date,
     level: Math.max(...Object.keys(run.points).map(Number)),
     total: run.total,
   });
+  // the online leaderboard: the same document grows by one level; the name stays the one the game started with
+  const points = Object.keys(run.points).map(Number).sort((a, b) => a - b).map((l) => run.points[l]);
+  board.submitRun({ docId: run.docId, name: run.name, mode: run.mode, points, month: run.month })
+    .catch((e) => console.warn('[tabela] not saved:', e.message));
 }
 $('test-start').addEventListener('click', () => {
   state.level = 1;
-  run = { id: Date.now(), mode: state.mode, points: {}, tracks: shuffled(NUMERE.map((n) => n.id)), songs: songsForGame(songList) };
+  const name = $('player-name').value.trim();
+  store.setName(name);
+  run = { id: Date.now(), docId: board.newRunId(), month: board.monthOf(), name, mode: state.mode, points: {}, tracks: shuffled(NUMERE.map((n) => n.id)), songs: songsForGame(songList) };
   startTest(state.mode, $('test-start'));
 });
 $('res-next').addEventListener('click', () => { state.level++; startTest(state.mode, $('res-next')); });
@@ -747,7 +756,6 @@ function offsetText(ms) {
 
 function renderGames() {
   const runs = store.getRuns();
-  $('history-clear').hidden = runs.length === 0;
   $('game-list').innerHTML = Object.keys(MODES).map((mode) => {
     const mine = runs.filter((r) => r.mode === mode);
     const top = mine.length ? mine.reduce((a, b) => (b.total > a.total ? b : a)) : null;
@@ -767,10 +775,43 @@ function renderIntro() {
   $('intro-steps').innerHTML = [t('intro.music'), t(`mode.${state.mode}.how`), t(`goal.${state.mode}`), t('intro.miss'), t('intro.speed', { total: LEVELS.length })]
     .map((l) => `<li>${l}</li>`).join('');
 }
-$('history-clear').addEventListener('click', () => {
-  if (confirm(t('hist.confirm'))) { store.clearResults(); renderGames(); }
-});
 renderGames();
+
+// ------------------------------------------------------------ leaderboard
+const boardView = { period: 'month' }; // the game is the one opened (state.mode)
+let boardLoad = 0;
+$('board-period').addEventListener('change', (e) => { boardView.period = e.target.value; renderBoard(); });
+async function renderBoard() {
+  if ($('test-intro').hidden) return;
+  boardView.mode = state.mode;
+  const load = ++boardLoad;
+  const list = $('board-list');
+  const me = $('board-me');
+  const month = boardView.period === 'month' ? board.monthOf() : null;
+  if (!list.children.length || list.dataset.view !== `${boardView.mode}/${boardView.period}`) {
+    list.innerHTML = `<li class="board-note">${escapeHtml(t('board.loading'))}</li>`;
+  }
+  let rows;
+  try {
+    rows = await board.topRuns(boardView.mode, month);
+  } catch (e) {
+    console.warn('[tabela]', e.message);
+    if (load === boardLoad) { list.innerHTML = `<li class="board-note">${escapeHtml(t('board.error'))}</li>`; me.hidden = true; }
+    return;
+  }
+  if (load !== boardLoad) return;
+  list.dataset.view = `${boardView.mode}/${boardView.period}`;
+  // this phone's own games are highlighted; its best game is shown below if it is not in the list
+  const mine = store.getRuns().filter((r) => r.mode === boardView.mode && r.docId && (!month || board.monthOf(new Date(r.date)) === month));
+  const myIds = new Set(mine.map((r) => r.docId));
+  list.innerHTML = rows.length
+    ? rows.map((r, i) => `<li class="board-row${myIds.has(r.id) ? ' is-me' : ''}"><span class="board-rank">${i + 1}.</span><span class="board-name">${escapeHtml(r.name)}</span><span class="board-level">${escapeHtml(t('board.level', { level: r.level }))}</span><b class="board-total">${escapeHtml(t('board.points', { total: r.total }))}</b></li>`).join('')
+    : `<li class="board-note">${escapeHtml(t('board.empty'))}</li>`;
+  const best = mine.length ? mine.reduce((a, b) => (b.total > a.total ? b : a)) : null;
+  me.hidden = !best || rows.some((r) => myIds.has(r.id));
+  if (best) me.textContent = t('board.me', { total: best.total, level: best.level });
+}
+renderBoard();
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

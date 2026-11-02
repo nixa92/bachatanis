@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Sacramento&display=swap" rel="stylesheet">
   <link rel="preload" href="fonts/Northwell.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/app.css?v=20261102181819">
+  <link rel="stylesheet" href="css/app.css?v=20261102190458">
 </head>
 <body>
   <header class="top">
@@ -123,7 +123,6 @@
       <div class="test-setup" id="test-setup">
         <p class="field-label" data-i18n="games.pick">Izaberi igru</p>
         <div class="game-list" id="game-list"></div>
-        <button class="btn-quiet" id="history-clear" type="button" hidden data-i18n="hist.clear">Obriši rezultate</button>
       </div>
 
       <div class="test-intro" id="test-intro" hidden>
@@ -132,10 +131,24 @@
         <div class="field">
           <label class="field-label" for="player-name" data-i18n="name.label">Tvoje ime</label>
           <input type="text" id="player-name" class="text-input" maxlength="40" autocomplete="given-name" placeholder="Nije obavezno" data-i18n-placeholder="name.placeholder">
+          <p class="field-help" data-i18n="name.help">Sa imenom se tvoj rezultat prikazuje na tabeli najboljih.</p>
         </div>
-        <button class="cta" id="test-start" type="button" data-i18n="test.start">Kreni</button>
+        <div class="result-actions">
+          <button class="cta" id="test-start" type="button" data-i18n="test.start">Kreni</button>
+          <button class="btn-quiet" id="intro-back" type="button" data-i18n="res.back">Izaberi drugu igru</button>
+        </div>
         <p class="hint" data-i18n="hint.test">Bluetooth slušalice kasne, pa rezultat neće biti tačan. Koristi zvučnik telefona ili slušalice na žicu.</p>
-        <button class="btn-quiet" id="intro-back" type="button" data-i18n="res.back">Izaberi drugu igru</button>
+        <section class="board" aria-labelledby="board-title">
+          <div class="board-head">
+            <p class="field-label" id="board-title" data-i18n="board.title">Tabela najboljih</p>
+            <select class="pick pick-small" id="board-period" aria-labelledby="board-title">
+              <option value="month" data-i18n="board.month">Ovaj mesec</option>
+              <option value="all" data-i18n="board.all">Sva vremena</option>
+            </select>
+          </div>
+          <ol class="board-list" id="board-list" aria-live="polite"></ol>
+          <p class="board-me" id="board-me" hidden></p>
+        </section>
       </div>
 
       <div class="test-run" id="test-run" hidden>
@@ -194,6 +207,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/app.js?v=20261102181819"></script>
+  <script type="module" src="js/app.js?v=20261102190458"></script>
 </body>
 </html>
