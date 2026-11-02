@@ -1,5 +1,5 @@
-import { t } from './i18n.js?v=20261102165317';
-import { KORACI, NOGA_NA_NOGU } from './steps.js?v=20261102165317';
+import { t } from './i18n.js?v=20261102171018';
+import { KORACI, NOGA_NA_NOGU } from './steps.js?v=20261102171018';
 // Top-down feet animation for the Koraci screen.
 // Positions come from steps.js; time comes from the audio engine (positionAt),
 // so the feet land exactly on the counts you hear.
@@ -26,11 +26,12 @@ export function moveLabel(m) {
 export function buildStates(step, role) {
   const moves = step.brojevi.map((b) => !b ? null
     : role === 'vodja'
-      ? { noga: b.noga, x: b.x, y: b.y, tap: !!b.tap, ugao: b.ugao }
-      // in a turn the follower is a left-right mirror, so y stays; otherwise she goes back when the lead goes forward
-      : b.ugao === undefined
-        ? { noga: SWAP[b.noga], x: -b.x, y: -b.y, tap: !!b.tap }
-        : { noga: SWAP[b.noga], x: -b.x, y: b.y, tap: !!b.tap, ugao: -b.ugao });
+      ? { noga: b.noga, x: b.x, y: b.y, tap: !!b.tap, ugao: b.ugao, vuci: !!b.vuci }
+      // in a turn or a cross behind the follower is a left-right mirror, so y stays;
+      // otherwise she goes back when the lead goes forward
+      : b.ugao === undefined && !b.iza
+        ? { noga: SWAP[b.noga], x: -b.x, y: -b.y, tap: !!b.tap, vuci: !!b.vuci }
+        : { noga: SWAP[b.noga], x: -b.x, y: b.y, tap: !!b.tap, vuci: !!b.vuci, ugao: b.ugao === undefined ? undefined : -b.ugao });
   const pos = {};
   const real = moves.filter(Boolean); // counts where a foot moves (null = both feet hold)
   for (const foot of ['L', 'D']) {
@@ -160,8 +161,13 @@ export class FeetView {
         let angle = st.footAngle[foot];
         let lift = 0;
         let onBall = !idle && st.tapped[foot];
-        // the foot of the next count travels during the second half of the beat
-        if (!idle && next && next.noga === foot && f > 0.5) {
+        // the foot of the next count travels during the second half of the beat;
+        // a sliding foot (vuci) moves along the floor through the whole beat, so the slide looks continuous
+        if (!idle && next && next.noga === foot && next.vuci) {
+          x += (next.x - x) * f;
+          y += (next.y - y) * f;
+          onBall = true;
+        } else if (!idle && next && next.noga === foot && f > 0.5) {
           const k = ease((f - 0.5) / 0.5);
           x += (next.x - x) * k;
           y += (next.y - y) * k;
@@ -169,7 +175,9 @@ export class FeetView {
           angle += next.spin * k; // the foot turns only in the air
           onBall = next.tap;
         }
-        const flash = !idle && cur && cur.tap && cur.noga === foot ? Math.max(0, 1 - f / 0.55) : 0;
+        // no flash in the middle of a slide, only where it ends
+        const sliding = next && next.vuci && cur && next.noga === cur.noga;
+        const flash = !idle && cur && cur.tap && cur.noga === foot && !sliding ? Math.max(0, 1 - f / 0.55) : 0;
         const [sx, sy] = p.place.map(x, y);
         updateFoot(p.feet[foot], sx, sy, p.place.rot + angle, st.weight === foot, lift, flash, onBall);
       }

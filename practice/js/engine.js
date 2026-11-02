@@ -3,9 +3,9 @@
 // and get the step that is sounding right now, so sound and picture stay locked
 // even when the tempo changes mid-play.
 
-import * as I from './instruments.js?v=20261102165317';
-import * as P from './patterns.js?v=20261102165317';
-import { SampleBank } from './samples.js?v=20261102165317';
+import * as I from './instruments.js?v=20261102171018';
+import * as P from './patterns.js?v=20261102171018';
+import { SampleBank } from './samples.js?v=20261102171018';
 
 export const STEPS_PER_PHRASE = 16;
 const LOOKAHEAD = 0.18;    // schedule this far ahead (s); a count word may start up to 0.15 s before its beat
@@ -111,13 +111,23 @@ export class Engine {
   // A whole song decoded is large (a 4-minute track at 48 kHz is about 50 MB), and a phone can refuse to
   // decode more. So tracks are decoded at 32 kHz (a third less memory, no audible loss for practice)
   // and one after another, so the memory peak stays low.
-  async loadSong(meta, onProgress = () => {}) {
+  // parallel: decode every track at once. Faster where the browser decodes on several threads, but the
+  // memory peak is higher (each running decode keeps a temporary buffer of about 45 MB), so the game,
+  // which loads the next level's song while the current one is still in memory, stays one at a time.
+  async loadSong(meta, onProgress = () => {}, { parallel = false } = {}) {
     this.prepare();
-    const buffers = [];
-    for (let n = 0; n < meta.tracks.length; n++) {
-      const res = await this._songFile(meta, n);
-      buffers.push(await this._decodeSong(await res.arrayBuffer()));
-      onProgress(n + 1, meta.tracks.length);
+    const total = meta.tracks.length;
+    let buffers = [];
+    if (parallel) {
+      const files = await Promise.all(meta.tracks.map((_, n) => this._songFile(meta, n).then((r) => r.arrayBuffer())));
+      let done = 0;
+      buffers = await Promise.all(files.map((data) => this._decodeSong(data).then((buf) => { onProgress(++done, total); return buf; })));
+    } else {
+      for (let n = 0; n < total; n++) {
+        const res = await this._songFile(meta, n);
+        buffers.push(await this._decodeSong(await res.arrayBuffer()));
+        onProgress(n + 1, total);
+      }
     }
     return { meta, buffers, mix: meta.tracks.map(() => ({ vol: 0.6, mute: false })) }; // 0.6 = the middle of the slider (0-1.2)
   }

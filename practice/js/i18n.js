@@ -21,6 +21,7 @@ const DICT = {
     'game.fallback': 'Pesma nije učitana, svira generisana muzika.',
     'muzika.gen': 'Generisana – Podesivi tempo',
     'song.loading': 'Učitavam pesmu… {done} od {total} instrumenata',
+    'song.loadedIn': 'Pesma učitana za {s}',
     'song.error': 'Pesma nije učitana. Proveri internet i izaberi je ponovo.',
     'preset.song': 'Original',
     'section.song': 'Izaberi prikaz ritma',
@@ -63,7 +64,6 @@ const DICT = {
 
     'step.label': 'Izaberi korak',
     'introShift.label': 'S noge na nogu u intro delovima',
-    'introShift.help': 'Uz pravu pesmu: dok traje intro, težina ide s noge na nogu, duplo sporije, dok ne krene bachata.',
     'view.label': 'Izaberi prikaz',
     'role.vodja': 'Leader',
     'role.pratilja': 'Follower',
@@ -185,6 +185,7 @@ const DICT = {
     'game.fallback': 'The song did not load, the generated music plays.',
     'muzika.gen': 'Generated – Adjustable tempo',
     'song.loading': 'Loading the song… {done} of {total} instruments',
+    'song.loadedIn': 'Song loaded in {s}',
     'song.error': 'The song did not load. Check your internet and pick it again.',
     'preset.song': 'Original',
     'section.song': 'Pick the rhythm view',
@@ -227,7 +228,6 @@ const DICT = {
 
     'step.label': 'Pick a step',
     'introShift.label': 'Weight shifts in the intro',
-    'introShift.help': 'With a real song: during the intro the weight shifts from foot to foot, half as fast, until the bachata starts.',
     'view.label': 'Pick a view',
     'role.vodja': 'Leader',
     'role.pratilja': 'Follower',

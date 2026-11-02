@@ -1,11 +1,11 @@
-import { Engine, CHANNELS } from './engine.js?v=20261102165317';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261102165317';
-import { KORACI } from './steps.js?v=20261102165317';
-import { FeetView } from './feet.js?v=20261102165317';
-import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261102165317';
-import * as store from './storage.js?v=20261102165317';
-import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261102165317';
-import { ICONS } from './icons.js?v=20261102165317';
+import { Engine, CHANNELS } from './engine.js?v=20261102171018';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261102171018';
+import { KORACI } from './steps.js?v=20261102171018';
+import { FeetView } from './feet.js?v=20261102171018';
+import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261102171018';
+import * as store from './storage.js?v=20261102171018';
+import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261102171018';
+import { ICONS } from './icons.js?v=20261102171018';
 
 const $ = (id) => document.getElementById(id);
 const engine = new Engine();
@@ -376,10 +376,13 @@ function renderSongTiles() {
 function setLoading(on) {
   $('play').disabled = on;
   $('play').classList.toggle('is-loading', on);
+  $('play').setAttribute('aria-busy', String(on));
 }
 async function pickMusic(id) {
   const load = ++songLoad;
   if (engine.playing || engine.pausedPos) { engine.stop(); renderPlay(); }
+  // let go of the previous song's sound now, so it is not in memory while the new song decodes (~270 MB)
+  if (engine.song) engine.song.buffers = null;
   setLoading(false);
   try { localStorage.setItem(MUSIC_KEY, id); } catch (e) { /* private mode */ }
   const status = $('song-status');
@@ -394,10 +397,11 @@ async function pickMusic(id) {
   }
   status.textContent = t('song.loading', { done: 0, total: meta.tracks.length });
   setLoading(true);
+  const t0 = performance.now();
   try {
     const song = await engine.loadSong(meta, (done, total) => {
       if (load === songLoad) status.textContent = t('song.loading', { done, total });
-    });
+    }, { parallel: true });
     if (load !== songLoad) return;
     engine.song = song;
     setLoading(false);
@@ -412,7 +416,8 @@ async function pickMusic(id) {
     setBpm(genBpm);
     return;
   }
-  status.textContent = '';
+  // for testing on phones: how long the song took to load (remove before launch)
+  status.textContent = t('song.loadedIn', { s: `${((performance.now() - t0) / 1000).toFixed(1).replace('.', t('decimal'))} s` });
   const box = $('song-mixer');
   box.textContent = '';
   songTiles = meta.tracks.map((tr, n) => ({
@@ -556,9 +561,14 @@ stepList.addEventListener('change', () => { state.step = KORACI.find((k) => k.id
 bindSeg(seg('view'), (v) => { state.view = v; setupFeet(); });
 // "S noge na nogu u intro delovima": in a song's intro the feet shift weight at half speed instead of the step
 const SHIFT_KEY = 'vezbaj.nogaNaNogu';
-try { $('intro-shift').checked = localStorage.getItem(SHIFT_KEY) !== 'off'; } catch (e) { /* private mode */ }
-$('intro-shift').addEventListener('change', (e) => {
-  try { localStorage.setItem(SHIFT_KEY, e.target.checked ? 'on' : 'off'); } catch (err) { /* private mode */ }
+let introShift = true;
+try { introShift = localStorage.getItem(SHIFT_KEY) !== 'off'; } catch (e) { /* private mode */ }
+$('intro-shift').setAttribute('aria-checked', String(introShift));
+// the switch toggles; tapping the text does the same
+$('intro-shift-row').addEventListener('click', () => {
+  introShift = !introShift;
+  $('intro-shift').setAttribute('aria-checked', String(introShift));
+  try { localStorage.setItem(SHIFT_KEY, introShift ? 'on' : 'off'); } catch (err) { /* private mode */ }
 });
 function setupFeet() {
   feet.setStep(state.step, state.view);
@@ -797,7 +807,7 @@ function frameBody() {
     lightLanes(pos ? pos.entry.s : -1);
     if (engine.playing && !engine.song && pos && pos.entry.section !== currentSection) drawLanes(pos.entry.section);
   } else if (state.screen === 'koraci') {
-    const intro = !!(engine.song && pos && pos.entry.section === 'intro' && $('intro-shift').checked);
+    const intro = !!(engine.song && pos && pos.entry.section === 'intro' && introShift);
     const fci = feet.render(pos || leadInPos(), { intro });
     lightCells(barCells, pos ? fci : -1);
   } else if (state.screen === 'test' && test.running) {

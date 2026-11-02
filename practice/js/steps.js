@@ -16,6 +16,13 @@
 //    { noga: 'L', x: -1.1, y: 0, ugao: -90 }  noga se okreće samo dok je u vazduhu; noga na kojoj se stoji miruje.
 //    Red bez ugla zadržava prethodni pravac. Okret ima tri prenosa težine; na trećem napiši ugao -360 ili 360, a tap posle njega je bez ugla.
 //
+//  Iza (cross back): dodaj iza: true kad noga staje iza druge. Tada je i kod pratilje iza
+//    (inače se pratilja računa kao ogledalo napred <-> nazad).
+//    { noga: 'D', x: -0.85, y: -0.35, iza: true }
+//
+//  Vučenje (slide): dodaj vuci: true kad noga klizi po podu do te tačke, bez podizanja.
+//    { noga: 'L', x: -0.8, y: 0, tap: true, vuci: true }
+//
 //  Sve se piše iz ugla VOĐE. Pratilja se računa sama (ogledalo: leva <-> desna,
 //  napred <-> nazad), ne treba je pisati.
 //
@@ -23,6 +30,7 @@
 //    x — levo je minus, desno je plus
 //    y — napred je plus, nazad je minus
 //    1 = otprilike dužina jednog stopala (~25 cm)
+//    Korak u stranu je 0.7 (mali koraci, kao na času).
 //  Početni stav: leva noga na x: -0.3, desna na x: 0.3, obe na y: 0.
 //
 //  Važno: posle broja 8 noge moraju da budu tamo gde su bile pre broja 1,
@@ -40,12 +48,12 @@ export const KORACI = [
     opis: 'Dva koraka ulevo pa tap, dva koraka udesno pa tap.',
     opis_en: 'Two steps to the left and tap, two steps to the right and tap.',
     brojevi: [
-      { noga: 'L', x: -1.3, y: 0 },             // 1 leva u stranu
-      { noga: 'D', x: -0.7, y: 0 },             // 2 desna prilazi levoj
-      { noga: 'L', x: -2.3, y: 0 },             // 3 leva u stranu
-      { noga: 'D', x: -1.7, y: 0, tap: true },  // 4 tap desnom
-      { noga: 'D', x: -0.7, y: 0 },             // 5 desna u stranu
-      { noga: 'L', x: -1.3, y: 0 },             // 6 leva prilazi desnoj
+      { noga: 'L', x: -1.0, y: 0 },             // 1 leva u stranu
+      { noga: 'D', x: -0.4, y: 0 },             // 2 desna prilazi levoj
+      { noga: 'L', x: -1.7, y: 0 },             // 3 leva u stranu
+      { noga: 'D', x: -1.1, y: 0, tap: true },  // 4 tap desnom
+      { noga: 'D', x: -0.4, y: 0 },             // 5 desna u stranu
+      { noga: 'L', x: -1.0, y: 0 },             // 6 leva prilazi desnoj
       { noga: 'D', x: 0.3, y: 0 },              // 7 desna u stranu
       { noga: 'L', x: -0.3, y: 0, tap: true },  // 8 tap levom
     ],
@@ -57,12 +65,12 @@ export const KORACI = [
     opis: 'Kao osnovni, samo napred i nazad: dva koraka napred pa tap, dva koraka nazad pa tap.',
     opis_en: 'Like the basic, but forward and back: two steps forward and tap, two steps back and tap.',
     brojevi: [
-      { noga: 'L', x: -0.3, y: 1 },             // 1 leva napred
-      { noga: 'D', x: 0.3, y: 1 },              // 2 desna prilazi levoj
-      { noga: 'L', x: -0.3, y: 2 },             // 3 leva napred
-      { noga: 'D', x: 0.3, y: 2, tap: true },   // 4 tap desnom
-      { noga: 'D', x: 0.3, y: 1 },              // 5 desna nazad
-      { noga: 'L', x: -0.3, y: 1 },             // 6 leva prilazi desnoj
+      { noga: 'L', x: -0.3, y: 0.7 },           // 1 leva napred
+      { noga: 'D', x: 0.3, y: 0.7 },            // 2 desna prilazi levoj
+      { noga: 'L', x: -0.3, y: 1.4 },           // 3 leva napred
+      { noga: 'D', x: 0.3, y: 1.4, tap: true }, // 4 tap desnom
+      { noga: 'D', x: 0.3, y: 0.7 },            // 5 desna nazad
+      { noga: 'L', x: -0.3, y: 0.7 },           // 6 leva prilazi desnoj
       { noga: 'D', x: 0.3, y: 0 },              // 7 desna nazad
       { noga: 'L', x: -0.3, y: 0, tap: true },  // 8 tap levom
     ],
@@ -91,14 +99,83 @@ export const KORACI = [
     opis: 'U stranu, prilaz, napred i tap, pa u stranu, prilaz, nazad i tap.',
     opis_en: 'Side, close, forward and tap, then side, close, back and tap.',
     brojevi: [
-      { noga: 'L', x: -1.3, y: 0 },             // 1 leva u stranu
-      { noga: 'D', x: -0.7, y: 0 },             // 2 desna prilazi
-      { noga: 'L', x: -1.3, y: 0.9 },           // 3 leva napred
-      { noga: 'D', x: -0.7, y: 0.9, tap: true },// 4 tap desnom
-      { noga: 'D', x: 0.3, y: 0.9 },            // 5 desna u stranu
-      { noga: 'L', x: -0.3, y: 0.9 },           // 6 leva prilazi
+      { noga: 'L', x: -1.0, y: 0 },             // 1 leva u stranu
+      { noga: 'D', x: -0.4, y: 0 },             // 2 desna prilazi
+      { noga: 'L', x: -1.0, y: 0.7 },           // 3 leva napred
+      { noga: 'D', x: -0.4, y: 0.7, tap: true },// 4 tap desnom
+      { noga: 'D', x: 0.3, y: 0.7 },            // 5 desna u stranu
+      { noga: 'L', x: -0.3, y: 0.7 },           // 6 leva prilazi
       { noga: 'D', x: 0.3, y: 0 },              // 7 desna nazad
       { noga: 'L', x: -0.3, y: 0, tap: true },  // 8 tap levom
+    ],
+  },
+  {
+    id: 'korak-tap',
+    naziv: 'Korak tap',
+    naziv_en: 'Step tap',
+    opis: 'Korak levom ulevo i tap desnom pored, pa korak desnom udesno i tap levom pored. Traje 4 broja.',
+    opis_en: 'Step left and tap the right foot next to it, then step right and tap the left foot next to it. It takes 4 counts.',
+    // korak traje 4 broja, pa se u frazi od 8 ponavlja dva puta
+    brojevi: [
+      { noga: 'L', x: -1.0, y: 0 },             // 1 leva u stranu
+      { noga: 'D', x: -0.4, y: 0, tap: true },  // 2 tap desnom pored leve
+      { noga: 'D', x: 0.3, y: 0 },              // 3 desna u stranu
+      { noga: 'L', x: -0.3, y: 0, tap: true },  // 4 tap levom pored desne
+      { noga: 'L', x: -1.0, y: 0 },             // 5 leva u stranu
+      { noga: 'D', x: -0.4, y: 0, tap: true },  // 6 tap desnom pored leve
+      { noga: 'D', x: 0.3, y: 0 },              // 7 desna u stranu
+      { noga: 'L', x: -0.3, y: 0, tap: true },  // 8 tap levom pored desne
+    ],
+  },
+  {
+    id: 'dupli-tap',
+    naziv: 'Dupli tap',
+    naziv_en: 'Double tap',
+    opis: 'Tap levom u stranu, tap levom do noge, korak levom i tap desnom, pa isto na drugu stranu.',
+    opis_en: 'Tap the left foot out to the side, tap it next to the right foot, step left and tap right, then the same to the other side.',
+    brojevi: [
+      { noga: 'L', x: -1.0, y: 0, tap: true },  // 1 tap levom u stranu, na širini koraka
+      { noga: 'L', x: -0.3, y: 0, tap: true },  // 2 tap levom do desne noge
+      { noga: 'L', x: -1.0, y: 0 },             // 3 leva u stranu
+      { noga: 'D', x: -0.4, y: 0, tap: true },  // 4 tap desnom
+      { noga: 'D', x: 0.3, y: 0, tap: true },   // 5 tap desnom u stranu
+      { noga: 'D', x: -0.4, y: 0, tap: true },  // 6 tap desnom do leve noge
+      { noga: 'D', x: 0.3, y: 0 },              // 7 desna u stranu
+      { noga: 'L', x: -0.3, y: 0, tap: true },  // 8 tap levom
+    ],
+  },
+  {
+    id: 'cross-back',
+    naziv: 'Cross back',
+    naziv_en: 'Cross back',
+    opis: 'Kao osnovni, samo na 2 desna staje iza leve, a na 6 leva iza desne.',
+    opis_en: 'Like the basic, but on 2 the right foot steps behind the left, and on 6 the left behind the right.',
+    brojevi: [
+      { noga: 'L', x: -1.0, y: 0 },                     // 1 leva u stranu
+      { noga: 'D', x: -1.25, y: -0.4, iza: true },      // 2 desna iza leve, ukršteno
+      { noga: 'L', x: -1.7, y: 0 },                     // 3 leva u stranu
+      { noga: 'D', x: -1.1, y: 0, tap: true },          // 4 tap desnom
+      { noga: 'D', x: -0.4, y: 0 },                     // 5 desna u stranu
+      { noga: 'L', x: -0.15, y: -0.4, iza: true },      // 6 leva iza desne, ukršteno
+      { noga: 'D', x: 0.3, y: 0 },                      // 7 desna u stranu
+      { noga: 'L', x: -0.3, y: 0, tap: true },          // 8 tap levom
+    ],
+  },
+  {
+    id: 'slide',
+    naziv: 'Slide',
+    naziv_en: 'Slide',
+    opis: 'Osnovni ulevo, pa na 5 jedan veliki korak desnom udesno, a leva se do 8 vuče po podu do desne.',
+    opis_en: 'The basic to the left, then on 5 one big step to the right, and the left foot slides along the floor to the right foot by 8.',
+    brojevi: [
+      { noga: 'L', x: -1.0, y: 0 },                        // 1 leva u stranu
+      { noga: 'D', x: -0.4, y: 0 },                        // 2 desna prilazi levoj
+      { noga: 'L', x: -1.7, y: 0 },                        // 3 leva u stranu
+      { noga: 'D', x: -1.1, y: 0, tap: true },             // 4 tap desnom
+      { noga: 'D', x: 0.3, y: 0 },                         // 5 veliki korak desnom, odmah tamo gde bi bila na 7
+      { noga: 'L', x: -1.05, y: 0, tap: true, vuci: true },// 6 leva klizi po podu
+      { noga: 'L', x: -0.65, y: 0, tap: true, vuci: true },// 7 leva klizi dalje
+      { noga: 'L', x: -0.3, y: 0, tap: true, vuci: true }, // 8 leva stiže do desne, kao tap
     ],
   },
   {
@@ -111,14 +188,14 @@ export const KORACI = [
     // završava na istim mestima kao osnovni, da u prikazu Oboje partneri ostanu jedan naspram drugog
     brojevi: [
       // mali koraci, kao u osnovnom: jasnije je gde se staje, a okrenuta stopala se mogu malo preklopiti
-      { noga: 'L', x: -1.0, y: 0, ugao: -120 },  // 1 leva ulevo, trećina okreta
-      { noga: 'D', x: -1.65, y: 0, ugao: -240 }, // 2 desna prolazi levu, dve trećine
-      { noga: 'L', x: -2.3, y: 0, ugao: -360 },  // 3 leva prolazi desnu, ravno napred
-      { noga: 'D', x: -1.7, y: 0, tap: true },   // 4 tap desnom
-      { noga: 'D', x: -0.7, y: 0 },              // 5 desna u stranu
-      { noga: 'L', x: -1.3, y: 0 },              // 6 leva prilazi desnoj
-      { noga: 'D', x: 0.3, y: 0 },               // 7 desna u stranu
-      { noga: 'L', x: -0.3, y: 0, tap: true },   // 8 tap levom
+      { noga: 'L', x: -0.75, y: 0, ugao: -120 },  // 1 leva ulevo, trećina okreta
+      { noga: 'D', x: -1.25, y: 0, ugao: -240 },  // 2 desna prolazi levu, dve trećine
+      { noga: 'L', x: -1.7, y: 0, ugao: -360 },   // 3 leva prolazi desnu, ravno napred
+      { noga: 'D', x: -1.1, y: 0, tap: true },    // 4 tap desnom
+      { noga: 'D', x: -0.4, y: 0 },               // 5 desna u stranu
+      { noga: 'L', x: -1.0, y: 0 },               // 6 leva prilazi desnoj
+      { noga: 'D', x: 0.3, y: 0 },                // 7 desna u stranu
+      { noga: 'L', x: -0.3, y: 0, tap: true },    // 8 tap levom
     ],
   },
   {
@@ -129,14 +206,14 @@ export const KORACI = [
     opis: 'Osnovni ulevo, pa pun okret udesno na brojeve 5, 6 i 7, tap na 8.',
     opis_en: 'The basic to the left, then a full turn to the right on counts 5, 6 and 7, a tap on 8.',
     brojevi: [
-      { noga: 'L', x: -1.3, y: 0 },              // 1 leva u stranu
-      { noga: 'D', x: -0.7, y: 0 },              // 2 desna prilazi levoj
-      { noga: 'L', x: -2.3, y: 0 },              // 3 leva u stranu
-      { noga: 'D', x: -1.7, y: 0, tap: true },   // 4 tap desnom
-      { noga: 'D', x: -1.0, y: 0, ugao: 120 },   // 5 desna udesno, trećina okreta
-      { noga: 'L', x: -0.35, y: 0, ugao: 240 },  // 6 leva prolazi desnu, dve trećine
-      { noga: 'D', x: 0.3, y: 0, ugao: 360 },    // 7 desna prolazi levu, ravno napred
-      { noga: 'L', x: -0.3, y: 0, tap: true },   // 8 tap levom
+      { noga: 'L', x: -1.0, y: 0 },               // 1 leva u stranu
+      { noga: 'D', x: -0.4, y: 0 },               // 2 desna prilazi levoj
+      { noga: 'L', x: -1.7, y: 0 },               // 3 leva u stranu
+      { noga: 'D', x: -1.1, y: 0, tap: true },    // 4 tap desnom
+      { noga: 'D', x: -0.65, y: 0, ugao: 120 },   // 5 desna udesno, trećina okreta
+      { noga: 'L', x: -0.15, y: 0, ugao: 240 },   // 6 leva prolazi desnu, dve trećine
+      { noga: 'D', x: 0.3, y: 0, ugao: 360 },     // 7 desna prolazi levu, ravno napred
+      { noga: 'L', x: -0.3, y: 0, tap: true },    // 8 tap levom
     ],
   },
 ];

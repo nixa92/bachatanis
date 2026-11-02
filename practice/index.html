@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Sacramento&display=swap" rel="stylesheet">
   <link rel="preload" href="fonts/Northwell.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/app.css?v=20261102165317">
+  <link rel="stylesheet" href="css/app.css?v=20261102171018">
 </head>
 <body>
   <header class="top">
@@ -95,8 +95,7 @@
           <div class="field">
             <span class="field-label" id="lbl-step" data-i18n="step.label">Izaberi korak</span>
             <select class="pick" id="step-list" aria-labelledby="lbl-step"></select>
-            <label class="check"><input type="checkbox" id="intro-shift" checked> <span data-i18n="introShift.label">S noge na nogu u intro delovima</span></label>
-            <p class="field-help" data-i18n="introShift.help">Uz pravu pesmu: dok traje intro, težina ide s noge na nogu, duplo sporije, dok ne krene bachata.</p>
+            <div class="switch-row" id="intro-shift-row"><span id="lbl-intro-shift" data-i18n="introShift.label">S noge na nogu u intro delovima</span><button type="button" role="switch" class="switch" id="intro-shift" aria-checked="true" aria-labelledby="lbl-intro-shift"><span class="switch-thumb"></span></button></div>
           </div>
           <div class="field">
             <span class="field-label" id="lbl-view" data-i18n="view.label">Izaberi prikaz</span>
@@ -181,7 +180,7 @@
     </div>
     <div class="bar-counts" id="bar-counts" aria-hidden="true"></div>
     <div class="transport-inner">
-      <button class="play" id="play" type="button" aria-pressed="false" aria-label="Pusti"><svg class="ico-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg><svg class="ico-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5.5" width="4" height="13" rx="1"/><rect x="13.5" y="5.5" width="4" height="13" rx="1"/></svg></button>
+      <button class="play" id="play" type="button" aria-pressed="false" aria-label="Pusti"><svg class="ico-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg><svg class="ico-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5.5" width="4" height="13" rx="1"/><rect x="13.5" y="5.5" width="4" height="13" rx="1"/></svg><svg class="ico-load" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/></svg></button>
       <div class="tempo" role="group" data-i18n-aria="tempo.aria" aria-label="Tempo">
         <button class="tempo-btn" id="bpm-down" type="button" data-i18n-aria="tempo.down" aria-label="Sporije">−</button>
         <div class="tempo-value" aria-live="polite"><span><span id="bpm-val">125</span> BPM</span><b id="bpm-name"></b></div>
@@ -190,6 +189,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/app.js?v=20261102165317"></script>
+  <script type="module" src="js/app.js?v=20261102171018"></script>
 </body>
 </html>
