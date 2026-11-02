@@ -1,0 +1,18 @@
+{
+ "id": "emu",
+ "order": -2,
+ "name": "emusicality bass",
+ "source": "https://emusicality.co.uk",
+ "license": "Used with permission of emusicality.co.uk (owner's agreement)",
+ "attribution": "emusicality.co.uk",
+ "notes": "Bass notes plucked on counts 1, 3 and 4, cut from the songs at a clean start; pitch measured.",
+ "gain": 1.0,
+ "notes_map": {
+  "30": "n30.wav",
+  "31": "n31.wav",
+  "34": "n34.wav",
+  "35": "n35.wav",
+  "38": "n38.wav",
+  "43": "n43.wav"
+ }
+}

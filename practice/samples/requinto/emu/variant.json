@@ -1,0 +1,19 @@
+{
+ "id": "emu",
+ "order": -2,
+ "name": "emusicality lead guitar (Del Mar)",
+ "source": "https://emusicality.co.uk",
+ "license": "Used with permission of emusicality.co.uk (owner's agreement)",
+ "attribution": "emusicality.co.uk",
+ "notes": "Clean single notes of the Del Mar lead guitar that ring at least 0.35 s; the melody plays an octave lower to fit them.",
+ "gain": 1.0,
+ "transpose": -12,
+ "notes_map": {
+  "56": "n56.wav",
+  "63": "n63.wav",
+  "65": "n65.wav",
+  "66": "n66.wav",
+  "68": "n68.wav",
+  "70": "n70.wav"
+ }
+}

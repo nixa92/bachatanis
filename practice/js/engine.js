@@ -3,12 +3,12 @@
 // and get the step that is sounding right now, so sound and picture stay locked
 // even when the tempo changes mid-play.
 
-import * as I from './instruments.js?v=20261102004425';
-import * as P from './patterns.js?v=20261102004425';
-import { SampleBank } from './samples.js?v=20261102004425';
+import * as I from './instruments.js?v=20261102165317';
+import * as P from './patterns.js?v=20261102165317';
+import { SampleBank } from './samples.js?v=20261102165317';
 
 export const STEPS_PER_PHRASE = 16;
-const LOOKAHEAD = 0.12;    // schedule this far ahead (s)
+const LOOKAHEAD = 0.18;    // schedule this far ahead (s); a count word may start up to 0.15 s before its beat
 const TICK_MS = 25;        // scheduler wake-up interval
 const START_DELAY = 0.08;
 
@@ -20,7 +20,8 @@ export const CHANNELS = [
   { id: 'requinto', name: 'Requinto', vol: 0.6 },
 ];
 
-const COUNT_FILES = { sr: 'audio/sr-', en: 'audio/en-' };
+// count voice per language: files audio/<lang>-<id>-1..8, made by tools/make-voices.py
+const VOICES = { sr: 'lana', en: 'samantha' };
 
 export class Engine {
   constructor() {
@@ -43,6 +44,7 @@ export class Engine {
     this._timer = null;
     this.pausedPos = null;          // { entry, frac } where pause() stopped; start() continues from there
     this.samples = new SampleBank(); // sample variants; falls back to the synth per instrument
+    this.song = null;               // a real song (loadSong) plays instead of the generated music
   }
 
   // Called when the page opens: creates the audio context (it stays suspended) and loads all sounds,
@@ -80,11 +82,9 @@ export class Engine {
   }
 
   async _loadVoices() {
-    for (const [lang, prefix] of Object.entries(COUNT_FILES)) {
+    for (const [lang, id] of Object.entries(VOICES)) {
       const list = [];
-      for (let i = 1; i <= 8; i++) {
-        list.push(this._loadWord(prefix + i));
-      }
+      for (let i = 1; i <= 8; i++) list.push(this._loadWord(`audio/${lang}-${id}-${i}`));
       this.voices[lang] = await Promise.all(list);
     }
   }
@@ -96,10 +96,94 @@ export class Engine {
         if (!res.ok) continue;
         const data = await res.arrayBuffer();
         const buf = await new Promise((ok, fail) => this.ctx.decodeAudioData(data, ok, fail));
-        return { buf, offset: onsetOf(buf) };
+        const offset = onsetOf(buf);
+        // the ear hears a word on its vowel: "sedam" starts with a hiss and its "e" comes 125 ms later,
+        // so it is started that much earlier and every count sounds evenly spaced
+        return { buf, offset, lead: Math.min(0.15, Math.max(0, vowelOf(buf) - offset)) };
       } catch (e) { /* try the next format */ }
     }
     return null;
+  }
+
+  // ---------------------------------------------------------------- real songs
+  // Loads every track of a song from songs/songs.json. onProgress(done, total) after each track.
+  // Returns { meta, buffers, mix } to set as engine.song.
+  // A whole song decoded is large (a 4-minute track at 48 kHz is about 50 MB), and a phone can refuse to
+  // decode more. So tracks are decoded at 32 kHz (a third less memory, no audible loss for practice)
+  // and one after another, so the memory peak stays low.
+  async loadSong(meta, onProgress = () => {}) {
+    this.prepare();
+    const buffers = [];
+    for (let n = 0; n < meta.tracks.length; n++) {
+      const res = await this._songFile(meta, n);
+      buffers.push(await this._decodeSong(await res.arrayBuffer()));
+      onProgress(n + 1, meta.tracks.length);
+    }
+    return { meta, buffers, mix: meta.tracks.map(() => ({ vol: 0.6, mute: false })) }; // 0.6 = the middle of the slider (0-1.2)
+  }
+  // Song files are kept in the browser's Cache Storage (on disk, not in memory), so a song picked later
+  // only has to be decoded. The version from songs.json is in the address, so a new import is fetched
+  // again and old files are dropped. Cache Storage needs https (or localhost); elsewhere it just fetches.
+  async _songFile(meta, n) {
+    const url = `songs/${meta.id}/${n}.m4a?v=${this.songVersion || 0}`;
+    const cache = await this._songCache();
+    let res = cache && await cache.match(url);
+    if (!res) {
+      res = await fetch(url);
+      if (!res.ok) throw new Error(`${meta.id} track ${n}: HTTP ${res.status}`);
+      if (cache) await cache.put(url, res.clone()).catch(() => {});
+    }
+    return res;
+  }
+  async _songCache() {
+    if (!window.caches) return null;
+    if (!this._cachePromise) {
+      this._cachePromise = caches.open('vezbaj-pesme').then(async (cache) => {
+        // drop files of an older import
+        for (const req of await cache.keys()) if (!req.url.endsWith(`v=${this.songVersion || 0}`)) cache.delete(req);
+        return cache;
+      }).catch(() => null);
+    }
+    return this._cachePromise;
+  }
+  // downloads every song's files into the cache, one at a time, unless the phone saves data
+  async prefetchSongs(songs) {
+    if (navigator.connection && navigator.connection.saveData) return;
+    const cache = await this._songCache();
+    if (!cache) return;
+    for (const meta of songs) {
+      for (let n = 0; n < meta.tracks.length; n++) {
+        try { const r = await this._songFile(meta, n); await r.arrayBuffer(); } catch (e) { return; }
+      }
+    }
+  }
+
+  _decodeSong(data) {
+    const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    let ctx = this.ctx;
+    try { if (OAC) ctx = new OAC(1, 1, 32000); } catch (e) { /* fall back to the main context's rate */ }
+    return new Promise((ok, fail) => ctx.decodeAudioData(data, ok, fail));
+  }
+  setSongMix(n, patch) {
+    Object.assign(this.song.mix[n], patch);
+    this._applyMix();
+  }
+  _songGain(n) {
+    const m = this.song.mix[n];
+    return this.musicOn && !m.mute ? m.vol : 0;
+  }
+  // starts every track so that eighth g of the song sounds at context time `when`
+  _startSong(g, when) {
+    const { meta, buffers } = this.song;
+    const pos = meta.lag + g * this.stepDur; // file time of that eighth
+    this.run.sources = buffers.map((buf, n) => {
+      const src = this.ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(this.run.bus[`t${n}`]);
+      if (pos >= 0) src.start(when, pos);
+      else src.start(when - pos, 0);
+      return src;
+    });
   }
 
   // ---------------------------------------------------------------- mixer
@@ -121,6 +205,7 @@ export class Engine {
       const v = this.musicOn ? this._gainFor(c.id) : 0;
       this.run.bus[c.id].gain.setTargetAtTime(v, t, 0.015);
     }
+    if (this.song && this.run.song) this.song.mix.forEach((_, n) => this.run.bus[`t${n}`].gain.setTargetAtTime(this._songGain(n), t, 0.015));
     this.run.bus.count.gain.setTargetAtTime(this.countVol, t, 0.015);
     this.run.bus.click.gain.setTargetAtTime(this.clickVol, t, 0.015);
   }
@@ -139,9 +224,16 @@ export class Engine {
       bus[id].connect(out);
     }
     bus.click.gain.value = this.clickVol;
-    this.run = { out, bus };
+    this.run = { out, bus, song: !!this.song, sources: [] };
     for (const c of CHANNELS) bus[c.id].gain.value = this.musicOn ? this._gainFor(c.id) : 0;
     bus.count.gain.value = this.countVol;
+    if (this.song) {
+      this.song.mix.forEach((_, n) => {
+        bus[`t${n}`] = ctx.createGain();
+        bus[`t${n}`].gain.value = this._songGain(n);
+        bus[`t${n}`].connect(out);
+      });
+    }
   }
 
   // ---------------------------------------------------------------- transport
@@ -154,7 +246,7 @@ export class Engine {
     if (this.playing || !this.ctx) return;
     this._buildRun();
     this.playing = true;
-    this.g = this.pausedPos ? this.pausedPos.entry.g + 1 : fromStep;
+    this.g = this.pausedPos ? (this.pausedPos.from ?? this.pausedPos.entry.g + 1) : fromStep;
     this.nextTime = this.ctx.currentTime + START_DELAY + (this.pausedPos ? 0 : leadIn);
     this.startTime = this.nextTime;
     if (fadeIn > 0) {
@@ -162,6 +254,7 @@ export class Engine {
       this.run.out.gain.linearRampToValueAtTime(1, this.startTime + fadeIn);
     }
     this.queue = [];
+    if (this.song) this._startSong(this.g, this.nextTime);
     this._tick();
   }
 
@@ -185,6 +278,7 @@ export class Engine {
     const run = this.run;
     const t = this.ctx.currentTime;
     run.out.gain.setTargetAtTime(0, t, 0.02);
+    for (const src of run.sources) src.stop(t + 0.15);
     setTimeout(() => run.out.disconnect(), 400);
     this.run = null;
     this.queue = [];
@@ -194,9 +288,19 @@ export class Engine {
   _tick() {
     if (!this.playing) return;
     const now = this.ctx.currentTime;
-    // tab was throttled: don't fire a burst of late notes, jump ahead instead
-    if (this.nextTime < now - 0.05) this.nextTime = now + 0.03;
+    // tab was throttled: don't fire a burst of late notes, jump ahead instead.
+    // A song keeps playing on its own, so skip the missed steps to stay on its beat.
+    if (this.nextTime < now - 0.05) {
+      if (this.song) while (this.nextTime < now) { this.nextTime += this.stepDur; this.g++; }
+      else this.nextTime = now + 0.03;
+    }
     while (this.nextTime < now + LOOKAHEAD) {
+      // a song ends 8 beats after its last counted beat, so the last notes can ring
+      if (this.song && this.g >= (this.song.meta.beats.length + 8) * 2) {
+        this.stop();
+        this._emit({ type: 'end' });
+        return;
+      }
       this._schedule(this.g, this.nextTime);
       this.nextTime += this.stepDur;
       this.g++;
@@ -210,6 +314,7 @@ export class Engine {
   }
 
   _schedule(g, t) {
+    if (this.song) { this._scheduleSong(g, t); return; }
     const ctx = this.ctx;
     const s = g % STEPS_PER_PHRASE;
     const phrase = Math.floor(g / STEPS_PER_PHRASE);
@@ -263,6 +368,38 @@ export class Engine {
     this._emit({ type: 'step', entry });
   }
 
+  // a song plays from its own tracks; this only keeps the count, the click and the visuals in step.
+  // Counts come from the song's breakdown, so a 4-beat bar counts 1-4 (or 5-8) like the dancers do.
+  _scheduleSong(g, t) {
+    const entry = this.songEntry(g, t);
+    if (!entry) return; // the tail after the last counted beat
+    const { onBeat } = entry;
+    this.queue.push(entry);
+    if (this.queue.length > 64) this.queue.splice(0, this.queue.length - 64);
+    if (onBeat) this._scheduleCount(entry, this.run.bus);
+    this._emit({ type: 'step', entry });
+  }
+
+  // the step of eighth g of the song, as the scheduler makes it (t = when it sounds)
+  songEntry(g, t = 0) {
+    const beat = this.song && this.song.meta.beats[Math.floor(g / 2)];
+    if (!beat) return null;
+    // section: the beginner's block (intro, derecho, majao or mambo); part and rhythm: the full breakdown
+    const [count, part, rhythm, block] = beat;
+    return { g, s: (count - 1) * 2 + (g % 2), phrase: Math.floor(g / 2), t, dur: this.stepDur, section: block, part, rhythm, count, onBeat: g % 2 === 0 };
+  }
+
+  // jumps to beat i of the song (from 0); keeps playing if it was playing, otherwise waits there
+  seekSong(i) {
+    if (!this.song) return;
+    const g = Math.max(0, Math.min(i, this.song.meta.beats.length - 1)) * 2;
+    const was = this.playing;
+    this._halt();
+    // start() continues from the step after pausedPos, so point it one step back
+    this.pausedPos = { entry: this.songEntry(g), frac: 0, from: g };
+    if (was) this.start();
+  }
+
   // one instrument hit: the selected sample variant if it is loaded, otherwise the synth.
   // Both get the same `time`, so switching variants never moves a note.
   _play(fn, ...args) {
@@ -281,7 +418,11 @@ export class Engine {
       return;
     }
     const v = count === 1 ? 1.15 : 1;
-    I.playSample(this.ctx, t, word.buf, bus.count, v, word.offset, this.stepDur * 2 * 0.95);
+    // start before the beat by the word's lead, but never in the past (then skip that much of the hiss)
+    const start = Math.max(t - word.lead, this.ctx.currentTime + 0.005);
+    const skip = word.offset + (start - (t - word.lead));
+    // a word may sound until shortly before the next one; it fades out gently instead of being cut
+    I.playSample(this.ctx, start, word.buf, bus.count, v, skip, this.stepDur * 2 * 0.9, 0.09);
   }
 
   // ---------------------------------------------------------------- clock helpers
@@ -320,6 +461,29 @@ export class Engine {
 }
 
 function humanize() { return 0.94 + Math.random() * 0.1; }
+
+// Where the vowel starts: the first moment the low band (below ~1 kHz, so not the hiss of s, š, č)
+// reaches 30 % of its loudest, minus 10 ms.
+function vowelOf(buf) {
+  const d = buf.getChannelData(0);
+  const a = 1 - Math.exp((-2 * Math.PI * 1000) / buf.sampleRate);
+  const win = Math.round(buf.sampleRate * 0.01);
+  const env = new Float32Array(d.length);
+  let y = 0;
+  let sum = 0;
+  const sq = new Float32Array(d.length);
+  for (let i = 0; i < d.length; i++) {
+    y += a * (d[i] - y);
+    sq[i] = y * y;
+    sum += sq[i] - (i >= win ? sq[i - win] : 0);
+    env[i] = sum;
+  }
+  let max = 0;
+  for (let i = 0; i < env.length; i++) if (env[i] > max) max = env[i];
+  const th = max * 0.09; // 30 % of the level = 9 % of the energy
+  for (let i = 0; i < env.length; i++) if (env[i] > th) return Math.max(0, (i - win) / buf.sampleRate - 0.01);
+  return 0;
+}
 
 // Where the word actually starts (first sample above 10 % of the peak), minus 8 ms.
 function onsetOf(buf) {

@@ -55,6 +55,29 @@ export const ICONS = {
     <path d="M8 12 h48 a4 4 0 0 1 4 4 v24 a4 4 0 0 1 -4 4 H26 l-12 10 v-10 H8 a4 4 0 0 1 -4 -4 V16 a4 4 0 0 1 4 -4 Z"/>
     <text x="32" y="34" text-anchor="middle" font-size="15" font-weight="800" fill="currentColor" stroke="none" font-family="Sequel, system-ui, sans-serif">1 2 3</text>`),
 
+  // microphone
+  vokal: svg(`
+    <rect x="23" y="6" width="18" height="30" rx="9"/>
+    <path d="M15 28 a17 17 0 0 0 34 0"/>
+    <path d="M32 45 V56 M22 58 h20"/>
+    <path d="M23 18 h6 M23 24 h6" stroke-width="1.6"/>`),
+
+  // kick drum, seen from the front, with the pedal
+  kik: svg(`
+    <circle cx="32" cy="30" r="20"/>
+    <circle cx="32" cy="30" r="13" stroke-width="1.6" opacity=".55"/>
+    <path d="M18 50 L12 58 M46 50 L52 58"/>
+    <path d="M32 50 V58 M27 58 h10"/>`),
+
+  // keyboard
+  sint: svg(`
+    <rect x="4" y="20" width="56" height="26" rx="3"/>
+    <path d="M12 20 V46 M20 20 V46 M28 20 V46 M36 20 V46 M44 20 V46 M52 20 V46" stroke-width="1.4"/>
+    <g fill="currentColor" stroke="none">
+      <rect x="9.5" y="20" width="5" height="15"/><rect x="17.5" y="20" width="5" height="15"/>
+      <rect x="33.5" y="20" width="5" height="15"/><rect x="41.5" y="20" width="5" height="15"/><rect x="49.5" y="20" width="5" height="15"/>
+    </g>`),
+
   // metronome
   klik: svg(`
     <path d="M24 6 h16 l12 52 H12 Z"/>

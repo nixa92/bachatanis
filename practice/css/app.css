@@ -154,6 +154,12 @@ main { max-width: var(--max); margin: 0 auto; padding: 18px var(--pad) 0; }
   color: var(--ink);
 }
 .field-help { margin: 8px 0 0; font-size: 14px; color: var(--ink-600); max-width: 36em; }
+.check { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-size: 16px; color: var(--ink); cursor: pointer; }
+.check input { width: 20px; height: 20px; margin: 0; accent-color: var(--red); flex: none; }
+.check + .field-help { margin-top: 4px; }
+.song-rhythm { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin: 14px 0 0; }
+.song-rhythm b { font-family: var(--font-display); font-weight: 700; font-size: 28px; line-height: 1.15; color: var(--red); }
+.song-rhythm span { font-size: 15px; color: var(--ink); }
 .play-hint { margin: 0 0 20px; font-size: 16px; color: var(--ink); }
 
 .seg {
@@ -371,15 +377,14 @@ input[type="range"] { accent-color: var(--red); width: 100%; min-height: 32px; }
 .legend-D { background: var(--red); }
 .legend-note { flex-basis: 100%; }
 
-.stage { background: var(--paper); box-shadow: inset 0 0 0 1px var(--red-20); padding: 16px; display: grid; gap: 8px; }
+.stage { background: var(--paper); box-shadow: inset 0 0 0 1px var(--red-20); padding: 10px; display: grid; gap: 8px; }
 .readout { display: flex; align-items: flex-end; min-height: 56px; }
 .readout-text { display: grid; gap: 2px; font-size: 20px; font-weight: 600; }
 .readout-text .is-tap { color: var(--red); }
 .readout-text b { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--ink-600); margin-right: 4px; }
 .readout-idle { color: var(--ink-600); font-weight: 500; }
 
-.feet { width: 100%; height: auto; max-height: 56vh; aspect-ratio: 4 / 3; display: block; }
-.feet[data-view="oboje"] { aspect-ratio: 3 / 4; }
+.feet { width: 100%; height: auto; max-height: 56vh; display: block; } /* aspect ratio set by feet.js from the step */
 .foot-sole { fill: var(--paper); stroke-width: 0.045; }
 .foot-L .foot-sole { stroke: var(--ink); }
 .foot-D .foot-sole { stroke: var(--red); }
@@ -493,10 +498,12 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 .h-meta { grid-area: meta; font-size: 13px; color: var(--ink-600); }
 
 /* ------------------------------------------------------------ transport + 8 counts */
+/* the bottom bar: the same margin at the sides, between play and tempo, and at the bottom */
+:root { --tp: min(var(--pad), 24px); }
 .bar-counts {
   max-width: var(--max);
   margin: 0 auto;
-  padding: 4px var(--pad) 0;
+  padding: 4px var(--tp) 0;
   display: flex;
   justify-content: space-between;
 }
@@ -518,24 +525,46 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
   left: 0; right: 0; bottom: 0;
   background: var(--ink);
   color: var(--paper);
-  padding-bottom: env(safe-area-inset-bottom);
+  /* on phones with a home bar the safe area is the bottom margin, if it is bigger */
+  padding-bottom: max(0px, calc(env(safe-area-inset-bottom) - var(--tp)));
   z-index: 10;
 }
 .transport-inner {
   max-width: var(--max);
   margin: 0 auto;
-  padding: 4px var(--pad) 8px;
+  padding: 4px var(--tp) var(--tp);
   display: grid;
-  grid-template-columns: minmax(60px, 1fr) auto;
+  grid-template-columns: 1fr 1fr; /* play as wide as the tempo control */
   grid-template-areas: "play tempo";
-  gap: 6px clamp(16px, 7vw, 32px);
+  gap: var(--tp);
   align-items: center;
 }
+
+/* song seek bar: one segment per part of the song, filled as it plays */
+.seek { max-width: var(--max); margin: 0 auto; padding: 10px var(--tp) 0; }
+.seek-head { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; line-height: 1.3; color: rgba(247, 243, 236, 0.75); margin-bottom: 6px; }
+#seek-part { font-family: var(--font-display); font-weight: 700; color: var(--paper); }
+.seek-bar { position: relative; height: 22px; display: flex; align-items: center; cursor: pointer; touch-action: none; -webkit-tap-highlight-color: transparent; }
+.seek-bar:focus:not(:focus-visible) { outline: none; }
+.seek-segs { display: flex; gap: 3px; width: 100%; height: 6px; }
+.seek-seg { position: relative; height: 100%; border-radius: 3px; overflow: hidden; background: rgba(247, 243, 236, 0.16); }
+.seek-seg i { position: absolute; inset: 0 auto 0 0; width: 0; background: rgba(247, 243, 236, 0.85); }
+/* intro: the plain light segment; derecho green, majao gold, mambo red; bachata (simple view) red */
+.seek-seg.is-bachata { background: rgba(255, 90, 110, 0.32); }
+.seek-seg.is-bachata i { background: #FF5A6E; }
+.seek-seg.is-derecho { background: rgba(76, 195, 138, 0.3); }
+.seek-seg.is-derecho i { background: #4CC38A; }
+/* mambo, the most energy, is red */
+.seek-seg.is-majao { background: rgba(242, 181, 68, 0.32); }
+.seek-seg.is-majao i { background: #F2B544; }
+.seek-seg.is-mambo { background: rgba(255, 90, 110, 0.32); }
+.seek-seg.is-mambo i { background: #FF5A6E; }
+.seek-thumb { position: absolute; top: 50%; left: 0; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--paper); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); pointer-events: none; }
 .play {
   grid-area: play;
   touch-action: manipulation;
   display: grid; place-items: center;
-  width: 100%; max-width: 240px; height: 48px;
+  width: 100%; height: 48px;
   border: 0;
   border-radius: 999px;
   background: var(--red);
@@ -549,9 +578,10 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 .play[aria-pressed="true"] .ico-play { display: none; }
 .play[aria-pressed="true"] .ico-pause { display: block; }
 .play:hover { background: var(--red-hover); }
+.play:disabled { opacity: 0.45; cursor: default; } /* a song is loading */
 .play:active { transform: scale(0.94); }
 .play[aria-pressed="true"] { background: var(--paper); color: var(--red); }
-.tempo { grid-area: tempo; display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+.tempo { grid-area: tempo; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
 .tempo-value { display: grid; justify-items: center; min-width: 92px; font-size: 12px; line-height: 1.2; color: rgba(247, 243, 236, 0.75); }
 .tempo-value b { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--paper); }
 #bpm-val { font-family: var(--font-display); font-weight: 800; font-size: 22px; color: var(--paper); margin-right: 2px; }
@@ -585,7 +615,6 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
   .lang button { height: 32px; }
 }
 @media (min-width: 760px) {
-  .transport-inner { grid-template-columns: minmax(60px, 1fr) auto; grid-template-areas: "play tempo"; gap: 32px; }
   :root { --transport-h: 110px; }
   .ritam-grid { grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr); gap: 40px; align-items: start; }
   .bar-cell { height: 36px; }

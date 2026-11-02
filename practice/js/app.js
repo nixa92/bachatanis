@@ -1,17 +1,17 @@
-import { Engine, CHANNELS } from './engine.js?v=20261102004425';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261102004425';
-import { KORACI } from './steps.js?v=20261102004425';
-import { FeetView } from './feet.js?v=20261102004425';
-import { EarTest, MODES, LEVELS, roundMs, feedback } from './game.js?v=20261102004425';
-import * as store from './storage.js?v=20261102004425';
-import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261102004425';
-import { ICONS } from './icons.js?v=20261102004425';
+import { Engine, CHANNELS } from './engine.js?v=20261102165317';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261102165317';
+import { KORACI } from './steps.js?v=20261102165317';
+import { FeetView } from './feet.js?v=20261102165317';
+import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261102165317';
+import * as store from './storage.js?v=20261102165317';
+import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261102165317';
+import { ICONS } from './icons.js?v=20261102165317';
 
 const $ = (id) => document.getElementById(id);
 const engine = new Engine();
 engine.prepare();
-const state = { screen: 'ritam', step: KORACI[0], view: 'vodja', mode: 'puls', level: 1, voiceOn: true };
-const BPM_MIN = 80, BPM_MAX = 200;
+const state = { screen: 'ritam', step: KORACI[0], view: 'vodja', mode: 'puls', level: 1, voiceOn: false }; // the count starts off (owner)
+const BPM_MIN = 60, BPM_MAX = 200;
 
 // ------------------------------------------------------------ language (SR / EN, like the site)
 applyStatic();
@@ -22,6 +22,10 @@ onLangChange((l) => {
   renderPlay();
   setBpm(engine.bpm);
   renderTiles();
+  renderMusicPicker();
+  renderSongTiles();
+  showSongMode(!!engine.song);
+  buildSeek();
   renderGames();
   renderIntro();
   renderStepList();
@@ -113,6 +117,11 @@ function renderPlay() {
 }
 $('play').addEventListener('click', togglePlay);
 renderPlay();
+engine.on((ev) => {
+  if (ev.type !== 'end') return; // a song played to its end
+  renderPlay();
+  if (test.running) { test.abort(); startTest(state.mode); } // the game ran out of song: the level starts again
+});
 
 // ------------------------------------------------------------ track picker (shared by Ritam and Koraci)
 const NUMERA_KEY = 'vezbaj.numera';
@@ -126,8 +135,17 @@ numeraSel.addEventListener('change', () => {
   if (!engine.playing) drawLanes(currentSection);
 });
 
+let genBpm = 125; // the generated music's tempo, kept while a song plays at its own tempo
 function setBpm(v) {
-  engine.bpm = Math.max(BPM_MIN, Math.min(BPM_MAX, Math.round(v / 5) * 5));
+  if (engine.song) {
+    // a real song plays at its recorded tempo
+    engine.bpm = engine.song.meta.bpm;
+    $('bpm-down').disabled = $('bpm-up').disabled = true;
+    $('bpm-val').textContent = engine.bpm;
+    $('bpm-name').textContent = t('preset.song');
+    return;
+  }
+  engine.bpm = genBpm = Math.max(BPM_MIN, Math.min(BPM_MAX, Math.round(v / 5) * 5));
   $('bpm-down').disabled = engine.bpm <= BPM_MIN;
   $('bpm-up').disabled = engine.bpm >= BPM_MAX;
   $('bpm-val').textContent = engine.bpm;
@@ -205,7 +223,7 @@ const TILES = [
   },
 ];
 const TILE_NAME = { glas: 'ch.brojanje', klik: 'ch.klik' };
-for (const tile of TILES) {
+function makeTile(tile, box) {
   const el = document.createElement('div');
   el.className = 'tile';
   el.dataset.id = tile.id;
@@ -217,16 +235,17 @@ for (const tile of TILES) {
     </div>
     <input type="range" class="tile-vol" min="0" max="1.2" step="0.05" value="${tile.vol()}">`;
   // the switch toggles; tapping the icon or name does the same
-  el.querySelector('.tile-head').addEventListener('click', () => { tile.toggle(); renderTiles(); drawLanes(currentSection); });
+  el.querySelector('.tile-head').addEventListener('click', () => { tile.toggle(); renderTiles(); renderSongTiles(); drawLanes(currentSection); });
   el.querySelector('.tile-vol').addEventListener('input', (e) => { tile.setVol(Number(e.target.value)); drawLanes(currentSection); });
   if (tile.id === 'requinto') el.insertBefore($('numera-field'), el.querySelector('.tile-vol'));
-  $(tile.box).appendChild(el);
+  box.appendChild(el);
   tile.el = el;
 }
-function renderTiles() {
-  for (const tile of TILES) {
-    const iconId = tile.id;
-    const name = t(TILE_NAME[tile.id] || `ch.${tile.id}`);
+for (const tile of TILES) makeTile(tile, $(tile.box));
+function renderTiles(tiles = TILES) {
+  for (const tile of tiles) {
+    const iconId = tile.icon || tile.id;
+    const name = tile.name ? tile.name() : t(TILE_NAME[tile.id] || `ch.${tile.id}`);
     const on = tile.isOn();
     const el = tile.el;
     if (el.dataset.icon !== iconId) { el.querySelector('.tile-icon').innerHTML = ICONS[iconId]; el.dataset.icon = iconId; }
@@ -287,6 +306,238 @@ function lightLanes(s) {
   lastCol = s;
 }
 
+// ------------------------------------------------------------ real songs (emusicality.co.uk)
+// "Izaberi pesmu": the generated music, or a real song with every instrument on its own track.
+const MUSIC_KEY = 'vezbaj.muzika';
+const musicSel = $('muzika');
+let songList = [];
+let songTiles = [];
+let songLoad = 0; // id of the latest load, so an older one that finishes late is ignored
+
+function renderMusicPicker() {
+  const value = musicSel.value || 'gen';
+  musicSel.textContent = '';
+  // one flat list: the generated music first, then the songs, all at the same level
+  musicSel.add(new Option(t('muzika.gen'), 'gen'));
+  for (const s of songList) musicSel.add(new Option(`${s.title} – ${s.artist}`, s.id));
+  musicSel.value = [...musicSel.options].some((o) => o.value === value) ? value : 'gen';
+}
+// in a song the rhythm is not picked: the panel shows the rhythm and the part playing now
+// for beginners a song has 4 kinds of block: intro, derecho, majao and mambo (songs.json, made by import-songs.py)
+const BLOCK_NAMES = { intro: 'Intro', derecho: 'Derecho', majao: 'Majao', mambo: 'Mambo', bachata: 'Bachata' };
+// "Izaberi prikaz ritma": simple (default) shows only Intro and Bachata (derecho, majao and mambo together);
+// detailed shows all four blocks. Used by the rhythm panel and the seek bar.
+const VIEW_KEY = 'vezbaj.prikaz';
+let songView = 'simple';
+try { if (localStorage.getItem(VIEW_KEY) === 'detail') songView = 'detail'; } catch (e) { /* private mode */ }
+const shownBlock = (kind) => (songView === 'simple' && kind !== 'intro' ? 'bachata' : kind);
+for (const b of seg('songview').querySelectorAll('button')) b.setAttribute('aria-checked', String(b.dataset.value === songView));
+bindSeg(seg('songview'), (v) => {
+  songView = v;
+  try { localStorage.setItem(VIEW_KEY, v); } catch (e) { /* private mode */ }
+  buildSeek();
+  shownBeat = undefined;
+  showSongRhythm(null);
+});
+let shownBeat = null;
+function showSongMode(on) {
+  $('mixer').hidden = on;
+  $('song-mixer').hidden = !on;
+  $('lanes-wrap').hidden = on;
+  seg('section').hidden = on;
+  seg('songview').hidden = !on;
+  if (on) placeInd(seg('songview'), false);
+  $('song-rhythm').hidden = !on;
+  $('lbl-section').textContent = t(on ? 'section.song' : 'section.label');
+  shownBeat = undefined;
+  if (on) showSongRhythm(null);
+  else describeSection();
+}
+// entry: the step playing now, or null before the song plays
+function showSongRhythm(entry) {
+  const key = entry ? shownBlock(entry.section) : null;
+  if (key === shownBeat) return;
+  shownBeat = key;
+  if (!entry) {
+    $('song-rhythm-name').textContent = '—';
+    $('song-rhythm-part').textContent = '';
+    $('section-help').textContent = t('song.idle');
+    return;
+  }
+  const b = shownBlock(entry.section);
+  $('song-rhythm-name').textContent = BLOCK_NAMES[b] || b;
+  $('song-rhythm-part').textContent = '';
+  $('section-help').textContent = t(`section.${b}.help`);
+}
+function renderSongTiles() {
+  renderTiles(songTiles);
+}
+// Play is off while a song loads, so the previous song cannot start in the meantime
+function setLoading(on) {
+  $('play').disabled = on;
+  $('play').classList.toggle('is-loading', on);
+}
+async function pickMusic(id) {
+  const load = ++songLoad;
+  if (engine.playing || engine.pausedPos) { engine.stop(); renderPlay(); }
+  setLoading(false);
+  try { localStorage.setItem(MUSIC_KEY, id); } catch (e) { /* private mode */ }
+  const status = $('song-status');
+  const meta = songList.find((s) => s.id === id);
+  if (!meta) {
+    engine.song = null;
+    buildSeek();
+    showSongMode(false);
+    status.textContent = '';
+    setBpm(genBpm);
+    return;
+  }
+  status.textContent = t('song.loading', { done: 0, total: meta.tracks.length });
+  setLoading(true);
+  try {
+    const song = await engine.loadSong(meta, (done, total) => {
+      if (load === songLoad) status.textContent = t('song.loading', { done, total });
+    });
+    if (load !== songLoad) return;
+    engine.song = song;
+    setLoading(false);
+  } catch (e) {
+    if (load !== songLoad) return;
+    setLoading(false);
+    status.textContent = t('song.error');
+    musicSel.value = 'gen';
+    engine.song = null;
+    buildSeek();
+    showSongMode(false);
+    setBpm(genBpm);
+    return;
+  }
+  status.textContent = '';
+  const box = $('song-mixer');
+  box.textContent = '';
+  songTiles = meta.tracks.map((tr, n) => ({
+    id: `t${n}`, icon: tr.kind,
+    name: () => (lang === 'en' ? tr.en : tr.sr),
+    isOn: () => !engine.song.mix[n].mute,
+    toggle: () => engine.setSongMix(n, { mute: !engine.song.mix[n].mute }),
+    vol: () => engine.song.mix[n].vol,
+    setVol: (v) => engine.setSongMix(n, { vol: v }),
+  }));
+  for (const tile of songTiles) makeTile(tile, box);
+  renderSongTiles();
+  showSongMode(true);
+  buildSeek();
+  setBpm();
+}
+musicSel.addEventListener('change', () => pickMusic(musicSel.value));
+renderMusicPicker();
+fetch('songs/songs.json', { cache: 'no-cache' }).then((r) => r.json()).then((data) => {
+  songList = data.songs;
+  engine.songVersion = data.version || '';
+  // download every song's files in the background, so picking a song only has to decode it
+  setTimeout(() => engine.prefetchSongs(songList), 3000);
+  renderMusicPicker();
+  let saved = null;
+  try { saved = localStorage.getItem(MUSIC_KEY); } catch (e) { /* private mode */ }
+  if (saved && songList.some((s) => s.id === saved)) {
+    musicSel.value = saved;
+    pickMusic(saved);
+  }
+}).catch(() => { /* no songs: only the generated music */ });
+
+// ------------------------------------------------------------ song seek bar
+// One segment per block of the song (intro, derecho, majao, mambo), filled as it plays. Seeking lands on a count 1.
+let seekSegs = [];
+let seeking = null; // beat index under the finger while dragging
+function buildSeek() {
+  const song = engine.song;
+  $('seek').hidden = !song;
+  const box = $('seek-segs');
+  box.textContent = '';
+  seekSegs = [];
+  if (!song) return;
+  // blocks as shown: in the simple view neighbouring derecho, majao and mambo merge into one Bachata block
+  const blocks = [];
+  for (const b of song.meta.blocks) {
+    const kind = shownBlock(b.kind);
+    if (blocks.length && blocks[blocks.length - 1].kind === kind) blocks[blocks.length - 1].end = b.end;
+    else blocks.push({ kind, start: b.start, end: b.end });
+  }
+  for (const sec of blocks) {
+    const el = document.createElement('div');
+    el.className = `seek-seg is-${sec.kind}`;
+    el.style.flex = `${sec.end - sec.start + 1} 1 0`;
+    el.title = BLOCK_NAMES[sec.kind];
+    el.appendChild(document.createElement('i'));
+    box.appendChild(el);
+    seekSegs.push({ sec, el, fill: el.firstChild });
+  }
+}
+// x on the screen -> the count 1 at or before that beat, inside its block
+function beatAt(clientX) {
+  let seg = seekSegs[seekSegs.length - 1];
+  for (const sg of seekSegs) if (clientX <= sg.el.getBoundingClientRect().right) { seg = sg; break; }
+  const r = seg.el.getBoundingClientRect();
+  const { sec } = seg;
+  const k = Math.max(0, Math.min(1, (clientX - r.left) / r.width));
+  let i = Math.round(sec.start + k * (sec.end - sec.start));
+  const beats = engine.song.meta.beats;
+  while (i > sec.start && beats[i][0] !== 1) i--;
+  return i;
+}
+const clock = (sec) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}`;
+function updateSeek(i) {
+  const { meta } = engine.song;
+  const beat = 60 / meta.bpm;
+  const bar = $('seek-bar').getBoundingClientRect();
+  for (const { sec, el, fill } of seekSegs) {
+    const k = Math.max(0, Math.min(1, (i - sec.start) / (sec.end - sec.start + 1)));
+    fill.style.width = `${(k * 100).toFixed(2)}%`;
+    if (i >= sec.start && i < sec.end + 1) {
+      const r = el.getBoundingClientRect();
+      $('seek-thumb').style.transform = `translateX(${(r.left - bar.left + k * r.width).toFixed(1)}px)`;
+      const text = BLOCK_NAMES[sec.kind];
+      if ($('seek-part').textContent !== text) $('seek-part').textContent = text;
+    }
+  }
+  const time = `${clock(i * beat)} / ${clock(meta.beats.length * beat)}`;
+  if ($('seek-time').textContent !== time) $('seek-time').textContent = time;
+  $('seek-bar').setAttribute('aria-valuenow', String(Math.round((100 * i) / meta.beats.length)));
+  $('seek-bar').setAttribute('aria-valuetext', `${$('seek-part').textContent}, ${time}`);
+}
+const seekBar = $('seek-bar');
+seekBar.addEventListener('pointerdown', (e) => {
+  if (!engine.song) return;
+  seekBar.setPointerCapture(e.pointerId);
+  seeking = beatAt(e.clientX);
+});
+seekBar.addEventListener('pointermove', (e) => { if (seeking !== null) seeking = beatAt(e.clientX); });
+const endSeek = () => {
+  if (seeking === null) return;
+  engine.seekSong(seeking);
+  seeking = null;
+  renderPlay();
+};
+seekBar.addEventListener('pointerup', endSeek);
+seekBar.addEventListener('pointercancel', () => { seeking = null; });
+// arrows: one 8-count back or forward; Home: the start
+seekBar.addEventListener('keydown', (e) => {
+  if (!engine.song) return;
+  const pos = engine.playing ? engine.positionAt(engine.heardTime()) : engine.pausedPos;
+  const now = pos ? Math.floor(pos.entry.g / 2) : 0;
+  const beats = engine.song.meta.beats;
+  let i = null;
+  if (e.key === 'Home') i = 0;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+    const dir = e.key === 'ArrowRight' ? 1 : -1;
+    i = now + dir;
+    while (i > 0 && i < beats.length - 1 && beats[i][0] !== 1) i += dir;
+  }
+  if (i === null) return;
+  e.preventDefault();
+  engine.seekSong(i);
+});
+
 // ------------------------------------------------------------ KORACI
 const feet = new FeetView($('feet'));
 const stepList = $('step-list');
@@ -303,6 +554,12 @@ renderStepList();
 stepList.addEventListener('change', () => { state.step = KORACI.find((k) => k.id === stepList.value); setupFeet(); });
 
 bindSeg(seg('view'), (v) => { state.view = v; setupFeet(); });
+// "S noge na nogu u intro delovima": in a song's intro the feet shift weight at half speed instead of the step
+const SHIFT_KEY = 'vezbaj.nogaNaNogu';
+try { $('intro-shift').checked = localStorage.getItem(SHIFT_KEY) !== 'off'; } catch (e) { /* private mode */ }
+$('intro-shift').addEventListener('change', (e) => {
+  try { localStorage.setItem(SHIFT_KEY, e.target.checked ? 'on' : 'off'); } catch (err) { /* private mode */ }
+});
 function setupFeet() {
   feet.setStep(state.step, state.view);
   $('feet').dataset.view = state.view;
@@ -351,14 +608,46 @@ const showStreak = (n) => {
 const seconds = (s) => `${s.toFixed(1).replace('.', t('decimal'))} s`;
 const levelText = (n) => t('level.of', { n, total: LEVELS.length });
 
-async function startTest(modeId) {
+// The game plays the real songs: the level's song is loaded while the button shows "Učitavam…",
+// and the next level's song loads while the result shows. If a song cannot load, another song is
+// tried; only if none loads does the generated music play.
+const gameSongs = new Map(); // song id -> promise of the loaded song (this level's and the next one)
+function loadGameSong(meta) {
+  if (!meta) return Promise.resolve(null);
+  if (!gameSongs.has(meta.id)) {
+    gameSongs.set(meta.id, engine.loadSong(meta).catch((e) => { console.warn('[igra] song load failed:', e); return null; }));
+  }
+  return gameSongs.get(meta.id);
+}
+// after a level: let go of its song and load the next level's while the result shows
+function preloadNextSong() {
+  const next = run && run.songs[state.level];
+  for (const id of [...gameSongs.keys()]) if (!next || id !== next.id) gameSongs.delete(id);
+  loadGameSong(next);
+}
+async function startTest(modeId, btn = null) {
   await engine.unlock();
   await engine.samples.whenReady();
-  setNumera(run.tracks[state.level - 1]);
-  test.begin(modeId, state.level);
+  let song = null;
+  if (state.level <= run.songs.length) {
+    const label = btn && btn.textContent;
+    if (btn) { btn.disabled = true; btn.textContent = t('song.loadingShort'); }
+    // this level's song; if it cannot load, another song of the game, before falling back to the generated music
+    const order = [run.songs[state.level - 1], ...run.songs.filter((_, i) => i !== state.level - 1)];
+    for (const meta of order) {
+      song = await loadGameSong(meta);
+      if (song) break;
+      console.warn(`[igra] ${meta.id} could not be loaded, trying another song`);
+      gameSongs.delete(meta.id);
+    }
+    if (btn) { btn.disabled = false; btn.textContent = label; }
+  }
+  if (!song) setNumera(run.tracks[(state.level - 1) % run.tracks.length]);
+  test.begin(modeId, state.level, song);
   $('run-title').textContent = `${t(`mode.${modeId}`)}, ${levelText(state.level)}`;
   $('run-instr').textContent = t(`mode.${modeId}.how`);
-  $('tap-fb').textContent = '';
+  // a song level that fell back to the generated music says so (usually the phone ran out of memory)
+  $('tap-fb').textContent = state.level <= run.songs.length && !test.song ? t('game.fallback') : '';
   $('tap-fb').className = 'tap-fb';
   showStreak(0);
   showTestPart('run');
@@ -385,10 +674,10 @@ function addToRun(r) {
 }
 $('test-start').addEventListener('click', () => {
   state.level = 1;
-  run = { id: Date.now(), mode: state.mode, points: {}, tracks: shuffled(NUMERE.map((n) => n.id)) };
-  startTest(state.mode);
+  run = { id: Date.now(), mode: state.mode, points: {}, tracks: shuffled(NUMERE.map((n) => n.id)), songs: songsForGame(songList) };
+  startTest(state.mode, $('test-start'));
 });
-$('res-next').addEventListener('click', () => { state.level++; startTest(state.mode); });
+$('res-next').addEventListener('click', () => { state.level++; startTest(state.mode, $('res-next')); });
 $('res-back').addEventListener('click', () => showTestPart('setup'));
 $('intro-back').addEventListener('click', () => showTestPart('setup'));
 $('test-abort').addEventListener('click', abortTest);
@@ -422,6 +711,7 @@ document.addEventListener('keyup', (e) => { if (e.code === 'Space' && test.runni
 
 function finishTest() {
   const r = test.finish();
+  preloadNextSong();
   r.name = $('player-name').value.trim();
   store.setName(r.name);
   addToRun(r);
@@ -500,12 +790,15 @@ function frameBody() {
     : engine.pausedPos;
   const ci = pos ? Math.floor(pos.entry.s / 2) : -1;
 
+  if (engine.song && state.screen !== 'test') updateSeek(seeking ?? (pos ? (pos.entry.g + pos.frac) / 2 : 0));
+  if (engine.song && state.screen === 'ritam') showSongRhythm(pos && pos.entry.part !== undefined ? pos.entry : null);
   if (state.screen === 'ritam') {
     lightCells(barCells, ci);
     lightLanes(pos ? pos.entry.s : -1);
-    if (engine.playing && pos && pos.entry.section !== currentSection) drawLanes(pos.entry.section);
+    if (engine.playing && !engine.song && pos && pos.entry.section !== currentSection) drawLanes(pos.entry.section);
   } else if (state.screen === 'koraci') {
-    const fci = feet.render(pos || leadInPos());
+    const intro = !!(engine.song && pos && pos.entry.section === 'intro' && $('intro-shift').checked);
+    const fci = feet.render(pos || leadInPos(), { intro });
     lightCells(barCells, pos ? fci : -1);
   } else if (state.screen === 'test' && test.running) {
     $('run-time').textContent = seconds(test.elapsed());

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Vežbe | Anita &amp; Nikola</title>
+  <title>Vežbanje | Anita &amp; Nikola</title>
   <meta name="description" content="Vežbaj osnovne korake i ritam bachate: muzika sa brojanjem, animirani koraci i igra sluha.">
   <meta name="theme-color" content="#EFE9E0">
   <meta name="robots" content="noindex">
@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Sacramento&display=swap" rel="stylesheet">
   <link rel="preload" href="fonts/Northwell.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/app.css?v=20261102004425">
+  <link rel="stylesheet" href="css/app.css?v=20261102165317">
 </head>
 <body>
   <header class="top">
@@ -26,7 +26,7 @@
           <button type="button" data-lang="en" lang="en" aria-pressed="false">EN</button>
         </div>
       </div>
-      <h1 class="title" data-i18n="title">Vežbe</h1>
+      <h1 class="title" data-i18n="title">Vežbanje</h1>
       <div class="rule"></div>
       <nav class="tabs" role="tablist" data-i18n-aria="tabs" aria-label="Ekrani">
         <button role="tab" id="tab-ritam" aria-controls="ritam" aria-selected="true" data-i18n="tab.ritam">Muzika</button>
@@ -39,6 +39,11 @@
   <main>
     <!-- ============================================================ RITAM -->
     <section id="ritam" class="screen" role="tabpanel" aria-labelledby="tab-ritam">
+      <div class="field muzika-field">
+        <label class="field-label" for="muzika" data-i18n="muzika.label">Izaberi pesmu</label>
+        <select class="pick" id="muzika"></select>
+        <p class="field-help" id="song-status" aria-live="polite"></p>
+      </div>
       <div class="field numera-field" id="numera-field">
         <label class="field-label" for="numera" data-i18n="numera.label">Numera</label>
         <select class="pick" id="numera"></select>
@@ -53,24 +58,30 @@
         <div class="field">
           <span class="field-label" data-i18n="instr.label">Uključi instrumente</span>
           <div class="tiles" id="mixer"></div>
+          <div class="tiles" id="song-mixer" hidden></div>
         </div>
 
         </div>
 
-        <div class="ritam-side">
+        <div class="ritam-side" id="ritam-side">
           <div class="field">
             <span class="field-label" id="lbl-section" data-i18n="section.label">Izaberi ritam</span>
             <div class="seg" role="radiogroup" aria-labelledby="lbl-section" data-name="section">
               <button role="radio" data-value="derecho" aria-checked="false">Derecho</button>
               <button role="radio" data-value="majao" aria-checked="true">Majao</button>
             </div>
+            <div class="seg" role="radiogroup" aria-labelledby="lbl-section" data-name="songview" hidden>
+              <button role="radio" data-value="simple" aria-checked="true" data-i18n="songview.simple">Uprošćeni</button>
+              <button role="radio" data-value="detail" aria-checked="false" data-i18n="songview.detail">Detaljni</button>
+            </div>
+            <p class="song-rhythm" id="song-rhythm" hidden><b id="song-rhythm-name"></b><span id="song-rhythm-part"></span></p>
             <p class="field-help" id="section-help"></p>
           </div>
 
         </div>
       </div>
 
-      <div class="lanes-wrap">
+      <div class="lanes-wrap" id="lanes-wrap">
         <span class="field-label" data-i18n="lanes.label">Šta svira kada</span>
         <div class="lanes" id="lanes" aria-hidden="true"></div>
       </div>
@@ -84,12 +95,14 @@
           <div class="field">
             <span class="field-label" id="lbl-step" data-i18n="step.label">Izaberi korak</span>
             <select class="pick" id="step-list" aria-labelledby="lbl-step"></select>
+            <label class="check"><input type="checkbox" id="intro-shift" checked> <span data-i18n="introShift.label">S noge na nogu u intro delovima</span></label>
+            <p class="field-help" data-i18n="introShift.help">Uz pravu pesmu: dok traje intro, težina ide s noge na nogu, duplo sporije, dok ne krene bachata.</p>
           </div>
           <div class="field">
             <span class="field-label" id="lbl-view" data-i18n="view.label">Izaberi prikaz</span>
             <div class="seg" role="radiogroup" aria-labelledby="lbl-view" data-name="view">
-              <button role="radio" data-value="vodja" aria-checked="true" data-i18n="role.vodja">Muškarac</button>
-              <button role="radio" data-value="pratilja" aria-checked="false" data-i18n="role.pratilja">Žena</button>
+              <button role="radio" data-value="vodja" aria-checked="true" data-i18n="role.vodja">Leader</button>
+              <button role="radio" data-value="pratilja" aria-checked="false" data-i18n="role.pratilja">Follower</button>
               <button role="radio" data-value="oboje" aria-checked="false" data-i18n="role.oboje">Oboje</button>
             </div>
           </div>
@@ -159,6 +172,13 @@
 
   <!-- ============================================================ TRANSPORT -->
   <footer class="transport" id="transport">
+    <div class="seek" id="seek" hidden>
+      <div class="seek-head"><span id="seek-part"></span><span id="seek-time"></span></div>
+      <div class="seek-bar" id="seek-bar" role="slider" tabindex="0" data-i18n-aria="seek.aria" aria-label="Premotavanje pesme" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="seek-segs" id="seek-segs"></div>
+        <div class="seek-thumb" id="seek-thumb"></div>
+      </div>
+    </div>
     <div class="bar-counts" id="bar-counts" aria-hidden="true"></div>
     <div class="transport-inner">
       <button class="play" id="play" type="button" aria-pressed="false" aria-label="Pusti"><svg class="ico-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg><svg class="ico-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5.5" width="4" height="13" rx="1"/><rect x="13.5" y="5.5" width="4" height="13" rx="1"/></svg></button>
@@ -170,6 +190,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/app.js?v=20261102004425"></script>
+  <script type="module" src="js/app.js?v=20261102165317"></script>
 </body>
 </html>

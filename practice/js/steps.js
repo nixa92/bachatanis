@@ -13,7 +13,7 @@
 //
 //  Okret: dodaj ugao: u koji pravac je telo okrenuto posle tog broja, u stepenima.
 //    0 = napred, -90 = ulevo, 90 = udesno. Minus je okret ulevo, plus udesno.
-//    { noga: 'L', x: -1.1, y: 0, ugao: -90 }  obe noge se okreću zajedno sa telom.
+//    { noga: 'L', x: -1.1, y: 0, ugao: -90 }  noga se okreće samo dok je u vazduhu; noga na kojoj se stoji miruje.
 //    Red bez ugla zadržava prethodni pravac. Okret ima tri prenosa težine; na trećem napiši ugao -360 ili 360, a tap posle njega je bez ugla.
 //
 //  Sve se piše iz ugla VOĐE. Pratilja se računa sama (ogledalo: leva <-> desna,
@@ -108,13 +108,15 @@ export const KORACI = [
     vodjaOboje: 'osnovni', // u prikazu Oboje vođa radi osnovni, okreće se samo pratilja
     opis: 'Pun okret ulevo na brojeve 1, 2 i 3, tap na 4, pa osnovni udesno.',
     opis_en: 'A full turn to the left on counts 1, 2 and 3, a tap on 4, then the basic to the right.',
+    // završava na istim mestima kao osnovni, da u prikazu Oboje partneri ostanu jedan naspram drugog
     brojevi: [
-      { noga: 'L', x: -1.1, y: 0, ugao: -120 },  // 1 leva ulevo, trećina okreta
-      { noga: 'D', x: -1.9, y: 0, ugao: -240 },  // 2 desna prolazi levu, dve trećine
-      { noga: 'L', x: -2.7, y: 0, ugao: -360 },  // 3 leva prolazi desnu, ravno napred
-      { noga: 'D', x: -2.1, y: 0, tap: true },   // 4 tap desnom, bez okretanja
-      { noga: 'D', x: -1.1, y: 0 },              // 5 desna u stranu
-      { noga: 'L', x: -1.7, y: 0 },              // 6 leva prilazi desnoj
+      // mali koraci, kao u osnovnom: jasnije je gde se staje, a okrenuta stopala se mogu malo preklopiti
+      { noga: 'L', x: -1.0, y: 0, ugao: -120 },  // 1 leva ulevo, trećina okreta
+      { noga: 'D', x: -1.65, y: 0, ugao: -240 }, // 2 desna prolazi levu, dve trećine
+      { noga: 'L', x: -2.3, y: 0, ugao: -360 },  // 3 leva prolazi desnu, ravno napred
+      { noga: 'D', x: -1.7, y: 0, tap: true },   // 4 tap desnom
+      { noga: 'D', x: -0.7, y: 0 },              // 5 desna u stranu
+      { noga: 'L', x: -1.3, y: 0 },              // 6 leva prilazi desnoj
       { noga: 'D', x: 0.3, y: 0 },               // 7 desna u stranu
       { noga: 'L', x: -0.3, y: 0, tap: true },   // 8 tap levom
     ],
@@ -127,14 +129,29 @@ export const KORACI = [
     opis: 'Osnovni ulevo, pa pun okret udesno na brojeve 5, 6 i 7, tap na 8.',
     opis_en: 'The basic to the left, then a full turn to the right on counts 5, 6 and 7, a tap on 8.',
     brojevi: [
-      { noga: 'L', x: -1.4, y: 0 },              // 1 leva u stranu
-      { noga: 'D', x: -0.8, y: 0 },              // 2 desna prilazi levoj
-      { noga: 'L', x: -2.7, y: 0 },              // 3 leva u stranu
-      { noga: 'D', x: -2.1, y: 0, tap: true },   // 4 tap desnom
-      { noga: 'D', x: -1.3, y: 0, ugao: 120 },   // 5 desna udesno, trećina okreta
-      { noga: 'L', x: -0.5, y: 0, ugao: 240 },   // 6 leva prolazi desnu, dve trećine
+      { noga: 'L', x: -1.3, y: 0 },              // 1 leva u stranu
+      { noga: 'D', x: -0.7, y: 0 },              // 2 desna prilazi levoj
+      { noga: 'L', x: -2.3, y: 0 },              // 3 leva u stranu
+      { noga: 'D', x: -1.7, y: 0, tap: true },   // 4 tap desnom
+      { noga: 'D', x: -1.0, y: 0, ugao: 120 },   // 5 desna udesno, trećina okreta
+      { noga: 'L', x: -0.35, y: 0, ugao: 240 },  // 6 leva prolazi desnu, dve trećine
       { noga: 'D', x: 0.3, y: 0, ugao: 360 },    // 7 desna prolazi levu, ravno napred
-      { noga: 'L', x: -0.3, y: 0, tap: true },   // 8 tap levom, bez okretanja
+      { noga: 'L', x: -0.3, y: 0, tap: true },   // 8 tap levom
     ],
   },
 ];
+
+// "S noge na nogu": u intro delovima pesme, dok ne krene bachata, težina prelazi s noge na nogu u mestu,
+// duplo sporije (na 1, 3, 5 i 7), kao energija bolera. null = na tom broju noge miruju.
+// Na kraju je težina na desnoj, a leva je slobodna, kao pre broja 1 svakog koraka.
+export const NOGA_NA_NOGU = {
+  id: 'noga-na-nogu',
+  naziv: 'S noge na nogu',
+  naziv_en: 'Weight shifts',
+  brojevi: [
+    { noga: 'L', x: -0.3, y: 0 }, null,
+    { noga: 'D', x: 0.3, y: 0 }, null,
+    { noga: 'L', x: -0.3, y: 0 }, null,
+    { noga: 'D', x: 0.3, y: 0 }, null,
+  ],
+};

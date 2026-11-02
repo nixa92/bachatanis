@@ -241,7 +241,7 @@ export function playClick(ctx, time, level, dest, vel = 1) {
 // ---------------------------------------------------------------- SAMPLES
 // Plays a decoded AudioBuffer. `offset` skips leading silence, `maxDur` cuts the tail
 // with a short fade so words never pile up at fast tempos.
-export function playSample(ctx, time, buffer, dest, vel = 1, offset = 0, maxDur = 0) {
+export function playSample(ctx, time, buffer, dest, vel = 1, offset = 0, maxDur = 0, fade = 0.04) {
   const src = ctx.createBufferSource();
   src.buffer = buffer;
   const g = ctx.createGain();
@@ -249,7 +249,7 @@ export function playSample(ctx, time, buffer, dest, vel = 1, offset = 0, maxDur 
   src.connect(g).connect(dest);
   src.start(time, offset);
   if (maxDur > 0 && buffer.duration - offset > maxDur) {
-    g.gain.setValueAtTime(vel, time + maxDur - 0.04);
+    g.gain.setValueAtTime(vel, time + maxDur - fade);
     g.gain.linearRampToValueAtTime(0, time + maxDur);
     src.stop(time + maxDur + 0.01);
   }

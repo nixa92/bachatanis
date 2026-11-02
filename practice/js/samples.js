@@ -1,5 +1,6 @@
 // Sample-based instrument voices (see samples/FORMAT.md).
-// samples/manifest.json lists the sounds (built by tools/build-manifest.py); each instrument uses its first entry.
+// samples/manifest.json lists the sounds (built by tools/build-manifest.py); each instrument uses its first entry
+// (today 'emu': one-shots cut from the emusicality songs).
 // Every play* method returns true if it played a sample, false if the caller
 // should use the synth instead (still loading, or failed).
 
@@ -195,6 +196,7 @@ export class SampleBank {
   playRequinto(ctx, time, midi, dest, vel = 1, lowpass = 0) {
     const e = this._ready('requinto');
     if (!e) return false;
+    midi += this.variant('requinto').transpose || 0; // a sound recorded lower plays the melody an octave down
     return this._note('requinto', e.notes, time, midi, dest, this._gain('requinto') * vel, { len: 0.5, fade: 0.15, lp: lowpass });
   }
 }

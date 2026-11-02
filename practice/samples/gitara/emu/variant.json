@@ -1,0 +1,16 @@
+{
+ "id": "emu",
+ "order": -2,
+ "name": "emusicality rhythm guitar (Eso Es Amor)",
+ "source": "https://emusicality.co.uk",
+ "license": "Used with permission of emusicality.co.uk (owner's agreement)",
+ "attribution": "emusicality.co.uk",
+ "notes": "Clean single notes of one rhythm guitar (Eso Es Amor) that ring at least 0.35 s, cut before the next note.",
+ "gain": 1.0,
+ "notes_map": {
+  "53": "n53.wav",
+  "57": "n57.wav",
+  "60": "n60.wav",
+  "64": "n64.wav"
+ }
+}

@@ -1,116 +1,126 @@
 {
  "bongo": [
   {
-   "name": "Bongo one-shots (menegass)",
-   "source": "https://freesound.org/people/menegass/sounds/99751/ (and 99752-99756)",
-   "license": "CC0 1.0",
-   "attribution": "Bongo samples by menegass (freesound.org), CC0 - credit not required",
-   "notes": "Six single bongo hits from one uploader: open (high, bright), mid and low open tones, short hi/lo strokes used as tip/heel. Old (2010) recordings, single hits only, so it can sound mechanical; tap = the lowest open tone. Cut from HQ preview MP3s.",
+   "id": "emu",
+   "order": -2,
+   "name": "emusicality bongo (Este Secreto)",
+   "source": "https://emusicality.co.uk",
+   "license": "Used with permission of emusicality.co.uk (owner's agreement)",
+   "attribution": "emusicality.co.uk",
+   "notes": "Hits cut from the bongo track and sorted by sound: high drum (macho) or low drum (hembra), loud or soft.",
    "gain": 1.0,
-   "id": "fs-menegass",
    "slots": {
-    "heel": [
-     "heel1.wav"
-    ],
-    "tip": [
-     "tip1.wav"
-    ],
     "open": [
-     "open1.wav"
+     "open1.wav",
+     "open2.wav",
+     "open3.wav"
     ],
     "openLow": [
      "openLow1.wav",
-     "openLow2.wav"
+     "openLow2.wav",
+     "openLow3.wav"
+    ],
+    "tip": [
+     "tip1.wav",
+     "tip2.wav",
+     "tip3.wav"
+    ],
+    "heel": [
+     "heel1.wav"
     ],
     "tap": [
-     "tap1.wav"
+     "tap1.wav",
+     "tap2.wav"
     ]
    },
-   "path": "samples/bongo/fs-menegass/"
+   "path": "samples/bongo/emu/"
   }
  ],
  "guira": [
   {
-   "id": "vcsl",
-   "name": "VCSL güiro + cabasa",
-   "source": "https://github.com/sgossner/VCSL",
-   "license": "CC0 1.0",
-   "attribution": "Versilian Community Sample Library (VCSL), Versilian Studios LLC",
+   "id": "emu",
+   "order": -2,
+   "name": "emusicality güira (Eso Es Amor)",
+   "source": "https://emusicality.co.uk",
+   "license": "Used with permission of emusicality.co.uk (owner's agreement)",
+   "attribution": "emusicality.co.uk",
+   "notes": "Majao strokes as long scrapes, derecho strokes as short ones.",
    "gain": 1.0,
-   "notes": "VCSL has no metal güira: gourd güiro (high-passed) layered with cabasa beads, premixed. Less metallic than a real güira.",
    "slots": {
     "long": [
-     "long_1.wav",
-     "long_2.wav"
+     "long1.wav",
+     "long2.wav",
+     "long3.wav"
     ],
     "short": [
-     "short_1.wav",
-     "short_2.wav"
+     "short1.wav",
+     "short2.wav",
+     "short3.wav"
     ]
    },
-   "order": -1,
-   "path": "samples/guira/vcsl/"
+   "path": "samples/guira/emu/"
   }
  ],
  "bas": [
   {
-   "id": "fp-fingerbass",
-   "name": "FreePats Finger Bass YR (Yamaha RBX)",
-   "source": "https://freepats.zenvoid.org/ElectricGuitar/clean-electric-bass.html (FingerBassYR-SFZ+WAV-20190930)",
-   "license": "CC0 1.0",
-   "attribution": "Andrea Biasior / FreePats project, CC0",
-   "notes": "Real fingerstyle electric bass, but the library has only ONE octave (MIDI 28-39). The app range 40-57 must repitch these up by 1-18 semitones, which sounds thin/chipmunky on high notes. Good only if the app plays bass an octave lower (28-45).",
+   "id": "emu",
+   "order": -2,
+   "name": "emusicality bass",
+   "source": "https://emusicality.co.uk",
+   "license": "Used with permission of emusicality.co.uk (owner's agreement)",
+   "attribution": "emusicality.co.uk",
+   "notes": "Bass notes plucked on counts 1, 3 and 4, cut from the songs at a clean start; pitch measured.",
    "gain": 1.0,
    "notes_map": {
-    "28": "n28.wav",
+    "30": "n30.wav",
     "31": "n31.wav",
     "34": "n34.wav",
-    "37": "n37.wav",
-    "39": "n39.wav"
+    "35": "n35.wav",
+    "38": "n38.wav",
+    "43": "n43.wav"
    },
-   "path": "samples/bas/fp-fingerbass/"
+   "path": "samples/bas/emu/"
   }
  ],
  "gitara": [
   {
-   "source": "https://freepats.zenvoid.org/Guitar/acoustic-guitar.html (SpanishClassicalGuitar-SFZ+FLAC-20190618)",
-   "license": "CC0 1.0",
-   "attribution": "roberto@zenvoid.org / FreePats project, CC0",
-   "id": "fp-nylon",
-   "name": "Spanish classical guitar, nylon (FreePats)",
-   "notes": "Nylon-string classical guitar, single notes; recorded in non-ideal conditions and filtered (some noise/dullness). Softer and darker than the steel strings of modern bachata. No muted samples.",
-   "gain": 0.98,
+   "id": "emu",
+   "order": -2,
+   "name": "emusicality rhythm guitar (Eso Es Amor)",
+   "source": "https://emusicality.co.uk",
+   "license": "Used with permission of emusicality.co.uk (owner's agreement)",
+   "attribution": "emusicality.co.uk",
+   "notes": "Clean single notes of one rhythm guitar (Eso Es Amor) that ring at least 0.35 s, cut before the next note.",
+   "gain": 1.0,
    "notes_map": {
-    "50": "n50.wav",
-    "52": "n52.wav",
-    "55": "n55.wav",
-    "58": "n58.wav",
-    "61": "n61.wav",
-    "64": "n64.wav",
-    "67": "n67.wav"
+    "53": "n53.wav",
+    "57": "n57.wav",
+    "60": "n60.wav",
+    "64": "n64.wav"
    },
-   "path": "samples/gitara/fp-nylon/"
+   "path": "samples/gitara/emu/"
   }
  ],
  "requinto": [
   {
-   "source": "https://freepats.zenvoid.org/Guitar/acoustic-guitar.html (SpanishClassicalGuitar-SFZ+FLAC-20190618)",
-   "license": "CC0 1.0",
-   "attribution": "roberto@zenvoid.org / FreePats project, CC0",
-   "id": "fp-nylon",
-   "name": "Spanish classical guitar, nylon (FreePats)",
-   "notes": "Upper register of the nylon classical guitar. Warm, traditional (older) bachata colour; lacks the bright steel bite of modern requinto.",
+   "id": "emu",
+   "order": -2,
+   "name": "emusicality lead guitar (Del Mar)",
+   "source": "https://emusicality.co.uk",
+   "license": "Used with permission of emusicality.co.uk (owner's agreement)",
+   "attribution": "emusicality.co.uk",
+   "notes": "Clean single notes of the Del Mar lead guitar that ring at least 0.35 s; the melody plays an octave lower to fit them.",
    "gain": 1.0,
+   "transpose": -12,
    "notes_map": {
-    "64": "n64.wav",
-    "67": "n67.wav",
-    "70": "n70.wav",
-    "73": "n73.wav",
-    "76": "n76.wav",
-    "79": "n79.wav",
-    "82": "n82.wav"
+    "56": "n56.wav",
+    "63": "n63.wav",
+    "65": "n65.wav",
+    "66": "n66.wav",
+    "68": "n68.wav",
+    "70": "n70.wav"
    },
-   "path": "samples/requinto/fp-nylon/"
+   "path": "samples/requinto/emu/"
   }
  ]
 }

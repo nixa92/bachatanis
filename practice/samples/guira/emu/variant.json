@@ -1,0 +1,22 @@
+{
+ "id": "emu",
+ "order": -2,
+ "name": "emusicality güira (Eso Es Amor)",
+ "source": "https://emusicality.co.uk",
+ "license": "Used with permission of emusicality.co.uk (owner's agreement)",
+ "attribution": "emusicality.co.uk",
+ "notes": "Majao strokes as long scrapes, derecho strokes as short ones.",
+ "gain": 1.0,
+ "slots": {
+  "long": [
+   "long1.wav",
+   "long2.wav",
+   "long3.wav"
+  ],
+  "short": [
+   "short1.wav",
+   "short2.wav",
+   "short3.wav"
+  ]
+ }
+}

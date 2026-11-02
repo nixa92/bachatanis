@@ -1,5 +1,5 @@
-import { t } from './i18n.js?v=20261102004425';
-import { KORACI } from './steps.js?v=20261102004425';
+import { t } from './i18n.js?v=20261102165317';
+import { KORACI, NOGA_NA_NOGU } from './steps.js?v=20261102165317';
 // Top-down feet animation for the Koraci screen.
 // Positions come from steps.js; time comes from the audio engine (positionAt),
 // so the feet land exactly on the counts you hear.
@@ -7,7 +7,9 @@ import { KORACI } from './steps.js?v=20261102004425';
 const NS = 'http://www.w3.org/2000/svg';
 const SWAP = { L: 'D', D: 'L' };
 const START = { L: [-0.3, 0], D: [0.3, 0] };
-const GAP = 2.3; // distance between partners in "Oboje" view
+const GAP = 1.4; // distance between partners in "Oboje" view (toes about 0.4 foot apart; checked: no overlap in any step)
+const FOOT = 0.85; // drawn foot size; smaller feet leave clear space between them in turns
+const SHIFT = 0.3; // in "Oboje" the follower stands a little to the lead's right, so their feet zigzag
 
 // right foot, toes up, ~1 unit long; the left foot is this mirrored
 const SOLE = 'M0.02,-0.5 C0.17,-0.5 0.2,-0.3 0.19,-0.13 C0.18,0.05 0.13,0.16 0.13,0.3 ' +
@@ -22,34 +24,53 @@ export function moveLabel(m) {
 
 // moves and the foot state after every count, for one role ('vodja' | 'pratilja')
 export function buildStates(step, role) {
-  const moves = step.brojevi.map((b) =>
-    role === 'vodja'
+  const moves = step.brojevi.map((b) => !b ? null
+    : role === 'vodja'
       ? { noga: b.noga, x: b.x, y: b.y, tap: !!b.tap, ugao: b.ugao }
       // in a turn the follower is a left-right mirror, so y stays; otherwise she goes back when the lead goes forward
       : b.ugao === undefined
         ? { noga: SWAP[b.noga], x: -b.x, y: -b.y, tap: !!b.tap }
         : { noga: SWAP[b.noga], x: -b.x, y: b.y, tap: !!b.tap, ugao: -b.ugao });
   const pos = {};
+  const real = moves.filter(Boolean); // counts where a foot moves (null = both feet hold)
   for (const foot of ['L', 'D']) {
-    const last = [...moves].reverse().find((m) => m.noga === foot);
+    const last = [...real].reverse().find((m) => m.noga === foot);
     const st = role === 'vodja' ? START[foot] : [-START[SWAP[foot]][0], 0];
     pos[foot] = last ? [last.x, last.y] : st;
   }
-  const lastWeighted = [...moves].reverse().find((m) => !m.tap);
+  const lastWeighted = [...real].reverse().find((m) => !m.tap);
   let weight = lastWeighted ? lastWeighted.noga : 'L';
-  const lastTurned = [...moves].reverse().find((m) => m.ugao !== undefined);
+  const lastTurned = [...real].reverse().find((m) => m.ugao !== undefined);
   let angle = lastTurned ? lastTurned.ugao : 0;
+  // Each foot has its own angle and turns only while it is in the air; the standing foot stays still.
+  // A turning step spins its foot in the turn's direction; any other step takes the short way.
+  const footAngle = { L: angle, D: angle };
+  const spin = (m, body) => {
+    const target = m.ugao !== undefined ? m.ugao : body;
+    let d = turnBy(footAngle[m.noga], target);
+    if (m.ugao !== undefined && d * Math.sign(m.ugao) < 0) d += 360 * Math.sign(m.ugao);
+    return d;
+  };
+  // one pass to find where each foot points at the end of the phrase, which is where it starts
+  let body = angle;
+  for (const m of real) {
+    if (m.ugao !== undefined) body = m.ugao;
+    footAngle[m.noga] += spin(m, body);
+  }
   const tapped = {};
   for (const foot of ['L', 'D']) {
-    const last = [...moves].reverse().find((m) => m.noga === foot);
+    const last = [...real].reverse().find((m) => m.noga === foot);
     tapped[foot] = !!(last && last.tap);
   }
   const states = moves.map((m) => {
+    if (!m) return { pos: { L: [...pos.L], D: [...pos.D] }, weight, angle, footAngle: { ...footAngle }, tapped: { ...tapped } };
     pos[m.noga] = [m.x, m.y];
     if (!m.tap) weight = m.noga;
     if (m.ugao !== undefined) angle = m.ugao;
+    m.spin = spin(m, angle); // how far this foot turns on its way to this count
+    footAngle[m.noga] += m.spin;
     tapped[m.noga] = m.tap;
-    return { pos: { L: [...pos.L], D: [...pos.D] }, weight, angle, tapped: { ...tapped } };
+    return { pos: { L: [...pos.L], D: [...pos.D] }, weight, angle, footAngle: { ...footAngle }, tapped: { ...tapped } };
   });
   return { moves, states };
 }
@@ -77,6 +98,7 @@ export class FeetView {
     this.svg.appendChild(clip);
     const add = (role, place, source = step) => {
       const data = buildStates(source, role);
+      data.intro = buildStates(NOGA_NA_NOGU, role); // shown in a song's intro when the option is on
       const g = el('g', { class: `person person-${role}` });
       this.svg.appendChild(g);
       const feet = {};
@@ -90,7 +112,7 @@ export class FeetView {
       const leadStep = KORACI.find((k) => k.id === step.vodjaOboje) || step;
       add('vodja', { map: (x, y) => [x, -y], rot: 0 }, leadStep);
       // follower stands opposite, facing the lead: own frame rotated 180°
-      add('pratilja', { map: (x, y) => [-x, -(GAP - y)], rot: 180 });
+      add('pratilja', { map: (x, y) => [SHIFT - x, -(GAP - y)], rot: 180 });
     }
     this._fitViewBox();
     this.render(null);
@@ -107,18 +129,20 @@ export class FeetView {
         }
       }
     }
-    const pad = 0.9;
+    const pad = 0.6; // a little room around the feet (less padding inside the card)
     let w = maxX - minX + pad * 2, h = maxY - minY + pad * 2;
     let x = minX - pad, y = minY - pad;
-    const minW = 4.2, minH = 3.0;
+    const minW = 3.6, minH = 2.6;
     if (w < minW) { x -= (minW - w) / 2; w = minW; }
     if (h < minH) { y -= (minH - h) / 2; h = minH; }
     this.svg.setAttribute('viewBox', `${x.toFixed(2)} ${y.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)}`);
+    this.svg.style.aspectRatio = `${w.toFixed(2)} / ${h.toFixed(2)}`; // the card is as tall as the step needs
   }
 
   // pos: {entry, frac} from engine.positionAt, or null when stopped.
+  // intro: true to show the weight shifts of a song's intro instead of the step.
   // Returns the current count index (0..7) or -1.
-  render(pos) {
+  render(pos, { intro = false } = {}) {
     let ci = 7, f = 0, idle = true;
     if (pos) {
       const b = (pos.entry.s + pos.frac) / 2; // beats into the phrase, 0..8
@@ -126,27 +150,26 @@ export class FeetView {
       f = b - ci;
       idle = false;
     }
-    for (const p of this.persons) {
+    for (const person of this.persons) {
+      const p = intro ? { ...person, ...person.intro } : person;
       const st = p.states[ci];
       const cur = p.moves[ci];
       const next = p.moves[(ci + 1) % 8];
-      const nextAngle = p.states[(ci + 1) % 8].angle;
-      // both feet turn with the body during the second half of the beat
-      const turn = !idle && f > 0.5 ? turnBy(st.angle, nextAngle) * ease((f - 0.5) / 0.5) : 0;
-      const angle = st.angle + turn;
       for (const foot of ['L', 'D']) {
         let [x, y] = st.pos[foot];
+        let angle = st.footAngle[foot];
         let lift = 0;
         let onBall = !idle && st.tapped[foot];
         // the foot of the next count travels during the second half of the beat
-        if (!idle && next.noga === foot && f > 0.5) {
+        if (!idle && next && next.noga === foot && f > 0.5) {
           const k = ease((f - 0.5) / 0.5);
           x += (next.x - x) * k;
           y += (next.y - y) * k;
           lift = Math.sin(Math.PI * k);
+          angle += next.spin * k; // the foot turns only in the air
           onBall = next.tap;
         }
-        const flash = !idle && cur.tap && cur.noga === foot ? Math.max(0, 1 - f / 0.55) : 0;
+        const flash = !idle && cur && cur.tap && cur.noga === foot ? Math.max(0, 1 - f / 0.55) : 0;
         const [sx, sy] = p.place.map(x, y);
         updateFoot(p.feet[foot], sx, sy, p.place.rot + angle, st.weight === foot, lift, flash, onBall);
       }
@@ -185,7 +208,7 @@ function makeFoot(parent, foot) {
 }
 
 function updateFoot(f, x, y, rot, weighted, lift, flash, onBall) {
-  const s = 1 + lift * 0.1;
+  const s = FOOT * (1 + lift * 0.1);
   f.g.setAttribute('transform', `translate(${x.toFixed(3)} ${y.toFixed(3)}) rotate(${rot}) scale(${s.toFixed(3)})`);
   f.label.setAttribute('transform', `rotate(${(-rot).toFixed(1)} 0 0.08)`); // the letter stays upright
   if (onBall) f.sole.setAttribute('clip-path', 'url(#foot-front)');

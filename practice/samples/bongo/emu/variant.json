@@ -1,0 +1,34 @@
+{
+ "id": "emu",
+ "order": -2,
+ "name": "emusicality bongo (Este Secreto)",
+ "source": "https://emusicality.co.uk",
+ "license": "Used with permission of emusicality.co.uk (owner's agreement)",
+ "attribution": "emusicality.co.uk",
+ "notes": "Hits cut from the bongo track and sorted by sound: high drum (macho) or low drum (hembra), loud or soft.",
+ "gain": 1.0,
+ "slots": {
+  "open": [
+   "open1.wav",
+   "open2.wav",
+   "open3.wav"
+  ],
+  "openLow": [
+   "openLow1.wav",
+   "openLow2.wav",
+   "openLow3.wav"
+  ],
+  "tip": [
+   "tip1.wav",
+   "tip2.wav",
+   "tip3.wav"
+  ],
+  "heel": [
+   "heel1.wav"
+  ],
+  "tap": [
+   "tap1.wav",
+   "tap2.wav"
+  ]
+ }
+}

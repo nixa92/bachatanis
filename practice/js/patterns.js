@@ -113,10 +113,13 @@ export const BONGO = {
   //   1 open covered | & open | 2 open | & palm | 3 open covered | & open | 4 OPEN LOW DRUM | & palm
   // 2& is much softer than 4&, as in the reference song (about 10 dB).
   // open covered ("abierto tapado") -> 'tip' (muffled), palm -> 'heel', low drum (hembra) -> 'openLow'
-  derecho: [['tip', 0.7], ['open', 0.55], ['open', 0.7], ['heel', 0.16], ['tip', 0.7], ['open', 0.55], ['openLow', 1.0], ['heel', 0.5]],
-  // majao: only the counts. Transcribed from "Bachata Basic Bongo Rhythms" (Bachata Academy):
-  // open tones on 1, 2 and 3, the low drum on 4.
-  majao:   [['open', 0.75], null, ['open', 0.75], null, ['open', 0.8], null, ['openLow', 1.0], null],
+  // Velocities measured on the real songs (emusicality bongo tracks, 131 derecho bars): the "&" strokes
+  // are ghost notes, far softer than the counts; the low drum on 4 is the loudest. Level ratios to the
+  // low drum, square-rooted so the ghost notes stay audible on our samples. Every stroke is on the eighth.
+  derecho: [['tip', 0.62], ['open', 0.28], ['open', 0.48], ['heel', 0.26], ['tip', 0.6], ['open', 0.37], ['openLow', 1.0], ['heel', 0.37]],
+  // majao: only the counts: open tones on 1, 2 and 3, the low drum on 4 ("Bachata Basic Bongo Rhythms",
+  // Bachata Academy). Real players add soft ghost notes on the "&", but they made it sound twice as busy.
+  majao:   [['open', 0.69], null, ['open', 0.63], null, ['open', 0.68], null, ['openLow', 1.0], null],
   // mambo, same video: a fast run of four sixteenths on the small drum (1&, 1a, 2, 2e),
   // then 2& low drum, 3 open, 3& open, 4 low drum, 4& palm; a slap on 1.
   // A step can hold several strokes: [[offset in eighths, stroke, velocity], ...]
@@ -140,12 +143,14 @@ export const GUIRA = {
 };
 
 // --- Bas gitara. Per bar: [stepInBar, interval above root, length in steps, velocity]
-// 1 held for 1½ beats, a pickup on 2&, then 3 and 4 one beat each. Nothing on 2.
+// 1 held to just past 2, a pickup on 2&, then 3 (the fifth) and 4 (the octave). Nothing on 2.
+// Checked on 9 real songs (emusicality bass tracks, about 400 bars each of derecho and majao):
+// the pickup on 2& is mostly the root, nearly as loud as the counts.
 export const BASS_BAR = [
-  [0, 0, 3, 1.0],
-  [3, 7, 1, 0.55],
-  [4, 7, 2, 0.75],
-  [6, 12, 2, 0.7],
+  [0, 0, 2.5, 1.0],
+  [3, 0, 1, 0.75],
+  [4, 7, 1.5, 0.9],
+  [6, 12, 1.5, 0.85],
 ];
 // Mambo has no fixed bass rhythm. Base taken from the majao described by iASO Records
 // (Bachata Breakdown): 1, 2, 2&, 4, 4&, no 3, with 1 and 2& emphasized and 2& held 1.5 beats.
