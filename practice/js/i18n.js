@@ -62,7 +62,7 @@ const DICT = {
     'hint.ios': 'Ako ne čuješ zvuk na iPhone-u, isključi nečujni režim.',
 
     'step.label': 'Izaberi korak',
-    'introShift.label': 'S noge na nogu u intro delovima',
+    'introShift.label': 'S noge na nogu u intro',
     'view.label': 'Izaberi prikaz',
     'role.vodja': 'Leader',
     'role.pratilja': 'Follower',

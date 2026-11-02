@@ -503,21 +503,20 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 
 /* ------------------------------------------------------------ transport + 8 counts */
 /* the bottom bar: the same margin at the sides, between play and tempo, and at the bottom */
-:root { --tp: min(var(--pad), 24px); }
+:root { --tp: 14px; }
+/* round Play on the left; on the right the counts on top (they change fastest and go with the steps),
+   then the song's seek bar, then a small info row: the song part, time and BPM, or the tempo control */
 .bar-counts {
-  max-width: var(--max);
-  margin: 0 auto;
-  padding: 4px var(--tp) 0;
   display: flex;
   justify-content: space-between;
 }
 .bar-cell {
   position: relative;
-  min-width: 18px;
-  height: 28px;
+  min-width: 16px;
+  height: 22px;
   display: flex; align-items: center; justify-content: center;
 }
-.bar-num { font-family: var(--font-display); font-weight: 800; font-size: 18px; letter-spacing: -0.03em; color: rgba(247, 243, 236, 0.35); }
+.bar-num { font-family: var(--font-display); font-weight: 800; font-size: 16px; letter-spacing: -0.03em; color: rgba(247, 243, 236, 0.35); }
 .bar-cell.is-tap .bar-num { color: #FF5A6E; }
 /* no transition: the highlight must switch exactly on the beat */
 .bar-cell.is-now .bar-num { color: var(--paper); transform: scale(1.35); }
@@ -529,29 +528,32 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
   left: 0; right: 0; bottom: 0;
   background: var(--ink);
   color: var(--paper);
+  border-radius: 20px 20px 0 0; /* rounded top corners, like the cards */
   /* on phones with a home bar the safe area is the bottom margin, if it is bigger */
   padding-bottom: max(0px, calc(env(safe-area-inset-bottom) - var(--tp)));
   z-index: 10;
 }
 .transport-inner {
-  max-width: var(--max);
+  max-width: 720px;
   margin: 0 auto;
-  padding: 4px var(--tp) var(--tp);
+  padding: 12px var(--tp) var(--tp);
   display: grid;
-  grid-template-columns: 1fr 1fr; /* play as wide as the tempo control */
-  grid-template-areas: "play tempo";
+  grid-template-columns: auto minmax(0, 1fr);
   gap: var(--tp);
   align-items: center;
 }
+.transport-right { display: grid; gap: 4px; min-width: 0; }
+.transport-info { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 16px; font-size: 12px; line-height: 1.3; color: rgba(247, 243, 236, 0.7); font-variant-numeric: tabular-nums; }
+/* a song has its own tempo: the info row shows its part, time and BPM; the generated music shows the tempo control */
+.transport.is-song .tempo { display: none; }
+.transport:not(.is-song) #seek-part, .transport:not(.is-song) #seek-time { display: none; }
 
 /* song seek bar: one segment per part of the song, filled as it plays */
-.seek { max-width: var(--max); margin: 0 auto; padding: 10px var(--tp) 0; }
-.seek-head { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; line-height: 1.3; color: rgba(247, 243, 236, 0.75); margin-bottom: 6px; }
 #seek-part { font-family: var(--font-display); font-weight: 700; color: var(--paper); }
-.seek-bar { position: relative; height: 22px; display: flex; align-items: center; cursor: pointer; touch-action: none; -webkit-tap-highlight-color: transparent; }
+.seek-bar { position: relative; height: 16px; display: flex; align-items: center; cursor: pointer; touch-action: none; -webkit-tap-highlight-color: transparent; }
 .seek-bar:focus:not(:focus-visible) { outline: none; }
-.seek-segs { display: flex; gap: 3px; width: 100%; height: 6px; }
-.seek-seg { position: relative; height: 100%; border-radius: 3px; overflow: hidden; background: rgba(247, 243, 236, 0.16); }
+.seek-segs { display: flex; gap: 3px; width: 100%; height: 4px; }
+.seek-seg { position: relative; height: 100%; border-radius: 2px; overflow: hidden; background: rgba(247, 243, 236, 0.16); }
 .seek-seg i { position: absolute; inset: 0 auto 0 0; width: 0; background: rgba(247, 243, 236, 0.85); }
 /* intro: the plain light segment; derecho green, majao gold, mambo red; bachata (simple view) red */
 .seek-seg.is-bachata { background: rgba(255, 90, 110, 0.32); }
@@ -563,21 +565,20 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 .seek-seg.is-majao i { background: #F2B544; }
 .seek-seg.is-mambo { background: rgba(255, 90, 110, 0.32); }
 .seek-seg.is-mambo i { background: #FF5A6E; }
-.seek-thumb { position: absolute; top: 50%; left: 0; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--paper); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); pointer-events: none; }
+.seek-thumb { position: absolute; top: 50%; left: 0; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--paper); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); pointer-events: none; }
 .play {
-  grid-area: play;
   touch-action: manipulation;
   display: grid; place-items: center;
-  width: 100%; height: 48px;
+  width: 52px; height: 52px;
   border: 0;
-  border-radius: 999px;
+  border-radius: 50%;
   background: var(--red);
   color: var(--paper);
   padding: 0;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
   transition: background var(--dur) var(--ease), transform 120ms var(--ease);
 }
-.play svg { width: 28px; height: 28px; fill: currentColor; }
+.play svg { width: 26px; height: 26px; fill: currentColor; }
 .play .ico-pause { display: none; }
 .play[aria-pressed="true"] .ico-play { display: none; }
 .play[aria-pressed="true"] .ico-pause { display: block; }
@@ -591,11 +592,12 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 @keyframes play-spin { to { transform: rotate(360deg); } }
 .play:active { transform: scale(0.94); }
 .play[aria-pressed="true"] { background: var(--paper); color: var(--red); }
-.tempo { grid-area: tempo; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-.tempo-value { display: grid; justify-items: center; min-width: 92px; font-size: 12px; line-height: 1.2; color: rgba(247, 243, 236, 0.75); }
-.tempo-value b { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--paper); }
-#bpm-val { font-family: var(--font-display); font-weight: 800; font-size: 22px; color: var(--paper); margin-right: 2px; }
-.tempo-btn { width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; font-family: var(--font-display); font-weight: 700; font-size: 20px; line-height: 1; color: rgba(247, 243, 236, 0.75); background: transparent; box-shadow: inset 0 0 0 1px rgba(247, 243, 236, 0.2); cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.tempo { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.tempo-value { display: flex; align-items: baseline; gap: 6px; font-size: 12px; line-height: 1.2; color: rgba(247, 243, 236, 0.75); }
+.tempo-value b { font-weight: 500; }
+.tempo-value b::before { content: "· "; }
+#bpm-val { font-family: var(--font-display); font-weight: 800; font-size: 15px; color: var(--paper); margin-right: 2px; }
+.tempo-btn { width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%; font-family: var(--font-display); font-weight: 700; font-size: 17px; line-height: 1; color: rgba(247, 243, 236, 0.75); background: transparent; box-shadow: inset 0 0 0 1px rgba(247, 243, 236, 0.2); cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .tempo-btn:active:not(:disabled) { background: rgba(247, 243, 236, 0.15); }
 .tempo-btn:focus:not(:focus-visible) { outline: none; }
 .tempo-btn:disabled { opacity: 0.3; cursor: default; }
@@ -627,8 +629,9 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 @media (min-width: 760px) {
   :root { --transport-h: 110px; }
   .ritam-grid { grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr); gap: 40px; align-items: start; }
-  .bar-cell { height: 36px; }
-  .bar-num { font-size: 24px; }
+  :root { --tp: 20px; }
+  .bar-cell { height: 28px; }
+  .bar-num { font-size: 20px; }
   .koraci-grid { grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.2fr); gap: 40px; align-items: start; }
   .koraci-controls { order: 0; }
   .test-setup, .test-intro, .test-run, .test-result { max-width: 640px; }

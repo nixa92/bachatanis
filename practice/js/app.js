@@ -1,11 +1,11 @@
-import { Engine, CHANNELS } from './engine.js?v=20261102171646';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261102171646';
-import { KORACI } from './steps.js?v=20261102171646';
-import { FeetView } from './feet.js?v=20261102171646';
-import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261102171646';
-import * as store from './storage.js?v=20261102171646';
-import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261102171646';
-import { ICONS } from './icons.js?v=20261102171646';
+import { Engine, CHANNELS } from './engine.js?v=20261102181249';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261102181249';
+import { KORACI } from './steps.js?v=20261102181249';
+import { FeetView } from './feet.js?v=20261102181249';
+import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261102181249';
+import * as store from './storage.js?v=20261102181249';
+import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261102181249';
+import { ICONS } from './icons.js?v=20261102181249';
 
 const $ = (id) => document.getElementById(id);
 const engine = new Engine();
@@ -455,6 +455,7 @@ let seeking = null; // beat index under the finger while dragging
 function buildSeek() {
   const song = engine.song;
   $('seek').hidden = !song;
+  $('transport').classList.toggle('is-song', !!song);
   const box = $('seek-segs');
   box.textContent = '';
   seekSegs = [];
@@ -503,7 +504,7 @@ function updateSeek(i) {
       if ($('seek-part').textContent !== text) $('seek-part').textContent = text;
     }
   }
-  const time = `${clock(i * beat)} / ${clock(meta.beats.length * beat)}`;
+  const time = `${clock(i * beat)} / ${clock(meta.beats.length * beat)} · ${meta.bpm} BPM`;
   if ($('seek-time').textContent !== time) $('seek-time').textContent = time;
   $('seek-bar').setAttribute('aria-valuenow', String(Math.round((100 * i) / meta.beats.length)));
   $('seek-bar').setAttribute('aria-valuetext', `${$('seek-part').textContent}, ${time}`);
@@ -557,7 +558,7 @@ renderStepList();
 stepList.addEventListener('change', () => { state.step = KORACI.find((k) => k.id === stepList.value); setupFeet(); });
 
 bindSeg(seg('view'), (v) => { state.view = v; setupFeet(); });
-// "S noge na nogu u intro delovima": in a song's intro the feet shift weight at half speed instead of the step
+// "S noge na nogu u intro": in a song's intro the feet shift weight at half speed instead of the step
 const SHIFT_KEY = 'vezbaj.nogaNaNogu';
 let introShift = true;
 try { introShift = localStorage.getItem(SHIFT_KEY) !== 'off'; } catch (e) { /* private mode */ }

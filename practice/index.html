@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Sacramento&display=swap" rel="stylesheet">
   <link rel="preload" href="fonts/Northwell.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/app.css?v=20261102171646">
+  <link rel="stylesheet" href="css/app.css?v=20261102181249">
 </head>
 <body>
   <header class="top">
@@ -112,7 +112,7 @@
         </div>
 
         <div class="stage">
-          <div class="switch-row" id="intro-shift-row"><span id="lbl-intro-shift" data-i18n="introShift.label">S noge na nogu u intro delovima</span><button type="button" role="switch" class="switch" id="intro-shift" aria-checked="true" aria-labelledby="lbl-intro-shift"><span class="switch-thumb"></span></button></div>
+          <div class="switch-row" id="intro-shift-row"><span id="lbl-intro-shift" data-i18n="introShift.label">S noge na nogu u intro</span><button type="button" role="switch" class="switch" id="intro-shift" aria-checked="true" aria-labelledby="lbl-intro-shift"><span class="switch-thumb"></span></button></div>
           <svg class="feet" id="feet" role="img" data-i18n-aria="feet.aria" aria-label="Animacija koraka, pogled odozgo"></svg>
         </div>
       </div>
@@ -171,24 +171,29 @@
 
   <!-- ============================================================ TRANSPORT -->
   <footer class="transport" id="transport">
-    <div class="seek" id="seek" hidden>
-      <div class="seek-head"><span id="seek-part"></span><span id="seek-time"></span></div>
-      <div class="seek-bar" id="seek-bar" role="slider" tabindex="0" data-i18n-aria="seek.aria" aria-label="Premotavanje pesme" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-        <div class="seek-segs" id="seek-segs"></div>
-        <div class="seek-thumb" id="seek-thumb"></div>
-      </div>
-    </div>
-    <div class="bar-counts" id="bar-counts" aria-hidden="true"></div>
     <div class="transport-inner">
       <button class="play" id="play" type="button" aria-pressed="false" aria-label="Pusti"><svg class="ico-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg><svg class="ico-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5.5" width="4" height="13" rx="1"/><rect x="13.5" y="5.5" width="4" height="13" rx="1"/></svg><svg class="ico-load" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/></svg></button>
-      <div class="tempo" role="group" data-i18n-aria="tempo.aria" aria-label="Tempo">
-        <button class="tempo-btn" id="bpm-down" type="button" data-i18n-aria="tempo.down" aria-label="Sporije">−</button>
-        <div class="tempo-value" aria-live="polite"><span><span id="bpm-val">125</span> BPM</span><b id="bpm-name"></b></div>
-        <button class="tempo-btn" id="bpm-up" type="button" data-i18n-aria="tempo.up" aria-label="Brže">+</button>
+      <div class="transport-right">
+        <div class="bar-counts" id="bar-counts" aria-hidden="true"></div>
+        <div class="seek" id="seek" hidden>
+          <div class="seek-bar" id="seek-bar" role="slider" tabindex="0" data-i18n-aria="seek.aria" aria-label="Premotavanje pesme" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="seek-segs" id="seek-segs"></div>
+            <div class="seek-thumb" id="seek-thumb"></div>
+          </div>
+        </div>
+        <div class="transport-info">
+          <span id="seek-part"></span>
+          <div class="tempo" role="group" data-i18n-aria="tempo.aria" aria-label="Tempo">
+            <button class="tempo-btn" id="bpm-down" type="button" data-i18n-aria="tempo.down" aria-label="Sporije">−</button>
+            <div class="tempo-value" aria-live="polite"><span><span id="bpm-val">125</span> BPM</span><b id="bpm-name"></b></div>
+            <button class="tempo-btn" id="bpm-up" type="button" data-i18n-aria="tempo.up" aria-label="Brže">+</button>
+          </div>
+          <span id="seek-time"></span>
+        </div>
       </div>
     </div>
   </footer>
 
-  <script type="module" src="js/app.js?v=20261102171646"></script>
+  <script type="module" src="js/app.js?v=20261102181249"></script>
 </body>
 </html>
