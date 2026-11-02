@@ -183,6 +183,11 @@ h3 {
 .hero .cta { background: var(--paper); color: var(--red); }
 .hero .cta:hover { background: #fff; }
 .hero .cta:active { background: var(--cream); }
+/* the practice app, a quiet link under the main button */
+/* the button and the app link under it, centred on the button */
+.hero-actions { display: grid; }
+.hero-app { justify-self: center; margin-top: 18px; color: var(--paper); font-weight: 600; font-size: 15px; text-underline-offset: 4px; text-decoration-color: rgba(247, 243, 236, 0.5); }
+.hero-app:hover { text-decoration-color: var(--paper); }
 
 section { padding: 64px 0; }
 .alt { background: var(--paper); }
@@ -291,6 +296,7 @@ footer { padding: 64px 0 32px; }
   .logo .hand { font-size: 92px; }
   .hero .logo .hand { font-size: 84px; }
   .cta { display: inline-flex; }
+  .hero-actions { width: max-content; max-width: 100%; }
   .bar .cta { display: flex; }
   .stats { display: flex; flex-wrap: wrap; gap: 26px 40px; }
   .stat { flex-direction: row; align-items: center; gap: 14px; }
@@ -327,6 +333,8 @@ footer { padding: 64px 0 32px; }
   .logo .hand { font-size: clamp(80px, 6.3vw, 104px); }
   .hero .tagline { color: var(--ink); font-size: 19px; margin-top: 30px; }
   .hero .cta { background: var(--red); color: var(--paper); }
+  .hero-app { color: var(--red); text-decoration-color: var(--red-50); }
+  .hero-app:hover { text-decoration-color: var(--red); }
   .hero .cta:hover { background: var(--red-hover); }
   .hero .cta:active { background: var(--red-press); }
 
