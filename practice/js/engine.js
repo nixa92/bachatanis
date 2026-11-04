@@ -3,9 +3,9 @@
 // and get the step that is sounding right now, so sound and picture stay locked
 // even when the tempo changes mid-play.
 
-import * as I from './instruments.js?v=20261104223357';
-import * as P from './patterns.js?v=20261104223357';
-import { SampleBank } from './samples.js?v=20261104223357';
+import * as I from './instruments.js?v=20261104231757';
+import * as P from './patterns.js?v=20261104231757';
+import { SampleBank } from './samples.js?v=20261104231757';
 
 export const STEPS_PER_PHRASE = 16;
 const LOOKAHEAD = 0.18;    // schedule this far ahead (s); a count word may start up to 0.15 s before its beat
@@ -26,6 +26,7 @@ const VOICES = { sr: 'lana', en: 'samantha' };
 export class Engine {
   constructor() {
     this.ctx = null;
+    this.stale = false;             // the app was in the background: the next tap makes a new context
     this.bpm = 120;
     this.playing = false;
     this.sectionMode = 'majao';   // 'derecho' | 'majao' | 'mambo'
@@ -50,27 +51,37 @@ export class Engine {
   // Called when the page opens: creates the audio context (it stays suspended) and loads all sounds,
   // so that the first press of play starts at once.
   prepare() {
-    if (!this.ctx) {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      this.ctx = new AC({ latencyHint: 'interactive' });
-      const ctx = this.ctx;
-      this.comp = ctx.createDynamicsCompressor();
-      this.comp.threshold.value = -14;
-      this.comp.knee.value = 10;
-      this.comp.ratio.value = 4;
-      this.comp.attack.value = 0.003;
-      this.comp.release.value = 0.2;
-      this.master = ctx.createGain();
-      this.master.gain.value = 0.7;
-      this.master.connect(this.comp).connect(ctx.destination);
-      this._loadVoices();
-      this.samples.attach(ctx);
-    }
+    if (this.ctx) return;
+    this._openContext();
+    this._loadVoices();
+  }
+
+  _openContext() {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    this.ctx = new AC({ latencyHint: 'interactive' });
+    const ctx = this.ctx;
+    this.comp = ctx.createDynamicsCompressor();
+    this.comp.threshold.value = -14;
+    this.comp.knee.value = 10;
+    this.comp.ratio.value = 4;
+    this.comp.attack.value = 0.003;
+    this.comp.release.value = 0.2;
+    this.master = ctx.createGain();
+    this.master.gain.value = 0.7;
+    this.master.connect(this.comp).connect(ctx.destination);
+    this.samples.attach(ctx);
   }
 
   // Must be called from inside a user gesture (tap/click) the first time — iOS rule.
   unlock() {
     this.prepare();
+    // iOS: after the app was in the background the context can report that it runs and still stay silent.
+    // A new context made inside the tap has sound. Decoded songs and samples are not tied to a context.
+    if (!this.playing && (this.stale || this.ctx.state === 'interrupted')) {
+      this.ctx.close().catch(() => {});
+      this._openContext();
+    }
+    this.stale = false;
     // a silent buffer started inside the gesture fully unlocks iOS output
     const b = this.ctx.createBuffer(1, 1, this.ctx.sampleRate);
     const s = this.ctx.createBufferSource();

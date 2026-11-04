@@ -1,13 +1,13 @@
-import { Engine, CHANNELS } from './engine.js?v=20261104223357';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261104223357';
-import { KORACI } from './steps.js?v=20261104223357';
-import { FeetView } from './feet.js?v=20261104223357';
-import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261104223357';
-import * as store from './storage.js?v=20261104223357';
-import * as board from './leaderboard.js?v=20261104223357';
-import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261104223357';
-import { ICONS } from './icons.js?v=20261104223357';
-import { unlocked } from './gate.js?v=20261104223357';
+import { Engine, CHANNELS } from './engine.js?v=20261104231757';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261104231757';
+import { KORACI } from './steps.js?v=20261104231757';
+import { FeetView } from './feet.js?v=20261104231757';
+import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261104231757';
+import * as store from './storage.js?v=20261104231757';
+import * as board from './leaderboard.js?v=20261104231757';
+import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261104231757';
+import { ICONS } from './icons.js?v=20261104231757';
+import { unlocked } from './gate.js?v=20261104231757';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -906,7 +906,14 @@ requestAnimationFrame(frame);
 // some embedded browser previews pause requestAnimationFrame; fall back to a timer there
 setInterval(() => { if (performance.now() - lastFrame > 120) { lastFrame = performance.now(); frameBody(); } }, 33);
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden && test.running) abortTest();
+  if (document.hidden) {
+    engine.stale = true;
+    if (test.running) abortTest();
+  } else if (engine.playing && engine.ctx.state !== 'running') {
+    // the sound stopped in the background: show Play, so the next tap starts the sound again
+    engine.pause();
+    renderPlay();
+  }
 });
 
 // open a screen directly: vezbaj/#koraci, vezbaj/#test
