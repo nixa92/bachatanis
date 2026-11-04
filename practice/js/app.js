@@ -1,13 +1,13 @@
-import { Engine, CHANNELS } from './engine.js?v=20261102194158';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261102194158';
-import { KORACI } from './steps.js?v=20261102194158';
-import { FeetView } from './feet.js?v=20261102194158';
-import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261102194158';
-import * as store from './storage.js?v=20261102194158';
-import * as board from './leaderboard.js?v=20261102194158';
-import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261102194158';
-import { ICONS } from './icons.js?v=20261102194158';
-import { unlocked } from './gate.js?v=20261102194158';
+import { Engine, CHANNELS } from './engine.js?v=20261104223357';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261104223357';
+import { KORACI } from './steps.js?v=20261104223357';
+import { FeetView } from './feet.js?v=20261104223357';
+import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261104223357';
+import * as store from './storage.js?v=20261104223357';
+import * as board from './leaderboard.js?v=20261104223357';
+import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261104223357';
+import { ICONS } from './icons.js?v=20261104223357';
+import { unlocked } from './gate.js?v=20261104223357';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -314,6 +314,18 @@ function lightLanes(s) {
 // ------------------------------------------------------------ real songs (emusicality.co.uk)
 // "Izaberi pesmu": the generated music, or a real song with every instrument on its own track.
 const MUSIC_KEY = 'vezbaj.muzika';
+const MUSIC_DAY_KEY = 'vezbaj.muzika.dan'; // the day the song was picked: a pick from an earlier day gives way to the song of the day
+// Song of the day: every day the next song in songs.json, in a circle. On 3. 11. 2026 it is Del Mar.
+const FIRST_DAY = { id: 'delmar', date: [2026, 11, 3] };
+const dayNumber = (d) => Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
+const today = () => new Date().toDateString();
+function songOfTheDay() {
+  const start = songList.findIndex((s) => s.id === FIRST_DAY.id);
+  const [y, m, d] = FIRST_DAY.date;
+  const days = dayNumber(new Date()) - dayNumber(new Date(y, m - 1, d));
+  const n = songList.length;
+  return songList[(((Math.max(start, 0) + days) % n) + n) % n];
+}
 const musicSel = $('muzika');
 let songList = [];
 let songTiles = [];
@@ -389,7 +401,7 @@ async function pickMusic(id) {
   // let go of the previous song's sound now, so it is not in memory while the new song decodes (~270 MB)
   if (engine.song) engine.song.buffers = null;
   setLoading(false);
-  try { localStorage.setItem(MUSIC_KEY, id); } catch (e) { /* private mode */ }
+  try { localStorage.setItem(MUSIC_KEY, id); localStorage.setItem(MUSIC_DAY_KEY, today()); } catch (e) { /* private mode */ }
   const status = $('song-status');
   const meta = songList.find((s) => s.id === id);
   if (!meta) {
@@ -445,11 +457,13 @@ fetch('songs/songs.json', { cache: 'no-cache' }).then((r) => r.json()).then((dat
   // download every song's files in the background, so picking a song only has to decode it
   setTimeout(() => engine.prefetchSongs(songList), 3000);
   renderMusicPicker();
+  // the song picked today stays; otherwise the song of the day
   let saved = null;
-  try { saved = localStorage.getItem(MUSIC_KEY); } catch (e) { /* private mode */ }
-  if (saved && songList.some((s) => s.id === saved)) {
-    musicSel.value = saved;
-    pickMusic(saved);
+  try { if (localStorage.getItem(MUSIC_DAY_KEY) === today()) saved = localStorage.getItem(MUSIC_KEY); } catch (e) { /* private mode */ }
+  const pick = saved === 'gen' || songList.some((s) => s.id === saved) ? saved : songOfTheDay()?.id;
+  if (pick) {
+    musicSel.value = pick;
+    pickMusic(pick);
   }
 }).catch(() => { /* no songs: only the generated music */ });
 

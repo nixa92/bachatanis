@@ -1,5 +1,5 @@
-import { t } from './i18n.js?v=20261102194158';
-import { KORACI, NOGA_NA_NOGU } from './steps.js?v=20261102194158';
+import { t } from './i18n.js?v=20261104223357';
+import { KORACI, NOGA_NA_NOGU } from './steps.js?v=20261104223357';
 // Top-down feet animation for the Koraci screen.
 // Positions come from steps.js; time comes from the audio engine (positionAt),
 // so the feet land exactly on the counts you hear.
@@ -9,7 +9,7 @@ const SWAP = { L: 'D', D: 'L' };
 const START = { L: [-0.3, 0], D: [0.3, 0] };
 const GAP = 1.4; // distance between partners in "Oboje" view (toes about 0.4 foot apart; checked: no overlap in any step)
 const FOOT = 0.85; // drawn foot size; smaller feet leave clear space between them in turns
-const SHIFT = 0.3; // in "Oboje" the follower stands a little to the lead's right, so their feet zigzag
+const SHIFT = 0.15; // in "Oboje" the follower stands a little to the lead's right, so their feet zigzag
 
 // right foot, toes up, ~1 unit long; the left foot is this mirrored
 const SOLE = 'M0.02,-0.5 C0.17,-0.5 0.2,-0.3 0.19,-0.13 C0.18,0.05 0.13,0.16 0.13,0.3 ' +
@@ -29,7 +29,8 @@ export function buildStates(step, role) {
       ? { noga: b.noga, x: b.x, y: b.y, tap: !!b.tap, ugao: b.ugao, vuci: !!b.vuci }
       // in a turn or a cross behind the follower is a left-right mirror, so y stays;
       // otherwise she goes back when the lead goes forward
-      : b.ugao === undefined && !b.iza
+      // with ogledalo the whole step is a left-right mirror: both partners go forward together
+      : b.ugao === undefined && !b.iza && !step.ogledalo
         ? { noga: SWAP[b.noga], x: -b.x, y: -b.y, tap: !!b.tap, vuci: !!b.vuci }
         : { noga: SWAP[b.noga], x: -b.x, y: b.y, tap: !!b.tap, vuci: !!b.vuci, ugao: b.ugao === undefined ? undefined : -b.ugao });
   const pos = {};
@@ -114,7 +115,8 @@ export class FeetView {
       const leadStep = KORACI.find((k) => k.id === step.vodjaOboje) || step;
       add('vodja', { map: (x, y) => [x, -y], rot: 0 }, leadStep);
       // follower stands opposite, facing the lead: own frame rotated 180°
-      add('pratilja', { map: (x, y) => [SHIFT - x, -(GAP - y)], rot: 180 });
+      const gap = step.razmak || GAP; // partners who step toward each other need more room
+      add('pratilja', { map: (x, y) => [SHIFT - x, -(gap - y)], rot: 180 });
     }
     this._fitViewBox();
     this.render(null);
@@ -137,6 +139,17 @@ export class FeetView {
     const minW = 3.6, minH = 2.6;
     if (w < minW) { x -= (minW - w) / 2; w = minW; }
     if (h < minH) { y -= (minH - h) / 2; h = minH; }
+    if (this.view === 'oboje') {
+      // names of the partners: the follower is at the top, the lead at the bottom
+      const band = 0.24;
+      y -= band; h += band * 2;
+      const cx = (x + w / 2).toFixed(2); // quiet captions, centred
+      const top = el('text', { class: 'role-name role-name-pratilja', x: cx, y: (y + 0.18).toFixed(2), 'text-anchor': 'middle' });
+      top.textContent = t('role.pratilja');
+      const bottom = el('text', { class: 'role-name role-name-vodja', x: cx, y: (y + h - 0.08).toFixed(2), 'text-anchor': 'middle' });
+      bottom.textContent = t('role.vodja');
+      this.svg.append(top, bottom);
+    }
     this.svg.setAttribute('viewBox', `${x.toFixed(2)} ${y.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)}`);
     this.svg.style.aspectRatio = `${w.toFixed(2)} / ${h.toFixed(2)}`; // the card is as tall as the step needs
   }

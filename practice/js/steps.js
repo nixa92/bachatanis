@@ -20,6 +20,9 @@
 //    (inače se pratilja računa kao ogledalo napred <-> nazad).
 //    { noga: 'D', x: -0.85, y: -0.35, iza: true }
 //
+//  Ogledalo: dodaj ogledalo: true na ceo korak kad pratilja ide napred kad i vođa (npr. Face to face).
+//    Tada je pratilja samo ogledalo levo <-> desno. razmak: 2.8 razmiče partnere u prikazu Oboje.
+//
 //  Vučenje (slide): dodaj vuci: true kad noga klizi po podu do te tačke, bez podizanja.
 //    { noga: 'L', x: -0.8, y: 0, tap: true, vuci: true }
 //
@@ -76,6 +79,25 @@ export const KORACI = [
     ],
   },
   {
+    id: 'face-to-face',
+    naziv: 'Face to face',
+    naziv_en: 'Face to face',
+    opis: 'Korak napred, druga noga prilazi, nazad na početak i tap, pa isto drugom nogom. Vođa i pratilja idu napred zajedno, kao u ogledalu.',
+    opis_en: 'Step forward, the other foot closes, back to the start and tap, then the same with the other foot. Leader and follower go forward together, like a mirror.',
+    ogledalo: true, // pratilja je ogledalo levo <-> desno, ali ide napred kad i vođa
+    razmak: 2.8,    // u prikazu Oboje idu jedno ka drugom, pa stoje dalje
+    brojevi: [
+      { noga: 'L', x: -0.3, y: 0.7 },            // 1 leva napred
+      { noga: 'D', x: 0.3, y: 0.7 },             // 2 desna prilazi levoj
+      { noga: 'L', x: -0.3, y: 0 },              // 3 leva nazad, na početak
+      { noga: 'D', x: 0.3, y: 0, tap: true },    // 4 tap desnom pored leve
+      { noga: 'D', x: 0.3, y: 0.7 },             // 5 desna napred
+      { noga: 'L', x: -0.3, y: 0.7 },            // 6 leva prilazi desnoj
+      { noga: 'D', x: 0.3, y: 0 },               // 7 desna nazad, na početak
+      { noga: 'L', x: -0.3, y: 0, tap: true },   // 8 tap levom pored desne
+    ],
+  },
+  {
     id: 'u-mestu',
     naziv: 'U mestu',
     naziv_en: 'In place',
@@ -90,6 +112,23 @@ export const KORACI = [
       { noga: 'L', x: -0.3, y: 0 },
       { noga: 'D', x: 0.3, y: 0 },
       { noga: 'L', x: -0.3, y: 0, tap: true },
+    ],
+  },
+  {
+    id: 'side-step',
+    naziv: 'Side step',
+    naziv_en: 'Side step',
+    opis: 'Leva u stranu, desna u mestu, leva do noge i tap desnom, pa isto na drugu stranu.',
+    opis_en: 'Left foot to the side, right foot in place, left foot back next to it and tap right, then the same to the other side.',
+    brojevi: [
+      { noga: 'L', x: -1.0, y: 0 },             // 1 leva u stranu
+      { noga: 'D', x: 0.3, y: 0 },              // 2 desna u mestu
+      { noga: 'L', x: -0.3, y: 0 },             // 3 leva do noge
+      { noga: 'D', x: 0.3, y: 0, tap: true },   // 4 tap desnom
+      { noga: 'D', x: 1.0, y: 0 },              // 5 desna u stranu
+      { noga: 'L', x: -0.3, y: 0 },             // 6 leva u mestu
+      { noga: 'D', x: 0.3, y: 0 },              // 7 desna do noge
+      { noga: 'L', x: -0.3, y: 0, tap: true },  // 8 tap levom
     ],
   },
   {

@@ -403,6 +403,7 @@ input[type="range"] { accent-color: var(--red); width: 100%; min-height: 32px; }
 .foot.is-lifted .foot-body { opacity: 0.8; }
 .foot-ring { fill: none; stroke: var(--red); stroke-width: 0.06; opacity: 0; }
 .person-pratilja .foot-sole { stroke-dasharray: none; }
+.role-name { font-family: var(--font-body); font-size: 0.13px; font-weight: 400; fill: var(--ink-600); opacity: 0.55; }
 
 /* ------------------------------------------------------------ TEST */
 .text-input {
