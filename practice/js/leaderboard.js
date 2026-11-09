@@ -65,35 +65,41 @@ export function submitRun({ docId, name, mode, points, month }) {
 
 const eq = (field, value) => ({ fieldFilter: { field: { fieldPath: field }, op: 'EQUAL', value } });
 
-// the best named games of a mode, all time or for one month; one row per name (its best game)
-export async function topRuns(mode, month = null, count = 10) {
+// all named players of a mode, all time or for one month, best first; one row per name (its best game).
+// The rules allow at most 50 documents per query, so the games are read in pages of 50.
+const PAGE = 50;
+const MAX_PAGES = 20; // up to 1000 games: far more than the club plays in a month
+export async function topRuns(mode, month = null) {
   const filters = [eq('mode', { stringValue: mode }), eq('named', { booleanValue: true })];
   if (month) filters.push(eq('month', { stringValue: month }));
-  const rows = await post(':runQuery', {
-    structuredQuery: {
-      from: [{ collectionId: 'runs' }],
-      where: { compositeFilter: { op: 'AND', filters } },
-      orderBy: [{ field: { fieldPath: 'total' }, direction: 'DESCENDING' }],
-      limit: 40, // more than shown, because one player can have several games near the top
-    },
-  });
   const seen = new Set();
   const out = [];
-  for (const r of rows || []) {
-    if (!r.document) continue;
-    const f = r.document.fields;
-    if (f.level.integerValue === '0') continue; // started, but no level finished
-    const name = f.name.stringValue;
-    const key = name.toLocaleLowerCase();
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push({
-      id: r.document.name.split('/').pop(),
-      name,
-      level: Number(f.level.integerValue),
-      total: Number(f.total.integerValue),
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const rows = await post(':runQuery', {
+      structuredQuery: {
+        from: [{ collectionId: 'runs' }],
+        where: { compositeFilter: { op: 'AND', filters } },
+        orderBy: [{ field: { fieldPath: 'total' }, direction: 'DESCENDING' }],
+        offset: page * PAGE,
+        limit: PAGE,
+      },
     });
-    if (out.length === count) break;
+    const docs = (rows || []).filter((r) => r.document);
+    for (const r of docs) {
+      const f = r.document.fields;
+      if (f.level.integerValue === '0') continue; // started, but no level finished
+      const name = f.name.stringValue;
+      const key = name.toLocaleLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({
+        id: r.document.name.split('/').pop(),
+        name,
+        level: Number(f.level.integerValue),
+        total: Number(f.total.integerValue),
+      });
+    }
+    if (docs.length < PAGE) break;
   }
   return out;
 }
