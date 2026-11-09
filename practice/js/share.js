@@ -3,7 +3,7 @@
 // Instagram covers about 250 px at the top and the bottom of a story, so the text stays inside that.
 
 const W = 1080, H = 1920;
-const RED = '#A5071C', RED_DARK = '#7C0514', CREAM = '#EFE9E0', PAPER = '#F7F3EC';
+const RED = '#A5071C', PAPER = '#F7F3EC';
 export const APP_URL = 'https://bachatanis.rs/practice/';
 
 async function fontsReady() {
@@ -27,7 +27,7 @@ function fit(ctx, text, font, size, maxW) {
 
 function spaced(ctx, px) { if ('letterSpacing' in ctx) ctx.letterSpacing = `${px}px`; }
 
-// d: { name, game, mode, total, unit, levelText, rank, challenge, url }  (all texts already translated)
+// d: { mode, total, unit, levelText, rank, challenge, url }  (all texts already translated)
 export async function drawCard(d) {
   await fontsReady();
   const c = document.createElement('canvas');
@@ -36,95 +36,51 @@ export async function drawCard(d) {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
 
-  // background: red, with a soft lighter glow behind the score
+  // a plain red background; few things, with room around them
   ctx.fillStyle = RED;
   ctx.fillRect(0, 0, W, H);
-  const glow = ctx.createRadialGradient(W / 2, 880, 40, W / 2, 880, 900);
-  glow.addColorStop(0, 'rgba(255,255,255,0.10)');
-  glow.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = glow;
-  ctx.fillRect(0, 0, W, H);
+  const SOFT = 'rgba(247,243,236,0.72)';
 
   // the logo: BACHATA with Anita i Nikola written over it
   ctx.fillStyle = PAPER;
-  spaced(ctx, 4);
-  ctx.font = '800 118px Sequel, system-ui, sans-serif';
-  ctx.fillText('BACHATA', W / 2, 350);
+  spaced(ctx, 3);
+  ctx.font = '800 84px Sequel, system-ui, sans-serif';
+  ctx.fillText('BACHATA', W / 2, 340);
   spaced(ctx, 0);
-  ctx.font = '96px Northwell, Sacramento, cursive';
-  ctx.fillText('Anita i Nikola', W / 2 + 10, 428);
+  ctx.font = '70px Northwell, Sacramento, cursive';
+  ctx.fillText('Anita i Nikola', W / 2 + 8, 396);
 
   // the game
-  ctx.fillStyle = CREAM;
-  spaced(ctx, 8);
-  ctx.font = '600 34px Montserrat, system-ui, sans-serif';
-  ctx.fillText(d.game.toUpperCase(), W / 2, 580);
-  spaced(ctx, 0);
-  const modeSize = fit(ctx, d.mode, (s) => `800 ${s}px Sequel, system-ui, sans-serif`, 76, W - 160);
-  ctx.font = `800 ${modeSize}px Sequel, system-ui, sans-serif`;
-  ctx.fillStyle = PAPER;
-  ctx.fillText(d.mode, W / 2, 670);
+  const modeSize = fit(ctx, d.mode, (s) => `600 ${s}px Sequel, system-ui, sans-serif`, 60, W - 200);
+  ctx.font = `600 ${modeSize}px Sequel, system-ui, sans-serif`;
+  ctx.fillStyle = SOFT;
+  ctx.fillText(d.mode, W / 2, 700);
 
   // the score
   const score = String(d.total);
-  const scoreSize = fit(ctx, score, (s) => `800 ${s}px Sequel, system-ui, sans-serif`, 330, W - 140);
+  const scoreSize = fit(ctx, score, (s) => `800 ${s}px Sequel, system-ui, sans-serif`, 360, W - 160);
   ctx.font = `800 ${scoreSize}px Sequel, system-ui, sans-serif`;
-  ctx.fillText(score, W / 2, 990);
-  ctx.font = '600 52px Sequel, system-ui, sans-serif';
-  ctx.fillStyle = CREAM;
-  ctx.fillText(d.unit, W / 2, 1070);
+  ctx.fillStyle = PAPER;
+  ctx.fillText(score, W / 2, 1050);
+  ctx.font = '600 48px Sequel, system-ui, sans-serif';
+  ctx.fillText(d.unit, W / 2, 1130);
 
-  // level and place, in two pills
-  const pills = [d.levelText, d.rank].filter(Boolean);
-  ctx.font = '600 36px Montserrat, system-ui, sans-serif';
-  const padX = 34, pillH = 78, gap = 20;
-  const widths = pills.map((p) => ctx.measureText(p).width + padX * 2);
-  let x = (W - widths.reduce((a, b) => a + b, 0) - gap * (pills.length - 1)) / 2;
-  const pillY = 1130;
-  pills.forEach((p, i) => {
-    ctx.beginPath();
-    ctx.roundRect(x, pillY, widths[i], pillH, pillH / 2);
-    ctx.fillStyle = RED_DARK;
-    ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = 'rgba(247,243,236,0.35)';
-    ctx.stroke();
-    ctx.fillStyle = PAPER;
-    ctx.fillText(p, x + widths[i] / 2, pillY + 52);
-    x += widths[i] + gap;
-  });
-
-  // the player's name
-  if (d.name) {
-    const nameSize = fit(ctx, d.name, (s) => `600 ${s}px Montserrat, system-ui, sans-serif`, 44, W - 200);
-    ctx.font = `600 ${nameSize}px Montserrat, system-ui, sans-serif`;
-    ctx.fillStyle = CREAM;
-    ctx.fillText(d.name, W / 2, 1290);
-  }
-
-  // the count 1–8, with the taps (4 and 8) marked
-  const dotY = 1380, step = 92;
-  ctx.font = '800 34px Sequel, system-ui, sans-serif';
-  for (let i = 0; i < 8; i++) {
-    const cx = W / 2 + (i - 3.5) * step + (i < 4 ? -14 : 14);
-    const tap = i === 3 || i === 7;
-    ctx.beginPath();
-    ctx.arc(cx, dotY, tap ? 32 : 26, 0, Math.PI * 2);
-    ctx.fillStyle = tap ? PAPER : 'rgba(247,243,236,0.16)';
-    ctx.fill();
-    ctx.fillStyle = tap ? RED : PAPER;
-    ctx.fillText(String(i + 1), cx, dotY + 12);
-  }
+  // level and place, one quiet line
+  const info = [d.levelText, d.rank].filter(Boolean).join('  ·  ');
+  const infoSize = fit(ctx, info, (s) => `500 ${s}px Montserrat, system-ui, sans-serif`, 36, W - 160);
+  ctx.font = `500 ${infoSize}px Montserrat, system-ui, sans-serif`;
+  ctx.fillStyle = SOFT;
+  ctx.fillText(info, W / 2, 1220);
 
   // the challenge and where to play
   ctx.fillStyle = PAPER;
-  const chSize = fit(ctx, d.challenge, (s) => `${s}px Northwell, Sacramento, cursive`, 130, W - 160);
+  const chSize = fit(ctx, d.challenge, (s) => `${s}px Northwell, Sacramento, cursive`, 124, W - 200);
   ctx.font = `${chSize}px Northwell, Sacramento, cursive`;
-  ctx.fillText(d.challenge, W / 2, 1540);
-  ctx.fillStyle = CREAM;
+  ctx.fillText(d.challenge, W / 2, 1500);
+  ctx.fillStyle = SOFT;
   spaced(ctx, 2);
-  ctx.font = '600 32px Montserrat, system-ui, sans-serif';
-  ctx.fillText(d.url, W / 2, 1665);
+  ctx.font = '500 30px Montserrat, system-ui, sans-serif';
+  ctx.fillText(d.url, W / 2, 1620);
   spaced(ctx, 0);
 
   return new Promise((resolve, reject) => c.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob'))), 'image/png'));

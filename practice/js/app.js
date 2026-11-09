@@ -1,14 +1,14 @@
-import { Engine, CHANNELS } from './engine.js?v=20261109210541';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109210541';
-import { KORACI } from './steps.js?v=20261109210541';
-import { FeetView } from './feet.js?v=20261109210541';
-import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261109210541';
-import * as store from './storage.js?v=20261109210541';
-import * as board from './leaderboard.js?v=20261109210541';
-import { drawCard, shareCard, APP_URL } from './share.js?v=20261109210541';
-import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261109210541';
-import { ICONS } from './icons.js?v=20261109210541';
-import { unlocked } from './gate.js?v=20261109210541';
+import { Engine, CHANNELS } from './engine.js?v=20261109211225';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109211225';
+import { KORACI } from './steps.js?v=20261109211225';
+import { FeetView } from './feet.js?v=20261109211225';
+import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261109211225';
+import * as store from './storage.js?v=20261109211225';
+import * as board from './leaderboard.js?v=20261109211225';
+import { drawCard, shareCard, APP_URL } from './share.js?v=20261109211225';
+import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261109211225';
+import { ICONS } from './icons.js?v=20261109211225';
+import { unlocked } from './gate.js?v=20261109211225';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -900,8 +900,6 @@ async function prepareShare(best) {
   const mode = t(`mode.${best.mode}`);
   const unit = pointsWord(best.total);
   const card = {
-    name: best.name,
-    game: t('tab.test'),
     mode,
     total: best.total,
     unit,
