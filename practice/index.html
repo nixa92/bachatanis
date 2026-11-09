@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Sacramento&display=swap" rel="stylesheet">
   <link rel="preload" href="fonts/Northwell.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/app.css?v=20261109215235">
+  <link rel="stylesheet" href="css/app.css?v=20261109221213">
 </head>
 <body class="is-locked">
   <header class="top">
@@ -137,8 +137,21 @@
     <!-- ============================================================ TEST -->
     <section id="test" class="screen" role="tabpanel" aria-labelledby="tab-test" hidden>
       <div class="test-setup" id="test-setup">
+        <p class="winner" id="winner" hidden></p>
         <p class="field-label" data-i18n="games.pick">Izaberi igru</p>
         <div class="game-list" id="game-list"></div>
+        <section class="board" aria-labelledby="total-title">
+          <div class="board-head">
+            <p class="field-label" id="total-title" data-i18n="total.title">Ukupna tabela</p>
+            <select class="pick pick-small" id="total-period" aria-labelledby="total-title">
+              <option value="month" data-i18n="board.month">Ovaj mesec</option>
+              <option value="prev" data-i18n="board.prev">Prošli mesec</option>
+              <option value="all" data-i18n="board.all">Sva vremena</option>
+            </select>
+          </div>
+          <p class="board-me" data-i18n="total.help">Zbir najboljih rezultata iz sve tri igre. Igraj sve tri pod istim imenom.</p>
+          <ol class="board-list" id="total-list" aria-live="polite"></ol>
+        </section>
       </div>
 
       <div class="test-intro" id="test-intro" hidden>
@@ -160,6 +173,7 @@
             <p class="field-label" id="board-title" data-i18n="board.title">Tabela najboljih</p>
             <select class="pick pick-small" id="board-period" aria-labelledby="board-title">
               <option value="month" data-i18n="board.month">Ovaj mesec</option>
+              <option value="prev" data-i18n="board.prev">Prošli mesec</option>
               <option value="all" data-i18n="board.all">Sva vremena</option>
             </select>
           </div>
@@ -236,6 +250,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/app.js?v=20261109215235"></script>
+  <script type="module" src="js/app.js?v=20261109221213"></script>
 </body>
 </html>

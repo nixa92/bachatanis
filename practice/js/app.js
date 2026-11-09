@@ -1,15 +1,15 @@
-import { Engine, CHANNELS } from './engine.js?v=20261109215235';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109215235';
-import { KORACI } from './steps.js?v=20261109215235';
-import { FeetView } from './feet.js?v=20261109215235';
-import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, feedback, songsForGame, slowSong } from './game.js?v=20261109215235';
-import * as store from './storage.js?v=20261109215235';
-import * as board from './leaderboard.js?v=20261109215235';
-import { drawCard, shareCard, APP_URL } from './share.js?v=20261109215235';
-import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261109215235';
-import { ICONS } from './icons.js?v=20261109215235';
-import { unlocked } from './gate.js?v=20261109215235';
-import { watchUpdates } from './update.js?v=20261109215235';
+import { Engine, CHANNELS } from './engine.js?v=20261109221213';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109221213';
+import { KORACI } from './steps.js?v=20261109221213';
+import { FeetView } from './feet.js?v=20261109221213';
+import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, feedback, songsForGame, slowSong } from './game.js?v=20261109221213';
+import * as store from './storage.js?v=20261109221213';
+import * as board from './leaderboard.js?v=20261109221213';
+import { drawCard, shareCard, APP_URL } from './share.js?v=20261109221213';
+import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261109221213';
+import { ICONS } from './icons.js?v=20261109221213';
+import { unlocked } from './gate.js?v=20261109221213';
+import { watchUpdates } from './update.js?v=20261109221213';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -34,6 +34,7 @@ onLangChange((l) => {
   buildSeek();
   renderGames();
   renderBoard();
+  renderTotal();
   renderIntro();
   renderStepList();
   setupFeet();
@@ -89,6 +90,7 @@ function showScreen(id) {
   $('transport').hidden = id === 'test';
   document.body.dataset.screen = id;
   if (id === 'test' && engine.playing) togglePlay();
+  if (id === 'test' && !$('test-setup').hidden) renderTotal();
   if (location.hash.slice(1) !== id) history.replaceState(null, '', id === 'ritam' ? location.pathname : `#${id}`);
 }
 for (const s of SCREENS) $(`tab-${s}`).addEventListener('click', () => showScreen(s));
@@ -635,6 +637,7 @@ function showTestPart(part, opts = {}) {
   if (part === 'run') window.scrollTo(0, 0);
   if (part === 'result') $('test-result').scrollIntoView();
   if (part === 'intro') renderBoard(opts.board);
+  if (part === 'setup') renderTotal();
 }
 
 const showStreak = (n) => {
@@ -920,6 +923,8 @@ function renderIntro() {
 renderGames();
 
 // ------------------------------------------------------------ leaderboard
+// the month of a period in the period picker: "month" this month, "prev" the month before, "all" none
+const periodMonth = (period) => (period === 'month' ? board.monthOf() : period === 'prev' ? board.prevMonth() : null);
 const boardView = { period: 'month' }; // the game is the one opened (state.mode)
 let boardLoad = 0;
 $('board-period').addEventListener('change', (e) => { boardView.period = e.target.value; renderBoard(); });
@@ -931,7 +936,7 @@ async function renderBoard(opts = {}) {
   const load = ++boardLoad;
   const list = $('board-list');
   const me = $('board-me');
-  const month = boardView.period === 'month' ? board.monthOf() : null;
+  const month = periodMonth(boardView.period);
   if (!list.children.length || list.dataset.view !== `${boardView.mode}/${boardView.period}`) {
     list.innerHTML = `<li class="board-note">${escapeHtml(t('board.loading'))}</li>`;
   }
@@ -951,7 +956,7 @@ async function renderBoard(opts = {}) {
   const myIds = new Set(mine.map((r) => r.docId));
   list.innerHTML = rows.length
     ? rows.map((r, i) => `<li class="board-row${myIds.has(r.id) ? ' is-me' : ''}"><span class="board-rank">${i + 1}.</span><span class="board-name">${escapeHtml(r.name)}</span><span class="board-level">${escapeHtml(t('board.level', { level: r.level }))}</span><b class="board-total">${escapeHtml(t('board.points', { total: r.total }))}</b></li>`).join('')
-    : `<li class="board-note">${escapeHtml(t('board.empty'))}</li>`;
+    : `<li class="board-note">${escapeHtml(t(boardView.period === 'prev' ? 'board.emptyPrev' : 'board.empty'))}</li>`;
   const best = mine.length ? mine.reduce((a, b) => (b.total > a.total ? b : a)) : null;
   me.hidden = !best || rows.some((r) => myIds.has(r.id));
   if (best) me.textContent = t('board.me', { total: best.total, level: best.level });
@@ -969,6 +974,47 @@ async function renderBoard(opts = {}) {
   }
 }
 renderBoard();
+
+// The total leaderboard on the game list: each name's best game of each of the three games added up.
+// Above it, the whole month long, last month's winner.
+const totalView = { period: 'month' };
+let totalLoad = 0;
+$('total-period').addEventListener('change', (e) => { totalView.period = e.target.value; renderTotal(); });
+const fmtPoints = (n) => n.toLocaleString(lang === 'en' ? 'en-GB' : 'sr-Latn');
+async function renderTotal() {
+  if ($('test').hidden || $('test-setup').hidden) return;
+  const load = ++totalLoad;
+  const list = $('total-list');
+  const period = totalView.period;
+  if (list.dataset.view !== period) list.innerHTML = `<li class="board-note">${escapeHtml(t('board.loading'))}</li>`;
+  let rows;
+  let prev;
+  try {
+    // last month's board is needed for the winner anyway
+    prev = board.totalRuns(board.prevMonth());
+    rows = period === 'prev' ? await prev : await board.totalRuns(periodMonth(period));
+    prev = await prev;
+  } catch (e) {
+    console.warn('[ukupno]', e.message);
+    if (load === totalLoad) list.innerHTML = `<li class="board-note">${escapeHtml(t('board.error'))}</li>`;
+    return;
+  }
+  if (load !== totalLoad) return;
+  list.dataset.view = period;
+  const myName = store.getName().toLocaleLowerCase();
+  const games = (r) => t('total.games', Object.fromEntries(board.MODE_IDS.map((m) => [m, r.games[m] ?? 0])));
+  list.innerHTML = rows.length
+    ? rows.map((r, i) => `<li class="board-row board-row-total${myName && r.name.toLocaleLowerCase() === myName ? ' is-me' : ''}"><span class="board-rank">${i + 1}.</span><span class="board-name">${escapeHtml(r.name)}</span><b class="board-total">${escapeHtml(t('board.points', { total: fmtPoints(r.total) }))}</b><span class="board-games">${escapeHtml(games(r))}</span></li>`).join('')
+    : `<li class="board-note">${escapeHtml(t(period === 'prev' ? 'board.emptyPrev' : 'board.empty'))}</li>`;
+  const winner = $('winner');
+  winner.hidden = !prev.length;
+  if (prev.length) {
+    const [y, m] = board.prevMonth().split('-').map(Number);
+    const month = new Date(y, m - 1, 1).toLocaleDateString(lang === 'en' ? 'en-GB' : 'sr-Latn', { month: 'long' });
+    winner.textContent = t('winner', { month, name: prev[0].name, total: fmtPoints(prev[0].total) });
+  }
+}
+renderTotal();
 
 // ------------------------------------------------------------ share the result (a picture for a story)
 // The picture is drawn as soon as the leaderboard shows, so the tap on the button opens the share sheet

@@ -15,6 +15,10 @@ const BASE = `https://firestore.googleapis.com/v1/${DOCS}`;
 const TIMEOUT_MS = 8000;
 
 export const monthOf = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+// the month before, as "2026-10"
+export function prevMonth(d = new Date()) {
+  return monthOf(new Date(d.getFullYear(), d.getMonth() - 1, 1));
+}
 
 // a random document id; the game's own id (a timestamp) would be easy to guess
 export function newRunId() {
@@ -97,9 +101,31 @@ export async function topRuns(mode, month = null) {
         name,
         level: Number(f.level.integerValue),
         total: Number(f.total.integerValue),
+        date: f.date && f.date.timestampValue ? Date.parse(f.date.timestampValue) : 0,
       });
     }
     if (docs.length < PAGE) break;
   }
   return out;
+}
+
+export const MODE_IDS = ['puls', 'tap', 'jedan'];
+
+// The total leaderboard: for each name, the best game of each of the three games added up (all time,
+// or for one month). A game not played counts 0. Equal totals: the one who reached it first is ahead.
+// Read from the three per-game leaderboards, so it needs no index of its own.
+export async function totalRuns(month = null) {
+  const lists = await Promise.all(MODE_IDS.map((mode) => topRuns(mode, month)));
+  const byName = new Map();
+  lists.forEach((rows, i) => {
+    for (const r of rows) {
+      const key = r.name.toLocaleLowerCase();
+      if (!byName.has(key)) byName.set(key, { name: r.name, games: {}, total: 0, date: 0 });
+      const p = byName.get(key);
+      p.games[MODE_IDS[i]] = r.total;
+      p.total += r.total;
+      p.date = Math.max(p.date, r.date);
+    }
+  });
+  return [...byName.values()].sort((a, b) => b.total - a.total || a.date - b.date);
 }

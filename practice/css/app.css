@@ -492,6 +492,11 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 .board-level { font-size: 13px; color: var(--ink-600); }
 .board-total { font-family: var(--font-display); font-weight: 800; }
 .board-note { padding: 10px 2px; color: var(--ink-600); }
+/* total leaderboard: rank, name, total; the points of each game on a second line */
+.board-row-total { grid-template-columns: 2em minmax(0, 1fr) auto; row-gap: 2px; }
+.board-games { grid-column: 2 / -1; font-size: 13px; color: var(--ink-600); }
+/* last month's winner, above the game list the whole month */
+.winner { margin: 0 0 20px; padding: 14px 18px; border-radius: 20px; background: var(--red); color: var(--paper); font-family: var(--font-display); font-weight: 800; font-size: 18px; line-height: 1.3; }
 .board-me { justify-self: stretch; margin: 0; font-size: 14px; color: var(--ink-600); }
 .board-me:empty { display: none; }
 .cta-share { gap: 10px; margin-top: 6px; }
