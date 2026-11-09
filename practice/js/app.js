@@ -1,15 +1,15 @@
-import { Engine, CHANNELS } from './engine.js?v=20261109221213';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109221213';
-import { KORACI } from './steps.js?v=20261109221213';
-import { FeetView } from './feet.js?v=20261109221213';
-import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, feedback, songsForGame, slowSong } from './game.js?v=20261109221213';
-import * as store from './storage.js?v=20261109221213';
-import * as board from './leaderboard.js?v=20261109221213';
-import { drawCard, shareCard, APP_URL } from './share.js?v=20261109221213';
-import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261109221213';
-import { ICONS } from './icons.js?v=20261109221213';
-import { unlocked } from './gate.js?v=20261109221213';
-import { watchUpdates } from './update.js?v=20261109221213';
+import { Engine, CHANNELS } from './engine.js?v=20261109223747';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109223747';
+import { KORACI } from './steps.js?v=20261109223747';
+import { FeetView } from './feet.js?v=20261109223747';
+import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, feedback, songsForGame, slowSong } from './game.js?v=20261109223747';
+import * as store from './storage.js?v=20261109223747';
+import * as board from './leaderboard.js?v=20261109223747';
+import { drawCard, shareCard, APP_URL } from './share.js?v=20261109223747';
+import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261109223747';
+import { ICONS } from './icons.js?v=20261109223747';
+import { unlocked } from './gate.js?v=20261109223747';
+import { watchUpdates } from './update.js?v=20261109223747';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -867,8 +867,10 @@ function showResult(r) {
   $('res-next').hidden = last;
   // between levels: the next level or quit (to the leaderboard); another game is offered only after the last level
   $('res-quit').hidden = last;
-  $('res-back').hidden = !last;
+  $('res-back').hidden = true;
   $('res-board').hidden = !last;
+  shareResult(null);
+  if (last) shareGame();
   $('res-msg').innerHTML = lines.map((l) => `<p>${escapeHtml(l)}</p>`).join('');
   // The level ends on a finger down on the pad; the same tap's click (and the next tap in rhythm) would land on
   // whatever button is now under the finger, often Odustani. So the buttons wait a moment.
@@ -878,6 +880,19 @@ function showResult(r) {
   resultGuard = setTimeout(() => { for (const b of buttons) b.disabled = false; }, RESULT_GUARD_MS);
   showTestPart('result');
   renderGames();
+}
+// After the last level: the game's picture to share, first without the place, then with it once the
+// game is saved and the month's leaderboard is read.
+async function shareGame() {
+  const game = run;
+  const card = { mode: t(`mode.${game.mode}`), total: game.total, levelText: t('share.level', { n: LEVELS.length }) };
+  shareResult(card);
+  try {
+    await game.saving;
+    const rows = await board.topRuns(game.mode, game.month);
+    const rank = rows.findIndex((r) => r.id === game.docId) + 1;
+    if (rank && game === run && !$('test-result').hidden) shareResult({ ...card, rank: rankText(rank, 'month') });
+  } catch (e) { /* the picture without the place */ }
 }
 // the level's points as "+75 bodova", counted up from 0
 let countUp = 0;
@@ -922,12 +937,65 @@ function renderIntro() {
 }
 renderGames();
 
+// ------------------------------------------------------------ share the result (a picture for a story)
+// The picture is drawn as soon as the button shows, so the tap on it opens the share sheet right away
+// (iPhone allows the share sheet only shortly after a tap). Three buttons: the game's leaderboard,
+// the total leaderboard, and the result after the last level. id: the prefix of the button's elements.
+function makeSharer(id) {
+  const btn = $(`${id}-share`);
+  const label = $(`${id}-share-label`);
+  const note = $(`${id}-share-note`);
+  let data = null; // { blob } once drawn
+  let drawing = null; // the drawing, while it runs
+  let draw = 0;
+  btn.addEventListener('click', async () => {
+    let ready = data;
+    if (!ready) {
+      // still drawing: wait for it (on iPhone the picture is then downloaded instead of shared)
+      btn.disabled = true;
+      label.textContent = t('share.making');
+      await drawing;
+      btn.disabled = false;
+      label.textContent = t('share.btn');
+      ready = data;
+      if (!ready) return;
+    }
+    const how = await shareCard(ready.blob, { fileName: 'bachata-rezultat.png' });
+    note.textContent = how === 'downloaded' ? t('share.saved') : '';
+  });
+  // card: the texts of the picture (drawCard), or null to hide the button
+  return async function prepare(card) {
+    note.textContent = '';
+    btn.hidden = !card;
+    data = null;
+    const n = ++draw;
+    if (!card) return;
+    const d = drawCard({ challenge: t('share.challenge'), url: APP_URL.replace(/^https:\/\//, '').replace(/\/$/, ''), unit: pointsWord(card.total), ...card })
+      .then((blob) => { if (n === draw) data = { blob }; })
+      .catch((e) => console.warn('[podeli]', e.message));
+    drawing = d;
+    await d;
+  };
+}
+const shareBoard = makeSharer('board');
+const shareTotal = makeSharer('total');
+const shareResult = makeSharer('res');
+const rankText = (rank, period) => (rank ? t(`share.rank.${period}`, { n: rank }) : '');
+
 // ------------------------------------------------------------ leaderboard
 // the month of a period in the period picker: "month" this month, "prev" the month before, "all" none
 const periodMonth = (period) => (period === 'month' ? board.monthOf() : period === 'prev' ? board.prevMonth() : null);
 const boardView = { period: 'month' }; // the game is the one opened (state.mode)
 let boardLoad = 0;
 $('board-period').addEventListener('change', (e) => { boardView.period = e.target.value; renderBoard(); });
+// The first BOARD_TOP rows; if the player is further down, a gap and the player's own row (with its place),
+// so the player's row and the share button above the list show without scrolling.
+const BOARD_TOP = 10;
+function topAndMe(rows, myIndex, row) {
+  const html = rows.slice(0, BOARD_TOP).map(row);
+  if (myIndex >= BOARD_TOP) html.push('<li class="board-gap" aria-hidden="true">…</li>', row(rows[myIndex], myIndex));
+  return html.join('');
+}
 // opts.after: a promise to wait for first (the save of the game just played)
 // opts.findMe: scroll to the player's row, if they are on the list
 async function renderBoard(opts = {}) {
@@ -954,14 +1022,14 @@ async function renderBoard(opts = {}) {
   // this phone's own games are highlighted; its best game is shown below if it is not in the list
   const mine = store.getRuns().filter((r) => r.mode === boardView.mode && r.docId && (!month || board.monthOf(new Date(r.date)) === month));
   const myIds = new Set(mine.map((r) => r.docId));
+  const myRank = rows.findIndex((r) => myIds.has(r.id)) + 1;
   list.innerHTML = rows.length
-    ? rows.map((r, i) => `<li class="board-row${myIds.has(r.id) ? ' is-me' : ''}"><span class="board-rank">${i + 1}.</span><span class="board-name">${escapeHtml(r.name)}</span><span class="board-level">${escapeHtml(t('board.level', { level: r.level }))}</span><b class="board-total">${escapeHtml(t('board.points', { total: r.total }))}</b></li>`).join('')
+    ? topAndMe(rows, myRank - 1, (r, i) => `<li class="board-row${myIds.has(r.id) ? ' is-me' : ''}"><span class="board-rank">${i + 1}.</span><span class="board-name">${escapeHtml(r.name)}</span><span class="board-level">${escapeHtml(t('board.level', { level: r.level }))}</span><b class="board-total">${escapeHtml(t('board.points', { total: r.total }))}</b></li>`)
     : `<li class="board-note">${escapeHtml(t(boardView.period === 'prev' ? 'board.emptyPrev' : 'board.empty'))}</li>`;
   const best = mine.length ? mine.reduce((a, b) => (b.total > a.total ? b : a)) : null;
-  me.hidden = !best || rows.some((r) => myIds.has(r.id));
-  if (best) me.textContent = t('board.me', { total: best.total, level: best.level });
-  const myRank = rows.findIndex((r) => myIds.has(r.id)) + 1;
-  prepareShare(best && best.total > 0 ? { ...best, rank: myRank, period: boardView.period } : null);
+  me.hidden = !best;
+  if (best) me.textContent = myRank ? t('board.meRank', { total: best.total, rank: myRank }) : t('board.me', { total: best.total, level: best.level });
+  shareBoard(best && best.total > 0 ? { mode: t(`mode.${best.mode}`), total: best.total, levelText: t('share.level', { n: best.level }), rank: rankText(myRank, boardView.period) } : null);
   // after a game: to the player's row if they are on the list, otherwise to the top of the leaderboard
   if (opts.findMe) {
     const myRow = list.querySelector('.is-me');
@@ -1003,8 +1071,13 @@ async function renderTotal() {
   list.dataset.view = period;
   const myName = store.getName().toLocaleLowerCase();
   const games = (r) => t('total.games', Object.fromEntries(board.MODE_IDS.map((m) => [m, r.games[m] ?? 0])));
+  const myIndex = myName ? rows.findIndex((r) => r.name.toLocaleLowerCase() === myName) : -1;
+  const mine = rows[myIndex];
+  $('total-me').hidden = !mine;
+  if (mine) $('total-me').textContent = t('total.me', { total: fmtPoints(mine.total), rank: myIndex + 1 });
+  shareTotal(mine && mine.total > 0 ? { mode: t('total.all'), total: mine.total, levelText: games(mine), rank: rankText(myIndex + 1, period) } : null);
   list.innerHTML = rows.length
-    ? rows.map((r, i) => `<li class="board-row board-row-total${myName && r.name.toLocaleLowerCase() === myName ? ' is-me' : ''}"><span class="board-rank">${i + 1}.</span><span class="board-name">${escapeHtml(r.name)}</span><b class="board-total">${escapeHtml(t('board.points', { total: fmtPoints(r.total) }))}</b><span class="board-games">${escapeHtml(games(r))}</span></li>`).join('')
+    ? topAndMe(rows, myIndex, (r, i) => `<li class="board-row board-row-total${myName && r.name.toLocaleLowerCase() === myName ? ' is-me' : ''}"><span class="board-rank">${i + 1}.</span><span class="board-name">${escapeHtml(r.name)}</span><b class="board-total">${escapeHtml(t('board.points', { total: fmtPoints(r.total) }))}</b><span class="board-games">${escapeHtml(games(r))}</span></li>`)
     : `<li class="board-note">${escapeHtml(t(period === 'prev' ? 'board.emptyPrev' : 'board.empty'))}</li>`;
   const winner = $('winner');
   winner.hidden = !prev.length;
@@ -1015,55 +1088,6 @@ async function renderTotal() {
   }
 }
 renderTotal();
-
-// ------------------------------------------------------------ share the result (a picture for a story)
-// The picture is drawn as soon as the leaderboard shows, so the tap on the button opens the share sheet
-// right away (iPhone allows the share sheet only shortly after a tap).
-let shareCardData = null; // { blob } of the result on the button, once drawn
-let shareDrawing = null; // the drawing of it, while it runs
-let shareDraw = 0;
-async function prepareShare(best) {
-  const btn = $('board-share');
-  $('board-share-note').textContent = '';
-  btn.hidden = !best;
-  shareCardData = null;
-  if (!best) return;
-  const id = ++shareDraw;
-  const mode = t(`mode.${best.mode}`);
-  const unit = pointsWord(best.total);
-  const card = {
-    mode,
-    total: best.total,
-    unit,
-    levelText: t('share.level', { n: best.level }),
-    rank: best.rank ? t(`share.rank.${best.period}`, { n: best.rank }) : '',
-    challenge: t('share.challenge'),
-    url: APP_URL.replace(/^https:\/\//, '').replace(/\/$/, ''),
-  };
-  const drawing = drawCard(card)
-    .then((blob) => { if (id === shareDraw) shareCardData = { blob }; })
-    .catch((e) => console.warn('[podeli]', e.message));
-  shareDrawing = drawing;
-  await drawing;
-  if (shareDrawing === drawing) shareDrawing = null;
-}
-$('board-share').addEventListener('click', async () => {
-  const btn = $('board-share');
-  const label = $('board-share-label');
-  let data = shareCardData;
-  if (!data) {
-    // still drawing: wait for it (on iPhone the picture is then downloaded instead of shared)
-    btn.disabled = true;
-    label.textContent = t('share.making');
-    await shareDrawing;
-    btn.disabled = false;
-    label.textContent = t('share.btn');
-    data = shareCardData;
-    if (!data) return;
-  }
-  const how = await shareCard(data.blob, { fileName: 'bachata-rezultat.png' });
-  $('board-share-note').textContent = how === 'downloaded' ? t('share.saved') : '';
-});
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

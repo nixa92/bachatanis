@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Sacramento&display=swap" rel="stylesheet">
   <link rel="preload" href="fonts/Northwell.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/app.css?v=20261109221213">
+  <link rel="stylesheet" href="css/app.css?v=20261109223747">
 </head>
 <body class="is-locked">
   <header class="top">
@@ -150,6 +150,9 @@
             </select>
           </div>
           <p class="board-me" data-i18n="total.help">Zbir najboljih rezultata iz sve tri igre. Igraj sve tri pod istim imenom.</p>
+          <p class="board-me board-mine" id="total-me" hidden></p>
+          <button class="cta cta-share" id="total-share" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg><span id="total-share-label" data-i18n="share.btn">Podeli rezultat</span></button>
+          <p class="board-me" id="total-share-note" role="status"></p>
           <ol class="board-list" id="total-list" aria-live="polite"></ol>
         </section>
       </div>
@@ -177,10 +180,10 @@
               <option value="all" data-i18n="board.all">Sva vremena</option>
             </select>
           </div>
-          <ol class="board-list" id="board-list" aria-live="polite"></ol>
           <p class="board-me" id="board-me" hidden></p>
           <button class="cta cta-share" id="board-share" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg><span id="board-share-label" data-i18n="share.btn">Podeli rezultat</span></button>
           <p class="board-me" id="board-share-note" role="status"></p>
+          <ol class="board-list" id="board-list" aria-live="polite"></ol>
         </section>
       </div>
 
@@ -215,10 +218,12 @@
         <div class="result-msg" id="res-msg"></div>
         <div class="result-actions">
           <button class="cta" id="res-next" type="button" data-i18n="res.next">Sledeći nivo</button>
-          <button class="cta" id="res-board" type="button" data-i18n="res.board" hidden>Vidi tabelu</button>
+          <button class="cta cta-share" id="res-share" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg><span id="res-share-label" data-i18n="share.btn">Podeli rezultat</span></button>
+          <button class="btn-quiet" id="res-board" type="button" data-i18n="res.board" hidden>Vidi tabelu</button>
           <button class="btn-quiet" id="res-quit" type="button" data-i18n="res.quit">Odustani</button>
           <button class="btn-quiet" id="res-back" type="button" data-i18n="res.back" hidden>Izaberi drugu igru</button>
         </div>
+        <p class="board-me" id="res-share-note" role="status"></p>
       </div>
 
     </section>
@@ -250,6 +255,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/app.js?v=20261109221213"></script>
+  <script type="module" src="js/app.js?v=20261109223747"></script>
 </body>
 </html>
