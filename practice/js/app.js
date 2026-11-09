@@ -1,13 +1,13 @@
-import { Engine, CHANNELS } from './engine.js?v=20261109202845';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109202845';
-import { KORACI } from './steps.js?v=20261109202845';
-import { FeetView } from './feet.js?v=20261109202845';
-import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261109202845';
-import * as store from './storage.js?v=20261109202845';
-import * as board from './leaderboard.js?v=20261109202845';
-import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261109202845';
-import { ICONS } from './icons.js?v=20261109202845';
-import { unlocked } from './gate.js?v=20261109202845';
+import { Engine, CHANNELS } from './engine.js?v=20261109203224';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109203224';
+import { KORACI } from './steps.js?v=20261109203224';
+import { FeetView } from './feet.js?v=20261109203224';
+import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261109203224';
+import * as store from './storage.js?v=20261109203224';
+import * as board from './leaderboard.js?v=20261109203224';
+import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261109203224';
+import { ICONS } from './icons.js?v=20261109203224';
+import { unlocked } from './gate.js?v=20261109203224';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -732,7 +732,7 @@ $('intro-back').addEventListener('click', () => showTestPart('setup'));
 $('test-abort').addEventListener('click', abortTest);
 function abortTest() { test.abort(); showBoardAfterGame(); }
 // after a game (stopped, or all levels passed): the leaderboard, loaded again once the game is saved;
-// if the player is on it, it scrolls to their name
+// it scrolls to the player's name, or to the leaderboard if they are not on it
 function showBoardAfterGame() {
   const played = run && Object.keys(run.points).length > 0;
   showTestPart('intro', { board: played ? { after: run.saving, findMe: true } : {} });
@@ -855,10 +855,15 @@ async function renderBoard(opts = {}) {
   const best = mine.length ? mine.reduce((a, b) => (b.total > a.total ? b : a)) : null;
   me.hidden = !best || rows.some((r) => myIds.has(r.id));
   if (best) me.textContent = t('board.me', { total: best.total, level: best.level });
-  const myRow = opts.findMe && list.querySelector('.is-me');
-  if (myRow) {
-    myRow.classList.add('is-found');
-    myRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  // after a game: to the player's row if they are on the list, otherwise to the top of the leaderboard
+  if (opts.findMe) {
+    const myRow = list.querySelector('.is-me');
+    if (myRow) {
+      myRow.classList.add('is-found');
+      myRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      $('board-title').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 }
 renderBoard();
