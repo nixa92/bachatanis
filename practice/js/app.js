@@ -1,13 +1,13 @@
-import { Engine, CHANNELS } from './engine.js?v=20261109200555';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109200555';
-import { KORACI } from './steps.js?v=20261109200555';
-import { FeetView } from './feet.js?v=20261109200555';
-import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261109200555';
-import * as store from './storage.js?v=20261109200555';
-import * as board from './leaderboard.js?v=20261109200555';
-import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261109200555';
-import { ICONS } from './icons.js?v=20261109200555';
-import { unlocked } from './gate.js?v=20261109200555';
+import { Engine, CHANNELS } from './engine.js?v=20261109201817';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109201817';
+import { KORACI } from './steps.js?v=20261109201817';
+import { FeetView } from './feet.js?v=20261109201817';
+import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261109201817';
+import * as store from './storage.js?v=20261109201817';
+import * as board from './leaderboard.js?v=20261109201817';
+import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261109201817';
+import { ICONS } from './icons.js?v=20261109201817';
+import { unlocked } from './gate.js?v=20261109201817';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -771,6 +771,8 @@ function finishTest() {
   if (last) lines.push(t('res.done', { total: LEVELS.length }));
   $('res-level').textContent = `${t(`mode.${r.mode}`)}, ${levelText(r.level)}`;
   $('res-next').hidden = last;
+  // between levels the only way on is the next level; another game is offered only after the last level
+  $('res-back').hidden = !last;
   $('res-msg').innerHTML = lines.map((l) => `<p>${escapeHtml(l)}</p>`).join('');
   showTestPart('result');
   renderGames();
