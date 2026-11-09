@@ -1,14 +1,15 @@
-import { Engine, CHANNELS } from './engine.js?v=20261109211225';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109211225';
-import { KORACI } from './steps.js?v=20261109211225';
-import { FeetView } from './feet.js?v=20261109211225';
-import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261109211225';
-import * as store from './storage.js?v=20261109211225';
-import * as board from './leaderboard.js?v=20261109211225';
-import { drawCard, shareCard, APP_URL } from './share.js?v=20261109211225';
-import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261109211225';
-import { ICONS } from './icons.js?v=20261109211225';
-import { unlocked } from './gate.js?v=20261109211225';
+import { Engine, CHANNELS } from './engine.js?v=20261109211754';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109211754';
+import { KORACI } from './steps.js?v=20261109211754';
+import { FeetView } from './feet.js?v=20261109211754';
+import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame, slowSong } from './game.js?v=20261109211754';
+import * as store from './storage.js?v=20261109211754';
+import * as board from './leaderboard.js?v=20261109211754';
+import { drawCard, shareCard, APP_URL } from './share.js?v=20261109211754';
+import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261109211754';
+import { ICONS } from './icons.js?v=20261109211754';
+import { unlocked } from './gate.js?v=20261109211754';
+import { watchUpdates } from './update.js?v=20261109211754';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -456,7 +457,8 @@ fetch('songs/songs.json', { cache: 'no-cache' }).then((r) => r.json()).then((dat
   songList = data.songs;
   engine.songVersion = data.version || '';
   // download every song's files in the background, so picking a song only has to decode it
-  setTimeout(() => engine.prefetchSongs(songList), 3000);
+  // the slower versions first: the game starts with them (levels 1-3)
+  setTimeout(() => engine.prefetchSongs([...songList.filter((s) => s.slow).map(slowSong), ...songList]), 3000);
   renderMusicPicker();
   // the song picked today stays; otherwise the song of the day
   let saved = null;
@@ -639,8 +641,8 @@ const showStreak = (n) => {
 const seconds = (s) => `${s.toFixed(1).replace('.', t('decimal'))} s`;
 const levelText = (n) => t('level.of', { n, total: LEVELS.length });
 
-// The game plays the real songs: the level's song is loaded while the button shows "Učitavam…",
-// and the next level's song loads while the result shows. If a song cannot load, another song is
+// The game plays the real songs: the first level's song loads while the game's page is open (prepareNextGame),
+// and the next level's song loads while the result shows; if it is not ready yet, the button shows "Učitavam…". If a song cannot load, another song is
 // tried; only if none loads does the generated music play.
 const gameSongs = new Map(); // song id -> promise of the loaded song (this level's and the next one)
 function loadGameSong(meta) {
@@ -649,6 +651,15 @@ function loadGameSong(meta) {
     gameSongs.set(meta.id, engine.loadSong(meta).catch((e) => { console.warn('[igra] song load failed:', e); return null; }));
   }
   return gameSongs.get(meta.id);
+}
+// The next game's songs are picked as soon as a game is opened (and after a game), and the first level's
+// song loads while the player reads the rules and types the name, so Kreni starts at once.
+let nextSongs = null;
+function prepareNextGame() {
+  if (!songList.length) return;
+  nextSongs = songsForGame(songList);
+  for (const id of [...gameSongs.keys()]) if (id !== nextSongs[0].id) gameSongs.delete(id);
+  loadGameSong(nextSongs[0]);
 }
 // after a level: let go of its song and load the next level's while the result shows
 function preloadNextSong() {
@@ -719,7 +730,8 @@ $('test-start').addEventListener('click', () => {
   $('name-error').textContent = '';
   state.level = 1;
   store.setName(name);
-  run = { id: Date.now(), docId: board.newRunId(), month: board.monthOf(), name, mode: state.mode, points: {}, tracks: shuffled(NUMERE.map((n) => n.id)), songs: songsForGame(songList) };
+  run = { id: Date.now(), docId: board.newRunId(), month: board.monthOf(), name, mode: state.mode, points: {}, tracks: shuffled(NUMERE.map((n) => n.id)), songs: nextSongs || songsForGame(songList) };
+  nextSongs = null;
   // "level 0": the game is saved when it starts, so the games that end inside level 1 are counted too
   board.submitRun({ docId: run.docId, name, mode: run.mode, points: [], month: run.month })
     .catch((e) => console.warn('[tabela] start not saved:', e.message));
@@ -739,6 +751,7 @@ function showBoardAfterGame() {
   const played = run && Object.keys(run.points).length > 0;
   showTestPart('intro', { board: played ? { after: run.saving, findMe: true } : {} });
   window.scrollTo(0, 0);
+  prepareNextGame();
 }
 
 function tapText({ kind, ms, late, count }) {
@@ -825,6 +838,7 @@ $('game-list').addEventListener('click', (e) => {
   renderIntro();
   showTestPart('intro');
   window.scrollTo(0, 0);
+  prepareNextGame();
 });
 function renderIntro() {
   $('intro-title').textContent = t(`mode.${state.mode}`);
@@ -937,6 +951,9 @@ $('board-share').addEventListener('click', async () => {
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
+
+// a new version of the app, for phones that keep it open (update.js)
+watchUpdates({ busy: () => engine.playing, inGame: () => test.running || document.body.classList.contains('is-game') });
 
 // ------------------------------------------------------------ frame loop
 // Everything visual is derived from the audio clock here.

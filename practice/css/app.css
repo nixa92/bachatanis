@@ -677,3 +677,16 @@ body.is-locked .tabs, body.is-locked main, body.is-locked .transport, body.is-lo
 .gate-error { min-height: 1.4em; margin: 8px 0 0; font-size: 14px; color: var(--red); }
 .gate-links { display: grid; gap: 10px; margin: 28px 0 0; }
 .gate-links a { color: var(--red); font-weight: 600; text-underline-offset: 3px; }
+
+/* a new version is out (update.js): a bar at the top */
+.update-bar {
+  position: fixed; z-index: 50; left: 12px; right: 12px; margin: 0 auto;
+  top: calc(10px + env(safe-area-inset-top));
+  width: fit-content;
+  display: flex; align-items: center; gap: 14px;
+  padding: 8px 8px 8px 18px; border-radius: 999px;
+  background: var(--ink); color: var(--paper); font-size: 14px; font-weight: 500;
+  box-shadow: 0 6px 24px rgba(31, 26, 23, 0.25);
+}
+.update-bar button { border: 0; border-radius: 999px; background: var(--red); color: var(--paper); font-weight: 600; font-size: 14px; padding: 8px 16px; }
+body.is-game .update-bar { display: none; }
