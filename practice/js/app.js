@@ -1,13 +1,13 @@
-import { Engine, CHANNELS } from './engine.js?v=20261109201817';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109201817';
-import { KORACI } from './steps.js?v=20261109201817';
-import { FeetView } from './feet.js?v=20261109201817';
-import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261109201817';
-import * as store from './storage.js?v=20261109201817';
-import * as board from './leaderboard.js?v=20261109201817';
-import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261109201817';
-import { ICONS } from './icons.js?v=20261109201817';
-import { unlocked } from './gate.js?v=20261109201817';
+import { Engine, CHANNELS } from './engine.js?v=20261109202649';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109202649';
+import { KORACI } from './steps.js?v=20261109202649';
+import { FeetView } from './feet.js?v=20261109202649';
+import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261109202649';
+import * as store from './storage.js?v=20261109202649';
+import * as board from './leaderboard.js?v=20261109202649';
+import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261109202649';
+import { ICONS } from './icons.js?v=20261109202649';
+import { unlocked } from './gate.js?v=20261109202649';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -617,7 +617,8 @@ window.addEventListener('popstate', () => {
   if (test.running) abortTest();
 });
 
-function showTestPart(part) {
+// opts.board: passed to renderBoard when the intro (with the leaderboard) opens
+function showTestPart(part, opts = {}) {
   if (part !== 'run') setNumera(numeraSel.value); // back to the player's own pick
   setGameView(part === 'run');
   $('test-setup').hidden = part !== 'setup';
@@ -626,7 +627,7 @@ function showTestPart(part) {
   $('test-result').hidden = part !== 'result';
   if (part === 'run') window.scrollTo(0, 0);
   if (part === 'result') $('test-result').scrollIntoView();
-  if (part === 'intro') renderBoard();
+  if (part === 'intro') renderBoard(opts.board);
 }
 
 const showStreak = (n) => {
@@ -702,7 +703,8 @@ function addToRun(r) {
   });
   // the online leaderboard: the same document grows by one level; the name stays the one the game started with
   const points = Object.keys(run.points).map(Number).sort((a, b) => a - b).map((l) => run.points[l]);
-  board.submitRun({ docId: run.docId, name: run.name, mode: run.mode, points, month: run.month })
+  // the leaderboard shown after the game waits for this save
+  run.saving = board.submitRun({ docId: run.docId, name: run.name, mode: run.mode, points, month: run.month })
     .catch((e) => console.warn('[tabela] not saved:', e.message));
 }
 $('test-start').addEventListener('click', () => {
@@ -724,9 +726,17 @@ $('test-start').addEventListener('click', () => {
 $('player-name').addEventListener('input', () => { $('name-error').textContent = ''; });
 $('res-next').addEventListener('click', () => { state.level++; startTest(state.mode, $('res-next')); });
 $('res-back').addEventListener('click', () => showTestPart('setup'));
+$('res-board').addEventListener('click', showBoardAfterGame);
 $('intro-back').addEventListener('click', () => showTestPart('setup'));
 $('test-abort').addEventListener('click', abortTest);
-function abortTest() { test.abort(); showTestPart('setup'); }
+function abortTest() { test.abort(); showBoardAfterGame(); }
+// after a game (stopped, or all levels passed): the leaderboard, loaded again once the game is saved;
+// if the player is on it, it scrolls to their name
+function showBoardAfterGame() {
+  const played = run && Object.keys(run.points).length > 0;
+  showTestPart('intro', { board: played ? { after: run.saving, findMe: true } : {} });
+  window.scrollTo(0, 0);
+}
 
 function tapText({ kind, ms, late, count }) {
   if (kind === 'hit') return ms <= 50 ? t('tap.hit') : t(late ? 'tap.hitLate' : 'tap.hitEarly');
@@ -773,6 +783,7 @@ function finishTest() {
   $('res-next').hidden = last;
   // between levels the only way on is the next level; another game is offered only after the last level
   $('res-back').hidden = !last;
+  $('res-board').hidden = !last;
   $('res-msg').innerHTML = lines.map((l) => `<p>${escapeHtml(l)}</p>`).join('');
   showTestPart('result');
   renderGames();
@@ -810,7 +821,9 @@ renderGames();
 const boardView = { period: 'month' }; // the game is the one opened (state.mode)
 let boardLoad = 0;
 $('board-period').addEventListener('change', (e) => { boardView.period = e.target.value; renderBoard(); });
-async function renderBoard() {
+// opts.after: a promise to wait for first (the save of the game just played)
+// opts.findMe: scroll to the player's row, if they are on the list
+async function renderBoard(opts = {}) {
   if ($('test-intro').hidden) return;
   boardView.mode = state.mode;
   const load = ++boardLoad;
@@ -822,6 +835,7 @@ async function renderBoard() {
   }
   let rows;
   try {
+    if (opts.after) await opts.after;
     rows = await board.topRuns(boardView.mode, month);
   } catch (e) {
     console.warn('[tabela]', e.message);
@@ -839,6 +853,11 @@ async function renderBoard() {
   const best = mine.length ? mine.reduce((a, b) => (b.total > a.total ? b : a)) : null;
   me.hidden = !best || rows.some((r) => myIds.has(r.id));
   if (best) me.textContent = t('board.me', { total: best.total, level: best.level });
+  const myRow = opts.findMe && list.querySelector('.is-me');
+  if (myRow) {
+    myRow.classList.add('is-found');
+    myRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 }
 renderBoard();
 
