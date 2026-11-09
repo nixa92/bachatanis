@@ -1,13 +1,13 @@
-import { Engine, CHANNELS } from './engine.js?v=20261109202706';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109202706';
-import { KORACI } from './steps.js?v=20261109202706';
-import { FeetView } from './feet.js?v=20261109202706';
-import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261109202706';
-import * as store from './storage.js?v=20261109202706';
-import * as board from './leaderboard.js?v=20261109202706';
-import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261109202706';
-import { ICONS } from './icons.js?v=20261109202706';
-import { unlocked } from './gate.js?v=20261109202706';
+import { Engine, CHANNELS } from './engine.js?v=20261109202845';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109202845';
+import { KORACI } from './steps.js?v=20261109202845';
+import { FeetView } from './feet.js?v=20261109202845';
+import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261109202845';
+import * as store from './storage.js?v=20261109202845';
+import * as board from './leaderboard.js?v=20261109202845';
+import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261109202845';
+import { ICONS } from './icons.js?v=20261109202845';
+import { unlocked } from './gate.js?v=20261109202845';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
