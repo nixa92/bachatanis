@@ -389,6 +389,15 @@ export function t(key, params) {
   return s;
 }
 
+// "bod", "boda" or "bodova" after a number (English: "point" or "points")
+export function pointsWord(n) {
+  if (lang === 'en') return n === 1 ? 'point' : 'points';
+  const d = n % 10, dd = n % 100;
+  if (d === 1 && dd !== 11) return 'bod';
+  if (d >= 2 && d <= 4 && (dd < 12 || dd > 14)) return 'boda';
+  return 'bodova';
+}
+
 export function setLang(l) {
   if (l !== 'sr' && l !== 'en') return;
   lang = l;

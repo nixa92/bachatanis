@@ -461,17 +461,18 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 .result-score { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
 #res-score { font-family: var(--font-display); font-weight: 800; font-size: 72px; line-height: 1; letter-spacing: -0.03em; color: var(--red); white-space: nowrap; }
 .result-score small { font-size: 15px; color: var(--ink-600); }
-.result-run { margin: 0 0 16px; font-weight: 600; }
+#res-level { margin-bottom: 14px; }
+.result-run { margin: 10px 0 22px; font-weight: 600; }
 #best { margin-bottom: 24px; }
-.result-stats { display: flex; flex-wrap: nowrap; margin: 8px 0 16px; color: var(--ink-600); } /* all four in one row, quieter than the score */
+.result-stats { display: flex; flex-wrap: nowrap; margin: 0 0 26px; color: var(--ink-600); } /* all four in one row, quieter than the score */
 .result-stats div { min-width: 0; padding: 0 8px; border-right: 1px solid var(--ink-15); }
 .result-stats div:first-child { padding-left: 0; }
 .result-stats div:last-child { padding-right: 0; border-right: 0; }
 .result-stats dt { font-size: 11px; line-height: 1.3; }
 .result-stats dd { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 14px; white-space: nowrap; }
 .result-msg { max-width: 34em; font-size: 17px; }
-.result-msg p { margin: 0 0 10px; }
-.result-actions { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: center; margin-top: 14px; }
+.result-msg p { margin: 0 0 14px; }
+.result-actions { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: center; margin-top: 26px; }
 
 .game-list { display: grid; gap: 10px; margin-bottom: 16px; }
 /* leaderboard: under the game cards */

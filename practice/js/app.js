@@ -1,13 +1,13 @@
-import { Engine, CHANNELS } from './engine.js?v=20261109203805';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109203805';
-import { KORACI } from './steps.js?v=20261109203805';
-import { FeetView } from './feet.js?v=20261109203805';
-import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261109203805';
-import * as store from './storage.js?v=20261109203805';
-import * as board from './leaderboard.js?v=20261109203805';
-import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261109203805';
-import { ICONS } from './icons.js?v=20261109203805';
-import { unlocked } from './gate.js?v=20261109203805';
+import { Engine, CHANNELS } from './engine.js?v=20261109204003';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109204003';
+import { KORACI } from './steps.js?v=20261109204003';
+import { FeetView } from './feet.js?v=20261109204003';
+import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261109204003';
+import * as store from './storage.js?v=20261109204003';
+import * as board from './leaderboard.js?v=20261109204003';
+import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261109204003';
+import { ICONS } from './icons.js?v=20261109204003';
+import { unlocked } from './gate.js?v=20261109204003';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -772,7 +772,7 @@ function finishTest() {
   store.setName(r.name);
   addToRun(r);
   $('res-run').textContent = t('res.run', { total: run.total });
-  $('res-score').textContent = r.points;
+  showLevelPoints(r.points);
   $('res-time').textContent = seconds(r.seconds);
   $('res-misses').textContent = r.misses;
   $('res-offset').textContent = offsetText(r.avgOffsetMs);
@@ -789,6 +789,24 @@ function finishTest() {
   $('res-msg').innerHTML = lines.map((l) => `<p>${escapeHtml(l)}</p>`).join('');
   showTestPart('result');
   renderGames();
+}
+// the level's points as "+75 bodova", counted up from 0
+let countUp = 0;
+function showLevelPoints(points) {
+  const score = $('res-score');
+  $('res-unit').textContent = pointsWord(points);
+  const id = ++countUp;
+  if (!points || window.matchMedia('(prefers-reduced-motion: reduce)').matches) { score.textContent = `+${points}`; return; }
+  const DURATION = 900;
+  const start = performance.now();
+  const step = (now) => {
+    if (id !== countUp) return;
+    const p = Math.min(1, (now - start) / DURATION);
+    score.textContent = `+${Math.round(points * (1 - (1 - p) ** 3))}`; // ease out: fast, then slowing to the end
+    if (p < 1) requestAnimationFrame(step);
+  };
+  score.textContent = '+0';
+  requestAnimationFrame(step);
 }
 function offsetText(ms) {
   const a = roundMs(Math.abs(ms));
