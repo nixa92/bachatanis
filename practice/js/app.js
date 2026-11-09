@@ -1,15 +1,15 @@
-import { Engine, CHANNELS } from './engine.js?v=20261109212911';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109212911';
-import { KORACI } from './steps.js?v=20261109212911';
-import { FeetView } from './feet.js?v=20261109212911';
-import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame, slowSong } from './game.js?v=20261109212911';
-import * as store from './storage.js?v=20261109212911';
-import * as board from './leaderboard.js?v=20261109212911';
-import { drawCard, shareCard, APP_URL } from './share.js?v=20261109212911';
-import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261109212911';
-import { ICONS } from './icons.js?v=20261109212911';
-import { unlocked } from './gate.js?v=20261109212911';
-import { watchUpdates } from './update.js?v=20261109212911';
+import { Engine, CHANNELS } from './engine.js?v=20261109214108';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109214108';
+import { KORACI } from './steps.js?v=20261109214108';
+import { FeetView } from './feet.js?v=20261109214108';
+import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, feedback, songsForGame, slowSong } from './game.js?v=20261109214108';
+import * as store from './storage.js?v=20261109214108';
+import * as board from './leaderboard.js?v=20261109214108';
+import { drawCard, shareCard, APP_URL } from './share.js?v=20261109214108';
+import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261109214108';
+import { ICONS } from './icons.js?v=20261109214108';
+import { unlocked } from './gate.js?v=20261109214108';
+import { watchUpdates } from './update.js?v=20261109214108';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -776,7 +776,7 @@ function showBoardAfterGame() {
 }
 
 function tapText({ kind, ms, late, count }) {
-  if (kind === 'hit') return ms <= 50 ? t('tap.hit') : t(late ? 'tap.hitLate' : 'tap.hitEarly');
+  if (kind === 'hit') return ms <= ON_BEAT_MS ? t('tap.hit') : t(late ? 'tap.hitLate' : 'tap.hitEarly');
   if (kind === 'early' || kind === 'late') return t(`tap.${kind}`, { ms: roundMs(ms) });
   if (kind === 'extra') return t('tap.extra');
   return t(`tap.wrong.${state.mode}`, { c: count });
@@ -811,8 +811,8 @@ function finishTest() {
   addToRun(r);
   $('res-run').textContent = t('res.run', { total: run.total });
   showLevelPoints(r.points);
-  $('res-time').textContent = seconds(r.seconds);
-  $('res-misses').textContent = r.misses;
+  $('res-speed').textContent = lostText(r.lostSpeed);
+  $('res-timing').textContent = lostText(r.lostTiming);
   $('res-bpm').textContent = `${r.bpm} BPM`;
   const last = state.level === LEVELS.length;
   const lines = feedback(r);
@@ -833,6 +833,8 @@ function finishTest() {
   showTestPart('result');
   renderGames();
 }
+// points lost in a part of the score: "−12", or "0" when none
+const lostText = (n) => (n > 0 ? `−${n}` : '0');
 // the level's points as "+75 bodova", counted up from 0
 let countUp = 0;
 function showLevelPoints(points) {

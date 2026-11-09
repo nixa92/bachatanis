@@ -1,12 +1,12 @@
-import { t } from './i18n.js?v=20261109212911';
+import { t } from './i18n.js?v=20261109214108';
 
 // Test sluha: the music starts at once and every tap counts. A level ends when the player
 // lands enough hits in a row; the faster that happens, the more points.
 // Tap times are converted to "heard" context time, so output latency is accounted for.
 
 // first: index of the first target beat, step: beats between targets, need: hits in a row to finish,
-// Points: fastest possible time / your time, reduced for timing error. A full score needs a hit
-// from the very first target and every tap dead on the beat, so it is close to impossible.
+// Points: fastest possible time / your time, reduced for timing error of the finishing streak. A full
+// score needs a hit from the first target after the start and every hit within ON_BEAT_MS ("Pogodak").
 export const MODES = {
   puls:  { first: 0, step: 1, need: 8 },
   tap:   { first: 3, step: 4, need: 4 },
@@ -14,6 +14,9 @@ export const MODES = {
 };
 const START_COUNTS = [2, 3, 4, 6, 7, 8]; // where Nađi tap and Nađi jedinicu may start
 const TIMING_WEIGHT = 0.3; // share of the points that depends on timing
+// A hit this close to the beat is "Pogodak" and costs no points; a phone cannot measure much finer.
+// Hits further off still count for the streak, but are shown as "a bit early/late" and cost points.
+export const ON_BEAT_MS = 50;
 
 // The test runs through these levels in order. It plays the real songs (songs.json): slower songs on
 // the lower levels, and the part it starts in gets harder: majao, then derecho, then mambo.
@@ -140,6 +143,7 @@ export class EarTest {
     this.lastUsed = null;  // target index the last tap went to
     this.misses = 0;
     this.errs = [];
+    this.streakErrs = []; // timing of the hits in the current streak: only the finishing streak is scored
     this.wrongCounts = {};
     this.endTime = null;
     // Nađi tap and Nađi jedinicu start on a random count and fade in over two beats: a hard start
@@ -156,8 +160,9 @@ export class EarTest {
     }
     this.beatDur = 60 / e.bpm;
     this.origin = e.startTime - this.offset * this.beatDur; // where count 1 would have been
-    // first target the player can hear
-    this.firstTarget = Math.max(0, Math.ceil((this.offset - mode.first) / mode.step));
+    // first target the player can catch: the first one after the music starts. A target right on
+    // the start cannot be hit (the player has to hear the beat first), so the score does not count it.
+    this.firstTarget = Math.max(0, Math.floor((this.offset - mode.first) / mode.step) + 1);
     this.hitWindow = mode.step > 1 ? this.beatDur / 2 : level.hitMs / 1000;
     this.running = true;
   }
@@ -189,6 +194,8 @@ export class EarTest {
       return result(err < 0 ? 'early' : 'late', err);
     }
     this.streak = this.lastHit === index - 1 ? this.streak + 1 : 1;
+    if (this.streak === 1) this.streakErrs = [];
+    this.streakErrs.push(err);
     this.lastHit = index;
     if (this.streak >= this.mode.need) this.endTime = time;
     return result('hit', err);
@@ -218,13 +225,20 @@ export class EarTest {
     const seconds = this.endTime - this.engine.startTime;
     const { first, step, need } = this.mode;
     const fastest = (first + (this.firstTarget + need - 1) * step - this.offset) * this.beatDur;
-    const avgError = mean(this.errs.map((x) => Math.min(Math.abs(x), this.hitWindow))) / this.hitWindow;
+    // timing: only the hits of the finishing streak; within ON_BEAT_MS costs nothing, then up to the window edge
+    const free = ON_BEAT_MS / 1000;
+    const avgError = mean(this.streakErrs.map((x) => Math.max(0, Math.min(Math.abs(x), this.hitWindow) - free))) / (this.hitWindow - free);
+    const speed = Math.min(1, fastest / seconds);
+    const points = Math.round(MAX_POINTS * speed * (1 - TIMING_WEIGHT * avgError));
+    const afterSpeed = Math.round(MAX_POINTS * speed);
     this._teardown();
     return {
       mode: this.modeId, level: this.levelNumber, bpm: Math.round(60 / this.beatDur), date: new Date().toISOString(),
       song: this.song ? this.song.meta.title : '',
       seconds,
-      points: Math.round(MAX_POINTS * Math.min(1, fastest / seconds) * (1 - TIMING_WEIGHT * avgError)),
+      points,
+      lostSpeed: MAX_POINTS - afterSpeed, // points lost to a late start or a broken streak
+      lostTiming: afterSpeed - points,    // points lost to hits off the beat
       misses: this.misses,
       avgOffsetMs: mean(this.errs) * 1000,
       spreadMs: std(this.errs) * 1000,
