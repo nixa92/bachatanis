@@ -463,11 +463,12 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 .result-score small { font-size: 15px; color: var(--ink-600); }
 .result-run { margin: 0 0 16px; font-weight: 600; }
 #best { margin-bottom: 24px; }
-.result-stats { display: flex; flex-wrap: wrap; gap: 0; margin: 8px 0 16px; }
-.result-stats div { padding: 0 20px 0 0; margin-right: 20px; border-right: 2px solid var(--red-50); }
-.result-stats div:last-child { border-right: 0; }
-.result-stats dt { font-size: 13px; color: var(--ink-600); }
-.result-stats dd { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 20px; }
+.result-stats { display: flex; flex-wrap: nowrap; margin: 8px 0 16px; color: var(--ink-600); } /* all four in one row, quieter than the score */
+.result-stats div { min-width: 0; padding: 0 8px; border-right: 1px solid var(--ink-15); }
+.result-stats div:first-child { padding-left: 0; }
+.result-stats div:last-child { padding-right: 0; border-right: 0; }
+.result-stats dt { font-size: 11px; line-height: 1.3; }
+.result-stats dd { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 14px; white-space: nowrap; }
 .result-msg { max-width: 34em; font-size: 17px; }
 .result-msg p { margin: 0 0 10px; }
 .result-actions { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: center; margin-top: 14px; }
