@@ -1,13 +1,14 @@
-import { Engine, CHANNELS } from './engine.js?v=20261109204523';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109204523';
-import { KORACI } from './steps.js?v=20261109204523';
-import { FeetView } from './feet.js?v=20261109204523';
-import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261109204523';
-import * as store from './storage.js?v=20261109204523';
-import * as board from './leaderboard.js?v=20261109204523';
-import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261109204523';
-import { ICONS } from './icons.js?v=20261109204523';
-import { unlocked } from './gate.js?v=20261109204523';
+import { Engine, CHANNELS } from './engine.js?v=20261109210541';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109210541';
+import { KORACI } from './steps.js?v=20261109210541';
+import { FeetView } from './feet.js?v=20261109210541';
+import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261109210541';
+import * as store from './storage.js?v=20261109210541';
+import * as board from './leaderboard.js?v=20261109210541';
+import { drawCard, shareCard, APP_URL } from './share.js?v=20261109210541';
+import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261109210541';
+import { ICONS } from './icons.js?v=20261109210541';
+import { unlocked } from './gate.js?v=20261109210541';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -676,6 +677,7 @@ async function startTest(modeId, btn = null) {
   test.begin(modeId, state.level, song);
   $('run-title').textContent = `${t(`mode.${modeId}`)}, ${levelText(state.level)}`;
   $('run-instr').textContent = t(`mode.${modeId}.how`);
+  $('pad-sub').textContent = t(`pad.sub.${modeId}`);
   // a song level that fell back to the generated music says so (usually the phone ran out of memory)
   $('tap-fb').textContent = state.level <= run.songs.length && !test.song ? t('game.fallback') : '';
   $('tap-fb').className = 'tap-fb';
@@ -775,7 +777,6 @@ function finishTest() {
   showLevelPoints(r.points);
   $('res-time').textContent = seconds(r.seconds);
   $('res-misses').textContent = r.misses;
-  $('res-offset').textContent = offsetText(r.avgOffsetMs);
   $('res-bpm').textContent = `${r.bpm} BPM`;
   const last = state.level === LEVELS.length;
   const lines = feedback(r);
@@ -807,11 +808,6 @@ function showLevelPoints(points) {
   };
   score.textContent = '+0';
   requestAnimationFrame(step);
-}
-function offsetText(ms) {
-  const a = roundMs(Math.abs(ms));
-  if (a === 0) return t('off.exact');
-  return t(ms < 0 ? 'off.early' : 'off.late', { ms: a });
 }
 
 function renderGames() {
@@ -873,6 +869,8 @@ async function renderBoard(opts = {}) {
   const best = mine.length ? mine.reduce((a, b) => (b.total > a.total ? b : a)) : null;
   me.hidden = !best || rows.some((r) => myIds.has(r.id));
   if (best) me.textContent = t('board.me', { total: best.total, level: best.level });
+  const myRank = rows.findIndex((r) => myIds.has(r.id)) + 1;
+  prepareShare(best && best.total > 0 ? { ...best, rank: myRank, period: boardView.period } : null);
   // after a game: to the player's row if they are on the list, otherwise to the top of the leaderboard
   if (opts.findMe) {
     const myRow = list.querySelector('.is-me');
@@ -885,6 +883,58 @@ async function renderBoard(opts = {}) {
   }
 }
 renderBoard();
+
+// ------------------------------------------------------------ share the result (a picture for a story)
+// The picture is drawn as soon as the leaderboard shows, so the tap on the button opens the share sheet
+// right away (iPhone allows the share sheet only shortly after a tap).
+let shareCardData = null; // { blob, text } of the result on the button, once drawn
+let shareDrawing = null; // the drawing of it, while it runs
+let shareDraw = 0;
+async function prepareShare(best) {
+  const btn = $('board-share');
+  $('board-share-note').textContent = '';
+  btn.hidden = !best;
+  shareCardData = null;
+  if (!best) return;
+  const id = ++shareDraw;
+  const mode = t(`mode.${best.mode}`);
+  const unit = pointsWord(best.total);
+  const card = {
+    name: best.name,
+    game: t('tab.test'),
+    mode,
+    total: best.total,
+    unit,
+    levelText: t('share.level', { n: best.level }),
+    rank: best.rank ? t(`share.rank.${best.period}`, { n: best.rank }) : '',
+    challenge: t('share.challenge'),
+    url: APP_URL.replace(/^https:\/\//, '').replace(/\/$/, ''),
+  };
+  const text = t('share.text', { total: best.total, unit, mode, url: APP_URL });
+  const drawing = drawCard(card)
+    .then((blob) => { if (id === shareDraw) shareCardData = { blob, text }; })
+    .catch((e) => console.warn('[podeli]', e.message));
+  shareDrawing = drawing;
+  await drawing;
+  if (shareDrawing === drawing) shareDrawing = null;
+}
+$('board-share').addEventListener('click', async () => {
+  const btn = $('board-share');
+  const label = $('board-share-label');
+  let data = shareCardData;
+  if (!data) {
+    // still drawing: wait for it (on iPhone the picture is then downloaded instead of shared)
+    btn.disabled = true;
+    label.textContent = t('share.making');
+    await shareDrawing;
+    btn.disabled = false;
+    label.textContent = t('share.btn');
+    data = shareCardData;
+    if (!data) return;
+  }
+  const how = await shareCard(data.blob, { text: data.text, fileName: 'bachata-rezultat.png' });
+  $('board-share-note').textContent = how === 'downloaded' ? t('share.saved') : '';
+});
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

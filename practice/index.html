@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Sacramento&display=swap" rel="stylesheet">
   <link rel="preload" href="fonts/Northwell.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/app.css?v=20261109204523">
+  <link rel="stylesheet" href="css/app.css?v=20261109210541">
 </head>
 <body class="is-locked">
   <header class="top">
@@ -165,6 +165,8 @@
           </div>
           <ol class="board-list" id="board-list" aria-live="polite"></ol>
           <p class="board-me" id="board-me" hidden></p>
+          <button class="cta cta-share" id="board-share" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg><span id="board-share-label" data-i18n="share.btn">Podeli rezultat</span></button>
+          <p class="board-me" id="board-share-note" role="status"></p>
         </section>
       </div>
 
@@ -174,7 +176,7 @@
         <div class="progress" aria-hidden="true"><div class="progress-bar" id="progress-bar"></div></div>
         <p class="run-status"><span id="run-streak"></span><span id="run-time"></span></p>
         <p class="tap-fb" id="tap-fb" role="status"></p>
-        <button class="tap-pad" id="tap-pad" type="button"><b data-i18n="pad.tap">Tapni</b><span data-i18n="pad.sub">ili pritisni razmak</span></button>
+        <button class="tap-pad" id="tap-pad" type="button"><b data-i18n="pad.tap">Tapni</b><span id="pad-sub"></span></button>
         <button class="btn-quiet" id="test-abort" type="button" data-i18n="test.abort">Odustani</button>
       </div>
 
@@ -185,7 +187,6 @@
         <dl class="result-stats">
           <div><dt data-i18n="res.time">Vreme</dt><dd id="res-time"></dd></div>
           <div><dt data-i18n="res.misses">Promašaji</dt><dd id="res-misses"></dd></div>
-          <div><dt data-i18n="res.avg">Prosečna tačnost</dt><dd id="res-offset"></dd></div>
           <div><dt data-i18n="res.tempo">Tempo</dt><dd id="res-bpm"></dd></div>
         </dl>
         <div class="result-msg" id="res-msg"></div>
@@ -226,6 +227,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/app.js?v=20261109204523"></script>
+  <script type="module" src="js/app.js?v=20261109210541"></script>
 </body>
 </html>

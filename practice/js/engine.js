@@ -3,9 +3,9 @@
 // and get the step that is sounding right now, so sound and picture stay locked
 // even when the tempo changes mid-play.
 
-import * as I from './instruments.js?v=20261109204523';
-import * as P from './patterns.js?v=20261109204523';
-import { SampleBank } from './samples.js?v=20261109204523';
+import * as I from './instruments.js?v=20261109210541';
+import * as P from './patterns.js?v=20261109210541';
+import { SampleBank } from './samples.js?v=20261109210541';
 
 export const STEPS_PER_PHRASE = 16;
 const LOOKAHEAD = 0.18;    // schedule this far ahead (s); a count word may start up to 0.15 s before its beat
@@ -140,13 +140,15 @@ export class Engine {
         onProgress(n + 1, total);
       }
     }
-    return { meta, buffers, mix: meta.tracks.map(() => ({ vol: 0.6, mute: false })) }; // 0.6 = the middle of the slider (0-1.2)
+    // 0.6 = the middle of the slider (0-1.2); a slower version has it in the file already (meta.mixVol 1)
+    return { meta, buffers, mix: meta.tracks.map(() => ({ vol: meta.mixVol ?? 0.6, mute: false })) };
   }
   // Song files are kept in the browser's Cache Storage (on disk, not in memory), so a song picked later
   // only has to be decoded. The version from songs.json is in the address, so a new import is fetched
   // again and old files are dropped. Cache Storage needs https (or localhost); elsewhere it just fetches.
   async _songFile(meta, n) {
-    const url = `songs/${meta.id}/${n}.m4a?v=${this.songVersion || 0}`;
+    // meta.dir and meta.files: the slower one-file version of a song (slowSong in game.js)
+    const url = `songs/${meta.dir || meta.id}/${meta.files ? meta.files[n] : `${n}.m4a`}?v=${this.songVersion || 0}`;
     const cache = await this._songCache();
     let res = cache && await cache.match(url);
     if (!res) {

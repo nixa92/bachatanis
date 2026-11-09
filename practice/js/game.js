@@ -1,4 +1,4 @@
-import { t } from './i18n.js?v=20261109204523';
+import { t } from './i18n.js?v=20261109210541';
 
 // Test sluha: the music starts at once and every tap counts. A level ends when the player
 // lands enough hits in a row; the faster that happens, the more points.
@@ -40,13 +40,30 @@ export const LEVELS = [
 const SONG_LEVELS = LEVELS.filter((l) => !l.generated).length;
 const HARDER = { majao: ['majao', 'derecho', 'mambo'], derecho: ['derecho', 'majao', 'mambo'], mambo: ['mambo', 'derecho', 'majao'] };
 
-// Songs for one game, one per level: sorted by tempo into slow, middle and fast thirds, each third in a new
+// The first levels play slowed songs, to make the start easier. Only songs that still sound good slowed
+// have a slower version ("slow" in songs.json, made by tools/slow-songs.py, at the speed the owner picked by ear).
+const SLOW_LEVELS = 3;
+
+// a song's slower version, as a song of its own: one file (all tracks mixed), its own tempo and lag
+export function slowSong(meta) {
+  const { speed, file, lag } = meta.slow;
+  return {
+    ...meta, id: `${meta.id}-x${speed}`, dir: meta.id, files: [file], speed,
+    bpm: meta.bpm * speed, lag, mixVol: 1, tracks: [{ kind: 'mix', sr: 'Cela pesma', en: 'Full song' }],
+  };
+}
+
+// Songs for one game, one per level. The first levels: slowed songs (picked at random), slowest first.
+// The other levels: the other songs sorted by tempo into slow, middle and fast thirds, each third in a new
 // random order, so the lower levels get the slower songs.
 export function songsForGame(songs) {
   if (!songs.length) return [];
-  const sorted = [...songs].sort((a, b) => a.bpm - b.bpm);
+  const slow = shuffled(songs.filter((s) => s.slow)).slice(0, SLOW_LEVELS).map(slowSong).sort((a, b) => a.bpm - b.bpm);
+  const used = new Set(slow.map((s) => s.dir));
+  const rest = songs.filter((s) => !used.has(s.id));
+  const sorted = [...(rest.length ? rest : songs)].sort((a, b) => a.bpm - b.bpm);
   const third = Math.ceil(sorted.length / 3);
-  const out = [];
+  const out = [...slow];
   for (let k = 0; k < 3; k++) out.push(...shuffled(sorted.slice(k * third, (k + 1) * third)));
   while (out.length < SONG_LEVELS) out.push(...shuffled(sorted));
   return out.slice(0, SONG_LEVELS);

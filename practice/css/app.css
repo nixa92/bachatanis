@@ -464,7 +464,7 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 #res-level { margin-bottom: 14px; }
 .result-run { margin: 10px 0 22px; font-weight: 600; }
 #best { margin-bottom: 24px; }
-.result-stats { display: flex; flex-wrap: nowrap; margin: 0 0 26px; color: var(--ink-600); } /* all four in one row, quieter than the score */
+.result-stats { display: flex; flex-wrap: nowrap; margin: 0 0 26px; color: var(--ink-600); } /* all three in one row, quieter than the score */
 .result-stats div { min-width: 0; padding: 0 8px; border-right: 1px solid var(--ink-15); }
 .result-stats div:first-child { padding-left: 0; }
 .result-stats div:last-child { padding-right: 0; border-right: 0; }
@@ -492,6 +492,9 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 .board-total { font-family: var(--font-display); font-weight: 800; }
 .board-note { padding: 10px 2px; color: var(--ink-600); }
 .board-me { justify-self: stretch; margin: 0; font-size: 14px; color: var(--ink-600); }
+.board-me:empty { display: none; }
+.cta-share { gap: 10px; margin-top: 6px; }
+.cta-share svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .game-card { display: grid; gap: 4px; width: 100%; padding: 16px 18px; text-align: left; font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--red-50); cursor: pointer; }
 .game-card:hover { border-color: var(--red); }
 .game-card b { font-family: var(--font-display); font-weight: 800; font-size: 20px; color: var(--red); }
