@@ -1,4 +1,4 @@
-import { t } from './i18n.js?v=20261109214108';
+import { t } from './i18n.js?v=20261109215235';
 
 // Test sluha: the music starts at once and every tap counts. A level ends when the player
 // lands enough hits in a row; the faster that happens, the more points.
@@ -230,15 +230,14 @@ export class EarTest {
     const avgError = mean(this.streakErrs.map((x) => Math.max(0, Math.min(Math.abs(x), this.hitWindow) - free))) / (this.hitWindow - free);
     const speed = Math.min(1, fastest / seconds);
     const points = Math.round(MAX_POINTS * speed * (1 - TIMING_WEIGHT * avgError));
-    const afterSpeed = Math.round(MAX_POINTS * speed);
     this._teardown();
     return {
       mode: this.modeId, level: this.levelNumber, bpm: Math.round(60 / this.beatDur), date: new Date().toISOString(),
       song: this.song ? this.song.meta.title : '',
       seconds,
       points,
-      lostSpeed: MAX_POINTS - afterSpeed, // points lost to a late start or a broken streak
-      lostTiming: afterSpeed - points,    // points lost to hits off the beat
+      speedPct: Math.round(100 * speed),          // 100: finished as fast as possible
+      accuracyPct: Math.round(100 * (1 - avgError)), // 100: every hit of the streak was a "Pogodak"
       misses: this.misses,
       avgOffsetMs: mean(this.errs) * 1000,
       spreadMs: std(this.errs) * 1000,

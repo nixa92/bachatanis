@@ -1,15 +1,15 @@
-import { Engine, CHANNELS } from './engine.js?v=20261109214108';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109214108';
-import { KORACI } from './steps.js?v=20261109214108';
-import { FeetView } from './feet.js?v=20261109214108';
-import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, feedback, songsForGame, slowSong } from './game.js?v=20261109214108';
-import * as store from './storage.js?v=20261109214108';
-import * as board from './leaderboard.js?v=20261109214108';
-import { drawCard, shareCard, APP_URL } from './share.js?v=20261109214108';
-import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261109214108';
-import { ICONS } from './icons.js?v=20261109214108';
-import { unlocked } from './gate.js?v=20261109214108';
-import { watchUpdates } from './update.js?v=20261109214108';
+import { Engine, CHANNELS } from './engine.js?v=20261109215235';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109215235';
+import { KORACI } from './steps.js?v=20261109215235';
+import { FeetView } from './feet.js?v=20261109215235';
+import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, feedback, songsForGame, slowSong } from './game.js?v=20261109215235';
+import * as store from './storage.js?v=20261109215235';
+import * as board from './leaderboard.js?v=20261109215235';
+import { drawCard, shareCard, APP_URL } from './share.js?v=20261109215235';
+import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261109215235';
+import { ICONS } from './icons.js?v=20261109215235';
+import { unlocked } from './gate.js?v=20261109215235';
+import { watchUpdates } from './update.js?v=20261109215235';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -690,6 +690,7 @@ async function startTest(modeId, btn = null) {
   }
   if (!song) setNumera(run.tracks[(state.level - 1) % run.tracks.length]);
   test.begin(modeId, state.level, song);
+  markLevelStarted();
   $('run-title').textContent = `${t(`mode.${modeId}`)}, ${levelText(state.level)}`;
   $('run-instr').textContent = t(`mode.${modeId}.how`);
   $('pad-sub').textContent = t(`pad.sub.${modeId}`);
@@ -734,6 +735,7 @@ $('test-start').addEventListener('click', () => {
   $('name-error').textContent = '';
   state.level = 1;
   store.setName(name);
+  clearGame(); // a new game replaces the one kept from before
   run = { id: Date.now(), docId: board.newRunId(), month: board.monthOf(), name, mode: state.mode, points: {}, tracks: shuffled(NUMERE.map((n) => n.id)), songs: nextSongs || songsForGame(songList) };
   nextSongs = null;
   // "level 0": the game is saved when it starts, so the games that end inside level 1 are counted too
@@ -743,7 +745,7 @@ $('test-start').addEventListener('click', () => {
 });
 $('player-name').addEventListener('input', () => { $('name-error').textContent = ''; });
 $('res-next').addEventListener('click', () => { state.level++; startTest(state.mode, $('res-next')); });
-$('res-back').addEventListener('click', () => showTestPart('setup'));
+$('res-back').addEventListener('click', () => { clearGame(); showTestPart('setup'); });
 $('res-board').addEventListener('click', showBoardAfterGame);
 $('res-quit').addEventListener('click', showBoardAfterGame);
 $('intro-back').addEventListener('click', () => showTestPart('setup'));
@@ -769,6 +771,7 @@ function abortTest() { quitDialogClose(); test.abort(); showBoardAfterGame(); }
 // after a game (stopped, or all levels passed): the leaderboard, loaded again once the game is saved;
 // it scrolls to the player's name, or to the leaderboard if they are not on it
 function showBoardAfterGame() {
+  clearGame();
   const played = run && Object.keys(run.points).length > 0;
   showTestPart('intro', { board: played ? { after: run.saving, findMe: true } : {} });
   window.scrollTo(0, 0);
@@ -809,10 +812,50 @@ function finishTest() {
   r.name = $('player-name').value.trim();
   store.setName(r.name);
   addToRun(r);
+  if (state.level < LEVELS.length) saveGame(r); else clearGame();
+  showResult(r);
+}
+// The game in progress is kept in localStorage after each level, so a page reload (also the automatic one
+// for a new version) does not lose it: the page opens on the last level's result, with Sledeći nivo.
+// A reload during a level ends the game, like leaving the app during a level (otherwise a reload would
+// let the player replay a level until it scores well).
+const GAME_KEY = 'vezbaj.igra';
+const GAME_MAX_AGE_MS = 6 * 60 * 60 * 1000; // an older game is not offered any more
+function saveGame(r) {
+  const { saving, ...keep } = run;
+  try { localStorage.setItem(GAME_KEY, JSON.stringify({ savedAt: Date.now(), level: state.level, run: keep, result: r })); } catch (e) { /* storage full or blocked */ }
+}
+// a level starts: a reload from now on ends the game
+function markLevelStarted() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(GAME_KEY) || 'null');
+    if (saved) localStorage.setItem(GAME_KEY, JSON.stringify({ ...saved, playing: true }));
+  } catch (e) { /* ignore */ }
+}
+function clearGame() {
+  try { localStorage.removeItem(GAME_KEY); } catch (e) { /* ignore */ }
+}
+function restoreGame() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(GAME_KEY) || 'null'); } catch (e) { /* ignore */ }
+  if (!saved || !saved.run || !MODES[saved.run.mode] || Date.now() - saved.savedAt > GAME_MAX_AGE_MS || saved.level >= LEVELS.length) {
+    clearGame();
+    return;
+  }
+  run = saved.run;
+  state.mode = run.mode;
+  state.level = saved.level;
+  showScreen('test');
+  renderIntro();
+  if (saved.playing) { showBoardAfterGame(); return; } // reloaded during a level: the game is over
+  preloadNextSong();
+  showResult(saved.result);
+}
+function showResult(r) {
   $('res-run').textContent = t('res.run', { total: run.total });
   showLevelPoints(r.points);
-  $('res-speed').textContent = lostText(r.lostSpeed);
-  $('res-timing').textContent = lostText(r.lostTiming);
+  $('res-speed').textContent = `${r.speedPct}%`;
+  $('res-timing').textContent = `${r.accuracyPct}%`;
   $('res-bpm').textContent = `${r.bpm} BPM`;
   const last = state.level === LEVELS.length;
   const lines = feedback(r);
@@ -833,8 +876,6 @@ function finishTest() {
   showTestPart('result');
   renderGames();
 }
-// points lost in a part of the score: "−12", or "0" when none
-const lostText = (n) => (n > 0 ? `−${n}` : '0');
 // the level's points as "+75 bodova", counted up from 0
 let countUp = 0;
 function showLevelPoints(points) {
@@ -1070,6 +1111,7 @@ document.addEventListener('visibilitychange', () => {
 // open a screen directly: vezbaj/#koraci, vezbaj/#test
 const startScreen = location.hash.slice(1);
 if (SCREENS.includes(startScreen) && startScreen !== 'ritam') showScreen(startScreen);
+restoreGame();
 
 // handy for debugging in the browser console
 window.vezbaj = { engine, test };
