@@ -473,6 +473,7 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 .result-msg { max-width: 34em; font-size: 17px; }
 .result-msg p { margin: 0 0 14px; }
 .result-actions { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: center; margin-top: 26px; }
+.result-actions button:disabled { opacity: 0.4; transition: opacity var(--dur) var(--ease); } /* the first second after a level */
 
 .game-list { display: grid; gap: 10px; margin-bottom: 16px; }
 /* leaderboard: under the game cards */
@@ -690,3 +691,16 @@ body.is-locked .tabs, body.is-locked main, body.is-locked .transport, body.is-lo
 }
 .update-bar button { border: 0; border-radius: 999px; background: var(--red); color: var(--paper); font-weight: 600; font-size: 14px; padding: 8px 16px; }
 body.is-game .update-bar { display: none; }
+
+/* Odustani during a level: are you sure? */
+.confirm {
+  width: min(360px, calc(100% - 40px)); padding: 26px 24px 18px; border: 0; border-radius: 24px;
+  background: var(--paper); color: var(--ink); text-align: center;
+  box-shadow: 0 12px 40px rgba(31, 26, 23, 0.3);
+}
+.confirm::backdrop { background: rgba(31, 26, 23, 0.55); }
+.confirm-q { margin: 0 0 8px; font-family: var(--font-display); font-weight: 800; font-size: 20px; line-height: 1.25; color: var(--red); }
+.confirm-note { margin: 0 0 20px; font-size: 14px; color: var(--ink-600); }
+.confirm-actions { display: grid; gap: 6px; justify-items: center; }
+.confirm-actions .cta { width: 100%; }
+.confirm-actions button:disabled { opacity: 0.4; }

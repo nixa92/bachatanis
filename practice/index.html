@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Sacramento&display=swap" rel="stylesheet">
   <link rel="preload" href="fonts/Northwell.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/app.css?v=20261109211754">
+  <link rel="stylesheet" href="css/app.css?v=20261109212911">
 </head>
 <body class="is-locked">
   <header class="top">
@@ -180,6 +180,15 @@
         <button class="btn-quiet" id="test-abort" type="button" data-i18n="test.abort">Odustani</button>
       </div>
 
+      <dialog class="confirm" id="quit-confirm" aria-labelledby="quit-q">
+        <p class="confirm-q" id="quit-q" data-i18n="quit.q">Da li želiš da odustaneš od igre?</p>
+        <p class="confirm-note" data-i18n="quit.note">Bodovi sa završenih nivoa ostaju na tabeli.</p>
+        <div class="confirm-actions">
+          <button class="cta" id="quit-no" type="button" data-i18n="quit.no">Nastavi igru</button>
+          <button class="btn-quiet" id="quit-yes" type="button" data-i18n="quit.yes">Odustani</button>
+        </div>
+      </dialog>
+
       <div class="test-result" id="test-result" hidden>
         <p class="run-title" id="res-level"></p>
         <p class="result-score"><span id="res-score"></span><small id="res-unit"></small></p>
@@ -227,6 +236,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/app.js?v=20261109211754"></script>
+  <script type="module" src="js/app.js?v=20261109212911"></script>
 </body>
 </html>

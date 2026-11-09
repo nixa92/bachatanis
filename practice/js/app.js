@@ -1,15 +1,15 @@
-import { Engine, CHANNELS } from './engine.js?v=20261109211754';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109211754';
-import { KORACI } from './steps.js?v=20261109211754';
-import { FeetView } from './feet.js?v=20261109211754';
-import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame, slowSong } from './game.js?v=20261109211754';
-import * as store from './storage.js?v=20261109211754';
-import * as board from './leaderboard.js?v=20261109211754';
-import { drawCard, shareCard, APP_URL } from './share.js?v=20261109211754';
-import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261109211754';
-import { ICONS } from './icons.js?v=20261109211754';
-import { unlocked } from './gate.js?v=20261109211754';
-import { watchUpdates } from './update.js?v=20261109211754';
+import { Engine, CHANNELS } from './engine.js?v=20261109212911';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109212911';
+import { KORACI } from './steps.js?v=20261109212911';
+import { FeetView } from './feet.js?v=20261109212911';
+import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame, slowSong } from './game.js?v=20261109212911';
+import * as store from './storage.js?v=20261109212911';
+import * as board from './leaderboard.js?v=20261109212911';
+import { drawCard, shareCard, APP_URL } from './share.js?v=20261109212911';
+import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261109212911';
+import { ICONS } from './icons.js?v=20261109212911';
+import { unlocked } from './gate.js?v=20261109212911';
+import { watchUpdates } from './update.js?v=20261109212911';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -167,7 +167,7 @@ document.addEventListener('keydown', (e) => {
   const tag = (e.target.tagName || '').toLowerCase();
   if (tag === 'input' && e.target.type === 'text') return;
   if (state.screen === 'test') {
-    if (test.running) { e.preventDefault(); onTap(e); }
+    if (test.running && !$('quit-confirm').open) { e.preventDefault(); onTap(e); }
     return;
   }
   if (tag === 'button' || tag === 'select') return; // let space activate the focused control
@@ -615,9 +615,13 @@ function setGameView(on) {
     history.back();
   }
 }
+// the back gesture during a level asks first, like Odustani; a second back while it asks quits
 window.addEventListener('popstate', () => {
   if (ignoreNextPop) { ignoreNextPop = false; return; }
-  if (test.running) abortTest();
+  if (!test.running) return;
+  if ($('quit-confirm').open) { abortTest(); return; }
+  history.pushState({ game: true }, '', location.href); // the game keeps its history step
+  askQuit();
 });
 
 // opts.board: passed to renderBoard when the intro (with the leaderboard) opens
@@ -743,8 +747,25 @@ $('res-back').addEventListener('click', () => showTestPart('setup'));
 $('res-board').addEventListener('click', showBoardAfterGame);
 $('res-quit').addEventListener('click', showBoardAfterGame);
 $('intro-back').addEventListener('click', () => showTestPart('setup'));
-$('test-abort').addEventListener('click', abortTest);
-function abortTest() { test.abort(); showBoardAfterGame(); }
+// Odustani during a level asks first: a tap meant for the pad can land on it.
+// The music keeps playing while it asks (the game cannot pause on the beat), so a running streak may break.
+const QUIT_GUARD_MS = 600; // the dialog's buttons wait a moment, for the same reason
+let quitGuard = 0;
+function askQuit() {
+  const dlg = $('quit-confirm');
+  if (dlg.open || !test.running) return;
+  const buttons = dlg.querySelectorAll('button');
+  for (const b of buttons) b.disabled = true;
+  clearTimeout(quitGuard);
+  quitGuard = setTimeout(() => { for (const b of buttons) b.disabled = false; $('quit-no').focus(); }, QUIT_GUARD_MS);
+  dlg.showModal();
+}
+function quitDialogClose() { if ($('quit-confirm').open) $('quit-confirm').close(); }
+$('test-abort').addEventListener('click', askQuit);
+$('quit-no').addEventListener('click', () => { quitDialogClose(); $('tap-pad').focus(); });
+$('quit-yes').addEventListener('click', () => { if (test.running) abortTest(); else quitDialogClose(); });
+$('quit-confirm').addEventListener('cancel', () => $('tap-pad').focus()); // Esc: keep playing
+function abortTest() { quitDialogClose(); test.abort(); showBoardAfterGame(); }
 // after a game (stopped, or all levels passed): the leaderboard, loaded again once the game is saved;
 // it scrolls to the player's name, or to the leaderboard if they are not on it
 function showBoardAfterGame() {
@@ -780,6 +801,8 @@ $('tap-pad').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.re
 // space is handled on document keydown; stop it from also "clicking" the focused pad
 document.addEventListener('keyup', (e) => { if (e.code === 'Space' && test.running) e.preventDefault(); });
 
+const RESULT_GUARD_MS = 1000;
+let resultGuard = 0;
 function finishTest() {
   const r = test.finish();
   preloadNextSong();
@@ -801,6 +824,12 @@ function finishTest() {
   $('res-back').hidden = !last;
   $('res-board').hidden = !last;
   $('res-msg').innerHTML = lines.map((l) => `<p>${escapeHtml(l)}</p>`).join('');
+  // The level ends on a finger down on the pad; the same tap's click (and the next tap in rhythm) would land on
+  // whatever button is now under the finger, often Odustani. So the buttons wait a moment.
+  const buttons = $('test-result').querySelectorAll('.result-actions button');
+  for (const b of buttons) b.disabled = true;
+  clearTimeout(resultGuard);
+  resultGuard = setTimeout(() => { for (const b of buttons) b.disabled = false; }, RESULT_GUARD_MS);
   showTestPart('result');
   renderGames();
 }
@@ -901,7 +930,7 @@ renderBoard();
 // ------------------------------------------------------------ share the result (a picture for a story)
 // The picture is drawn as soon as the leaderboard shows, so the tap on the button opens the share sheet
 // right away (iPhone allows the share sheet only shortly after a tap).
-let shareCardData = null; // { blob, text } of the result on the button, once drawn
+let shareCardData = null; // { blob } of the result on the button, once drawn
 let shareDrawing = null; // the drawing of it, while it runs
 let shareDraw = 0;
 async function prepareShare(best) {
@@ -922,9 +951,8 @@ async function prepareShare(best) {
     challenge: t('share.challenge'),
     url: APP_URL.replace(/^https:\/\//, '').replace(/\/$/, ''),
   };
-  const text = t('share.text', { total: best.total, unit, mode, url: APP_URL });
   const drawing = drawCard(card)
-    .then((blob) => { if (id === shareDraw) shareCardData = { blob, text }; })
+    .then((blob) => { if (id === shareDraw) shareCardData = { blob }; })
     .catch((e) => console.warn('[podeli]', e.message));
   shareDrawing = drawing;
   await drawing;
@@ -944,7 +972,7 @@ $('board-share').addEventListener('click', async () => {
     data = shareCardData;
     if (!data) return;
   }
-  const how = await shareCard(data.blob, { text: data.text, fileName: 'bachata-rezultat.png' });
+  const how = await shareCard(data.blob, { fileName: 'bachata-rezultat.png' });
   $('board-share-note').textContent = how === 'downloaded' ? t('share.saved') : '';
 });
 

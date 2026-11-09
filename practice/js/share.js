@@ -87,11 +87,12 @@ export async function drawCard(d) {
 }
 
 // shares the picture; returns 'shared', 'cancelled' or 'downloaded'
-export async function shareCard(blob, { text, fileName = 'rezultat.png' } = {}) {
+// only the picture: a text would come as a second message on Viber
+export async function shareCard(blob, { fileName = 'rezultat.png' } = {}) {
   const file = new File([blob], fileName, { type: 'image/png' });
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
-      await navigator.share({ files: [file], text });
+      await navigator.share({ files: [file] });
       return 'shared';
     } catch (e) {
       if (e.name === 'AbortError') return 'cancelled';
