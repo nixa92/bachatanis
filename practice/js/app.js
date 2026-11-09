@@ -1,13 +1,13 @@
-import { Engine, CHANNELS } from './engine.js?v=20261109202649';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109202649';
-import { KORACI } from './steps.js?v=20261109202649';
-import { FeetView } from './feet.js?v=20261109202649';
-import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261109202649';
-import * as store from './storage.js?v=20261109202649';
-import * as board from './leaderboard.js?v=20261109202649';
-import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261109202649';
-import { ICONS } from './icons.js?v=20261109202649';
-import { unlocked } from './gate.js?v=20261109202649';
+import { Engine, CHANNELS } from './engine.js?v=20261109202706';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109202706';
+import { KORACI } from './steps.js?v=20261109202706';
+import { FeetView } from './feet.js?v=20261109202706';
+import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261109202706';
+import * as store from './storage.js?v=20261109202706';
+import * as board from './leaderboard.js?v=20261109202706';
+import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261109202706';
+import { ICONS } from './icons.js?v=20261109202706';
+import { unlocked } from './gate.js?v=20261109202706';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -727,6 +727,7 @@ $('player-name').addEventListener('input', () => { $('name-error').textContent =
 $('res-next').addEventListener('click', () => { state.level++; startTest(state.mode, $('res-next')); });
 $('res-back').addEventListener('click', () => showTestPart('setup'));
 $('res-board').addEventListener('click', showBoardAfterGame);
+$('res-quit').addEventListener('click', showBoardAfterGame);
 $('intro-back').addEventListener('click', () => showTestPart('setup'));
 $('test-abort').addEventListener('click', abortTest);
 function abortTest() { test.abort(); showBoardAfterGame(); }
@@ -781,7 +782,8 @@ function finishTest() {
   if (last) lines.push(t('res.done', { total: LEVELS.length }));
   $('res-level').textContent = `${t(`mode.${r.mode}`)}, ${levelText(r.level)}`;
   $('res-next').hidden = last;
-  // between levels the only way on is the next level; another game is offered only after the last level
+  // between levels: the next level or quit (to the leaderboard); another game is offered only after the last level
+  $('res-quit').hidden = last;
   $('res-back').hidden = !last;
   $('res-board').hidden = !last;
   $('res-msg').innerHTML = lines.map((l) => `<p>${escapeHtml(l)}</p>`).join('');

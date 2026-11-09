@@ -1,5 +1,5 @@
-import { t } from './i18n.js?v=20261109202649';
-import { KORACI, NOGA_NA_NOGU } from './steps.js?v=20261109202649';
+import { t } from './i18n.js?v=20261109202706';
+import { KORACI, NOGA_NA_NOGU } from './steps.js?v=20261109202706';
 // Top-down feet animation for the Koraci screen.
 // Positions come from steps.js; time comes from the audio engine (positionAt),
 // so the feet land exactly on the counts you hear.
