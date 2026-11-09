@@ -5,7 +5,8 @@
 // One document per game in the collection "runs", updated after every level:
 //   name (may be empty), named (true when there is a name), mode, level (highest level played),
 //   total (points summed over the levels), points (the points of each level), month ("2026-11"), date (server time).
-// Games without a name are saved too (they show how far players get), but only named games are shown.
+// A game is first saved when it starts, with level 0 (no points), so the games that end inside level 1 are counted.
+// A name is required since November 2026; older games without a name stay in the database, but only named games are shown.
 
 const API_KEY = 'AIzaSyDcoOyFXHJsYqnqRQX1t1BVFUm6PZs9564';
 const PROJECT = 'bachata-nis';
@@ -81,6 +82,7 @@ export async function topRuns(mode, month = null, count = 10) {
   for (const r of rows || []) {
     if (!r.document) continue;
     const f = r.document.fields;
+    if (f.level.integerValue === '0') continue; // started, but no level finished
     const name = f.name.stringValue;
     const key = name.toLocaleLowerCase();
     if (seen.has(key)) continue;

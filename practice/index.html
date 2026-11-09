@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Sacramento&display=swap" rel="stylesheet">
   <link rel="preload" href="fonts/Northwell.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/app.css?v=20261104231757">
+  <link rel="stylesheet" href="css/app.css?v=20261109200555">
 </head>
 <body class="is-locked">
   <header class="top">
@@ -145,8 +145,9 @@
         <ol class="intro-steps" id="intro-steps"></ol>
         <div class="field">
           <label class="field-label" for="player-name" data-i18n="name.label">Tvoje ime</label>
-          <input type="text" id="player-name" class="text-input" maxlength="40" autocomplete="given-name" placeholder="Nije obavezno" data-i18n-placeholder="name.placeholder">
-          <p class="field-help" data-i18n="name.help">Sa imenom se tvoj rezultat prikazuje na tabeli najboljih.</p>
+          <input type="text" id="player-name" class="text-input" maxlength="40" autocomplete="given-name" required placeholder="npr. Marija" data-i18n-placeholder="name.placeholder">
+          <p class="field-help" data-i18n="name.help">Tvoj rezultat se prikazuje na tabeli najboljih pod ovim imenom.</p>
+          <p class="gate-error" id="name-error" role="alert"></p>
         </div>
         <div class="result-actions">
           <button class="cta" id="test-start" type="button" data-i18n="test.start">Kreni</button>
@@ -222,6 +223,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/app.js?v=20261104231757"></script>
+  <script type="module" src="js/app.js?v=20261109200555"></script>
 </body>
 </html>

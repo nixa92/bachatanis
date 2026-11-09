@@ -1,13 +1,13 @@
-import { Engine, CHANNELS } from './engine.js?v=20261104231757';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261104231757';
-import { KORACI } from './steps.js?v=20261104231757';
-import { FeetView } from './feet.js?v=20261104231757';
-import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261104231757';
-import * as store from './storage.js?v=20261104231757';
-import * as board from './leaderboard.js?v=20261104231757';
-import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261104231757';
-import { ICONS } from './icons.js?v=20261104231757';
-import { unlocked } from './gate.js?v=20261104231757';
+import { Engine, CHANNELS } from './engine.js?v=20261109200555';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261109200555';
+import { KORACI } from './steps.js?v=20261109200555';
+import { FeetView } from './feet.js?v=20261109200555';
+import { EarTest, MODES, LEVELS, roundMs, feedback, songsForGame } from './game.js?v=20261109200555';
+import * as store from './storage.js?v=20261109200555';
+import * as board from './leaderboard.js?v=20261109200555';
+import { t, lang, setLang, onLangChange, applyStatic } from './i18n.js?v=20261109200555';
+import { ICONS } from './icons.js?v=20261109200555';
+import { unlocked } from './gate.js?v=20261109200555';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -706,12 +706,22 @@ function addToRun(r) {
     .catch((e) => console.warn('[tabela] not saved:', e.message));
 }
 $('test-start').addEventListener('click', () => {
-  state.level = 1;
   const name = $('player-name').value.trim();
+  if (!name) {
+    $('name-error').textContent = t('name.missing');
+    $('player-name').focus();
+    return;
+  }
+  $('name-error').textContent = '';
+  state.level = 1;
   store.setName(name);
   run = { id: Date.now(), docId: board.newRunId(), month: board.monthOf(), name, mode: state.mode, points: {}, tracks: shuffled(NUMERE.map((n) => n.id)), songs: songsForGame(songList) };
+  // "level 0": the game is saved when it starts, so the games that end inside level 1 are counted too
+  board.submitRun({ docId: run.docId, name, mode: run.mode, points: [], month: run.month })
+    .catch((e) => console.warn('[tabela] start not saved:', e.message));
   startTest(state.mode, $('test-start'));
 });
+$('player-name').addEventListener('input', () => { $('name-error').textContent = ''; });
 $('res-next').addEventListener('click', () => { state.level++; startTest(state.mode, $('res-next')); });
 $('res-back').addEventListener('click', () => showTestPart('setup'));
 $('intro-back').addEventListener('click', () => showTestPart('setup'));
