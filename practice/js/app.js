@@ -1,15 +1,15 @@
-import { Engine, CHANNELS } from './engine.js?v=20261110133217';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261110133217';
-import { KORACI } from './steps.js?v=20261110133217';
-import { FeetView } from './feet.js?v=20261110133217';
-import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, songsForGame, slowSong } from './game.js?v=20261110133217';
-import * as store from './storage.js?v=20261110133217';
-import * as board from './leaderboard.js?v=20261110133217';
-import { drawCard, shareCard, APP_URL } from './share.js?v=20261110133217';
-import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261110133217';
-import { ICONS } from './icons.js?v=20261110133217';
-import { unlocked } from './gate.js?v=20261110133217';
-import { watchUpdates } from './update.js?v=20261110133217';
+import { Engine, CHANNELS } from './engine.js?v=20261110175832';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261110175832';
+import { KORACI } from './steps.js?v=20261110175832';
+import { FeetView } from './feet.js?v=20261110175832';
+import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, songsForGame, slowSong } from './game.js?v=20261110175832';
+import * as store from './storage.js?v=20261110175832';
+import * as board from './leaderboard.js?v=20261110175832';
+import { drawCard, shareCard, APP_URL } from './share.js?v=20261110175832';
+import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261110175832';
+import { ICONS } from './icons.js?v=20261110175832';
+import { unlocked } from './gate.js?v=20261110175832';
+import { watchUpdates } from './update.js?v=20261110175832';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
