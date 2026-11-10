@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Sacramento&display=swap" rel="stylesheet">
   <link rel="preload" href="fonts/Northwell.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/app.css?v=20261110123012">
+  <link rel="stylesheet" href="css/app.css?v=20261110125216">
 </head>
 <body class="is-locked">
   <header class="top">
@@ -185,9 +185,9 @@
 
       <div class="test-run" id="test-run" hidden>
         <p class="run-title" id="run-title"></p>
+        <p class="run-sub" id="run-sub"></p>
         <p class="run-instr" id="run-instr"></p>
-        <div class="progress" aria-hidden="true"><div class="progress-bar" id="progress-bar"></div></div>
-        <p class="run-status"><span id="run-streak"></span><span id="run-time"></span></p>
+        <div class="run-status"><span class="streak-dots" id="streak-dots" role="img"></span><span id="run-time"></span></div>
         <p class="tap-fb" id="tap-fb" role="status"></p>
         <button class="tap-pad" id="tap-pad" type="button"><b data-i18n="pad.tap">Tapni</b><span id="pad-sub"></span></button>
         <button class="btn-quiet" id="test-abort" type="button" data-i18n="test.abort">Odustani</button>
@@ -204,12 +204,13 @@
 
       <div class="test-result" id="test-result" hidden>
         <p class="run-title" id="res-level"></p>
+        <p class="run-sub" id="res-sub"></p>
         <p class="result-score"><span id="res-score"></span><small id="res-unit"></small></p>
         <p class="result-run" id="res-run"></p>
         <dl class="result-stats">
           <div><dt data-i18n="res.speed">Brzina</dt><dd id="res-speed"></dd></div>
           <div><dt data-i18n="res.accuracy">Tačnost</dt><dd id="res-timing"></dd></div>
-          <div><dt data-i18n="res.tempo">Tempo</dt><dd id="res-bpm"></dd></div>
+          <div><dt data-i18n="res.misses">Promašaji</dt><dd id="res-misses"></dd></div>
         </dl>
         <div class="result-msg" id="res-msg"></div>
         <div class="result-actions">
@@ -251,6 +252,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/app.js?v=20261110123012"></script>
+  <script type="module" src="js/app.js?v=20261110125216"></script>
 </body>
 </html>

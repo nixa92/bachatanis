@@ -1,4 +1,4 @@
-import { t } from './i18n.js?v=20261110123012';
+import { t } from './i18n.js?v=20261110125216';
 
 // Test sluha: the music starts at once and every tap counts. A level ends when the player
 // lands enough hits in a row; the faster that happens, the more points.
@@ -17,6 +17,9 @@ const TIMING_WEIGHT = 0.3; // share of the points that depends on timing
 // A hit this close to the beat is "Pogodak" and costs no points; a phone cannot measure much finer.
 // Hits further off still count for the streak, but are shown as "a bit early/late" and cost points.
 export const ON_BEAT_MS = 50;
+// Each tap that does not count (wrong count, a second tap, too early or late) costs a point, so tapping on
+// every beat until the 1 comes is not worth it. A target missed without a tap costs time instead.
+const WRONG_TAP_POINTS = 1;
 
 // The test runs through these levels in order. It plays the real songs (songs.json): slower songs on
 // the lower levels, and the part it starts in gets harder: majao, then derecho, then mambo.
@@ -142,6 +145,7 @@ export class EarTest {
     this.lastHit = null;   // target index of the last hit
     this.lastUsed = null;  // target index the last tap went to
     this.misses = 0;
+    this.wrongTaps = 0; // taps that did not count
     this.errs = [];
     this.streakErrs = []; // timing of the hits in the current streak: only the finishing streak is scored
     this.wrongCounts = {};
@@ -179,18 +183,21 @@ export class EarTest {
 
     if (Math.abs(err) >= this.beatDur / 2) {
       this._miss();
+      this.wrongTaps++;
       const count = ((Math.round(fromStart / this.beatDur) % 8) + 8) % 8 + 1;
       this.wrongCounts[count] = (this.wrongCounts[count] || 0) + 1;
       return { ...result('wrong'), count };
     }
     if (index === this.lastUsed) {
       this._miss();
+      this.wrongTaps++;
       return result('extra');
     }
     this.lastUsed = index;
     this.errs.push(err);
     if (Math.abs(err) > this.hitWindow) {
       this._miss();
+      this.wrongTaps++;
       return result(err < 0 ? 'early' : 'late', err);
     }
     this.streak = this.lastHit === index - 1 ? this.streak + 1 : 1;
@@ -229,7 +236,8 @@ export class EarTest {
     const free = ON_BEAT_MS / 1000;
     const avgError = mean(this.streakErrs.map((x) => Math.max(0, Math.min(Math.abs(x), this.hitWindow) - free))) / (this.hitWindow - free);
     const speed = Math.min(1, fastest / seconds);
-    const points = Math.round(MAX_POINTS * speed * (1 - TIMING_WEIGHT * avgError));
+    const penalty = this.wrongTaps * WRONG_TAP_POINTS;
+    const points = Math.max(0, Math.round(MAX_POINTS * speed * (1 - TIMING_WEIGHT * avgError)) - penalty);
     this._teardown();
     return {
       mode: this.modeId, level: this.levelNumber, bpm: Math.round(60 / this.beatDur), date: new Date().toISOString(),
@@ -238,6 +246,7 @@ export class EarTest {
       points,
       speedPct: Math.round(100 * speed),          // 100: finished as fast as possible
       accuracyPct: Math.round(100 * (1 - avgError)), // 100: every hit of the streak was a "Pogodak"
+      penalty, // points taken for taps that did not count
       misses: this.misses,
       avgOffsetMs: mean(this.errs) * 1000,
       spreadMs: std(this.errs) * 1000,

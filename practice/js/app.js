@@ -1,15 +1,15 @@
-import { Engine, CHANNELS } from './engine.js?v=20261110123012';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261110123012';
-import { KORACI } from './steps.js?v=20261110123012';
-import { FeetView } from './feet.js?v=20261110123012';
-import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, feedback, songsForGame, slowSong } from './game.js?v=20261110123012';
-import * as store from './storage.js?v=20261110123012';
-import * as board from './leaderboard.js?v=20261110123012';
-import { drawCard, shareCard, APP_URL } from './share.js?v=20261110123012';
-import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261110123012';
-import { ICONS } from './icons.js?v=20261110123012';
-import { unlocked } from './gate.js?v=20261110123012';
-import { watchUpdates } from './update.js?v=20261110123012';
+import { Engine, CHANNELS } from './engine.js?v=20261110125216';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261110125216';
+import { KORACI } from './steps.js?v=20261110125216';
+import { FeetView } from './feet.js?v=20261110125216';
+import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, feedback, songsForGame, slowSong } from './game.js?v=20261110125216';
+import * as store from './storage.js?v=20261110125216';
+import * as board from './leaderboard.js?v=20261110125216';
+import { drawCard, shareCard, APP_URL } from './share.js?v=20261110125216';
+import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261110125216';
+import { ICONS } from './icons.js?v=20261110125216';
+import { unlocked } from './gate.js?v=20261110125216';
+import { watchUpdates } from './update.js?v=20261110125216';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -640,13 +640,46 @@ function showTestPart(part, opts = {}) {
   if (part === 'setup') renderTotal();
 }
 
+// the streak as dots, one per hit needed; the hits so far are filled
 const showStreak = (n) => {
   const need = MODES[state.mode].need;
-  $('run-streak').textContent = t('run.streak', { n, need });
-  $('progress-bar').style.width = `${(100 * n / need).toFixed(1)}%`;
+  const dots = $('streak-dots');
+  dots.setAttribute('aria-label', t('run.streak', { n, need }));
+  if (dots.children.length !== need) dots.innerHTML = '<i></i>'.repeat(need);
+  [...dots.children].forEach((d, i) => d.classList.toggle('is-on', i < n));
 };
+// What a tap did: the text over the pad (green for a hit, red otherwise) fades out after a moment,
+// the pad flashes green or red (and shakes on a miss), and the phone gives a short tick (two on a miss).
+const FEEDBACK_MS = 900;
+let feedbackTimer = 0;
+function showTapFeedback(text, ok, { pad = true } = {}) {
+  const fb = $('tap-fb');
+  fb.textContent = text;
+  fb.className = `tap-fb is-${ok ? 'hit' : 'miss'}`;
+  clearTimeout(feedbackTimer);
+  feedbackTimer = setTimeout(() => fb.classList.add('is-faded'), FEEDBACK_MS);
+  if (!pad) return;
+  const p = $('tap-pad');
+  p.classList.remove('is-hit', 'is-miss');
+  void p.offsetWidth; // restart the animation
+  p.classList.add(ok ? 'is-hit' : 'is-miss');
+  haptic(ok);
+}
+// Android: the vibration API. iPhone (Safari 18+): no vibration API, but tapping a switch gives a haptic tick.
+let hapticSwitch = null;
+function haptic(ok) {
+  if (navigator.vibrate) { navigator.vibrate(ok ? 12 : [35, 45, 35]); return; }
+  if (!hapticSwitch) {
+    hapticSwitch = document.createElement('label');
+    hapticSwitch.setAttribute('aria-hidden', 'true');
+    hapticSwitch.style.cssText = 'position:fixed;left:-100px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none';
+    hapticSwitch.innerHTML = '<input type="checkbox" switch tabindex="-1">';
+    document.body.appendChild(hapticSwitch);
+  }
+  hapticSwitch.click();
+  if (!ok) setTimeout(() => hapticSwitch.click(), 90);
+}
 const seconds = (s) => `${s.toFixed(1).replace('.', t('decimal'))} s`;
-const levelText = (n) => t('level.of', { n, total: LEVELS.length });
 
 // The game plays the real songs: the first level's song loads while the game's page is open (prepareNextGame),
 // and the next level's song loads while the result shows; if it is not ready yet, the button shows "Učitavam…". If a song cannot load, another song is
@@ -694,12 +727,14 @@ async function startTest(modeId, btn = null) {
   if (!song) setNumera(run.tracks[(state.level - 1) % run.tracks.length]);
   test.begin(modeId, state.level, song);
   markLevelStarted();
-  $('run-title').textContent = `${t(`mode.${modeId}`)}, ${levelText(state.level)}`;
+  $('run-title').textContent = t(`mode.${modeId}`);
+  $('run-sub').textContent = t('level.bpm', { n: state.level, bpm: Math.round(60 / test.beatDur) });
   $('run-instr').textContent = t(`mode.${modeId}.how`);
   $('pad-sub').textContent = t(`pad.sub.${modeId}`);
   // a song level that fell back to the generated music says so (usually the phone ran out of memory)
   $('tap-fb').textContent = state.level <= run.songs.length && !test.song ? t('game.fallback') : '';
   $('tap-fb').className = 'tap-fb';
+  clearTimeout(feedbackTimer);
   showStreak(0);
   showTestPart('run');
   $('tap-pad').focus();
@@ -796,13 +831,7 @@ function onTap(e) {
   const res = test.tap(ts);
   if (!res) return;
   showStreak(res.streak);
-  const fb = $('tap-fb');
-  fb.textContent = tapText(res);
-  fb.className = `tap-fb is-${res.kind === 'hit' ? 'hit' : 'miss'}`;
-  const pad = $('tap-pad');
-  pad.classList.remove('is-hit');
-  void pad.offsetWidth;
-  pad.classList.add('is-hit');
+  showTapFeedback(tapText(res), res.kind === 'hit');
   if (res.done) finishTest();
 }
 $('tap-pad').addEventListener('pointerdown', (e) => { e.preventDefault(); onTap(e); });
@@ -862,11 +891,12 @@ function showResult(r) {
   showLevelPoints(r.points);
   $('res-speed').textContent = `${r.speedPct}%`;
   $('res-timing').textContent = `${r.accuracyPct}%`;
-  $('res-bpm').textContent = `${r.bpm} BPM`;
+  $('res-misses').textContent = r.penalty ? `−${r.penalty}` : '0';
   const last = state.level === LEVELS.length;
   const lines = feedback(r);
   if (last) lines.push(t('res.done', { total: LEVELS.length }));
-  $('res-level').textContent = `${t(`mode.${r.mode}`)}, ${levelText(r.level)}`;
+  $('res-level').textContent = t(`mode.${r.mode}`);
+  $('res-sub').textContent = t('level.bpm', { n: r.level, bpm: r.bpm });
   $('res-next').hidden = last;
   // between levels: the next level or quit (to the leaderboard); another game is offered only after the last level
   $('res-quit').hidden = last;
@@ -1188,8 +1218,7 @@ function frameBody() {
     $('run-time').textContent = seconds(test.elapsed());
     if (test.checkMissed()) {
       showStreak(0);
-      $('tap-fb').textContent = t(`tap.missed.${state.mode}`);
-      $('tap-fb').className = 'tap-fb is-miss';
+      showTapFeedback(t(`tap.missed.${state.mode}`), false, { pad: false });
     }
   }
 }

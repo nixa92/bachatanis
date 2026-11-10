@@ -22,6 +22,7 @@ html { touch-action: manipulation; } /* no double-tap zoom on iPhone */
   --red: #A5071C;
   --red-hover: #C4152C;
   --red-press: #7C0514;
+  --green: #1E7A3C; /* a hit in the game */
   --red-50: rgba(165, 7, 28, 0.5);
   --red-12: rgba(165, 7, 28, 0.12);
   --red-20: rgba(165, 7, 28, 0.2);
@@ -423,14 +424,20 @@ body.is-game main { padding-top: 12px; padding-bottom: 12px; }
 body.is-game { padding-bottom: 0; }
 body.is-game .test-run { display: flex; flex-direction: column; height: calc(100vh - 24px); height: calc(100dvh - 24px); }
 body.is-game .run-title { font-size: 20px; }
+/* under the game's name: "Nivo 3 · 120 BPM" */
+.run-sub { margin: 4px 0 0; font-size: 15px; font-weight: 600; color: var(--ink-600); font-variant-numeric: tabular-nums; }
+body.is-game .run-sub { font-size: 14px; }
 body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 .run-instr { margin: 8px 0 14px; font-size: 17px; max-width: 30em; }
-.run-status { display: flex; justify-content: space-between; margin: 10px 0 4px; font-size: 14px; font-weight: 600; color: var(--ink-600); font-variant-numeric: tabular-nums; min-height: 1.5em; }
+.run-status { display: flex; justify-content: space-between; align-items: center; margin: 14px 0 4px; font-size: 14px; font-weight: 600; color: var(--ink-600); font-variant-numeric: tabular-nums; min-height: 1.5em; }
 .tap-fb { margin: 0 0 12px; min-height: 1.4em; font-family: var(--font-display); font-weight: 700; font-size: 22px; text-align: center; font-variant-numeric: tabular-nums; }
-.tap-fb.is-hit { color: var(--ink); }
+.tap-fb.is-hit { color: var(--green); }
 .tap-fb.is-miss { color: var(--red); }
-.progress { position: relative; height: 6px; background: var(--paper); }
-.progress-bar { position: absolute; inset: 0 auto 0 0; background: var(--red); width: 0; }
+.tap-fb.is-faded { opacity: 0; transition: opacity 300ms; } /* the text goes away a moment after the tap */
+/* the streak: one dot per hit needed */
+.streak-dots { display: flex; flex-wrap: wrap; gap: 8px; }
+.streak-dots i { width: 16px; height: 16px; border-radius: 50%; box-shadow: inset 0 0 0 2px var(--red-20); transition: background 120ms; }
+.streak-dots i.is-on { background: var(--green); box-shadow: none; }
 
 .tap-pad {
   display: flex;
@@ -440,8 +447,9 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
   width: 100%;
   height: min(46vh, 380px);
   border: 0;
-  background: var(--red);
-  color: var(--paper);
+  background: var(--paper);
+  box-shadow: inset 0 0 0 2px var(--red-20);
+  color: var(--ink);
   font-family: var(--font-display);
   font-weight: 800;
   font-size: clamp(44px, 13vw, 88px);
@@ -455,8 +463,15 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 }
 .tap-pad b { font-weight: inherit; }
 .tap-pad span { font-family: var(--font-body); font-weight: 500; font-size: 14px; text-transform: none; letter-spacing: 0; margin-top: 10px; opacity: 0.8; }
-.tap-pad.is-hit { animation: hit 140ms linear; }
-@keyframes hit { from { background: var(--red-press); } to { background: var(--red); } }
+/* a short flash, so it is over before the next beat even at 200 BPM (300 ms a beat) */
+.tap-pad.is-hit { animation: pad-hit 160ms ease-out; }
+.tap-pad.is-miss { animation: pad-miss 260ms ease-out; }
+@keyframes pad-hit { 0%, 35% { background: var(--green); color: var(--paper); box-shadow: none; } }
+@keyframes pad-miss-color { 0%, 30% { background: var(--red); color: var(--paper); box-shadow: none; } }
+@keyframes pad-miss {
+  0%, 30% { background: var(--red); color: var(--paper); box-shadow: none; }
+  0% { transform: translateX(0); } 20% { transform: translateX(-8px); } 45% { transform: translateX(7px); } 70% { transform: translateX(-4px); } 100% { transform: translateX(0); }
+}
 
 .result-score { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
 #res-score { font-family: var(--font-display); font-weight: 800; font-size: 72px; line-height: 1; letter-spacing: -0.03em; color: var(--red); white-space: nowrap; }
@@ -645,7 +660,6 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 .pick { border-radius: 999px; }
 .cta { border-radius: 999px; }
 .legend-foot { border-radius: 50%; }
-.progress, .progress-bar { border-radius: 3px; }
 
 /* ------------------------------------------------------------ larger screens */
 /* 600 and 960 are the site's breakpoints */
@@ -674,7 +688,7 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tap-pad.is-hit { animation: none; }
+  .tap-pad.is-miss { animation-name: pad-miss-color; } /* no shake: only the colour */
   * { transition: none !important; }
 }
 
