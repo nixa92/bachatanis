@@ -1,15 +1,15 @@
-import { Engine, CHANNELS } from './engine.js?v=20261110125944';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261110125944';
-import { KORACI } from './steps.js?v=20261110125944';
-import { FeetView } from './feet.js?v=20261110125944';
-import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, songsForGame, slowSong } from './game.js?v=20261110125944';
-import * as store from './storage.js?v=20261110125944';
-import * as board from './leaderboard.js?v=20261110125944';
-import { drawCard, shareCard, APP_URL } from './share.js?v=20261110125944';
-import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261110125944';
-import { ICONS } from './icons.js?v=20261110125944';
-import { unlocked } from './gate.js?v=20261110125944';
-import { watchUpdates } from './update.js?v=20261110125944';
+import { Engine, CHANNELS } from './engine.js?v=20261110130235';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261110130235';
+import { KORACI } from './steps.js?v=20261110130235';
+import { FeetView } from './feet.js?v=20261110130235';
+import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, songsForGame, slowSong } from './game.js?v=20261110130235';
+import * as store from './storage.js?v=20261110130235';
+import * as board from './leaderboard.js?v=20261110130235';
+import { drawCard, shareCard, APP_URL } from './share.js?v=20261110130235';
+import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261110130235';
+import { ICONS } from './icons.js?v=20261110130235';
+import { unlocked } from './gate.js?v=20261110130235';
+import { watchUpdates } from './update.js?v=20261110130235';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -1113,7 +1113,7 @@ async function renderTotal() {
   renderGames();
   list.dataset.view = period;
   const name = myName();
-  const games = (r) => t('total.games', Object.fromEntries(board.MODE_IDS.map((m) => [m, r.games[m] ?? 0])));
+  const games = (r) => t('total.games', Object.fromEntries(board.MODE_IDS.map((m) => [m, fmtPoints(r.games[m] ?? 0)])));
   const myIndex = name ? rows.findIndex((r) => r.name.toLocaleLowerCase() === name) : -1;
   const mine = rows[myIndex];
   shareTotal.prepare(mine && mine.total > 0 ? { mode: t('total.all'), total: mine.total, levelText: games(mine), rank: rankText(myIndex + 1, period) } : null);
