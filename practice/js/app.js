@@ -1,15 +1,15 @@
-import { Engine, CHANNELS } from './engine.js?v=20261110225925';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261110225925';
-import { KORACI } from './steps.js?v=20261110225925';
-import { FeetView } from './feet.js?v=20261110225925';
-import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, songsForGame, slowSong } from './game.js?v=20261110225925';
-import * as store from './storage.js?v=20261110225925';
-import * as board from './leaderboard.js?v=20261110225925';
-import { drawCard, shareCard, APP_URL } from './share.js?v=20261110225925';
-import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261110225925';
-import { ICONS } from './icons.js?v=20261110225925';
-import { unlocked } from './gate.js?v=20261110225925';
-import { watchUpdates } from './update.js?v=20261110225925';
+import { Engine, CHANNELS } from './engine.js?v=20261110230436';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261110230436';
+import { KORACI } from './steps.js?v=20261110230436';
+import { FeetView } from './feet.js?v=20261110230436';
+import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, songsForGame, slowSong } from './game.js?v=20261110230436';
+import * as store from './storage.js?v=20261110230436';
+import * as board from './leaderboard.js?v=20261110230436';
+import { drawCard, shareCard, APP_URL } from './share.js?v=20261110230436';
+import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261110230436';
+import { ICONS } from './icons.js?v=20261110230436';
+import { unlocked } from './gate.js?v=20261110230436';
+import { watchUpdates } from './update.js?v=20261110230436';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -35,6 +35,7 @@ onLangChange((l) => {
   renderGames();
   renderBoard();
   renderTotal();
+  renderWinner();
   renderIntro();
   renderStepList();
   setupFeet();
@@ -1081,7 +1082,7 @@ function drawBoard(rows, findMe) {
 renderBoard();
 
 // The total leaderboard on the game list: each name's best game of each of the three games added up.
-// Above it, the whole month long, last month's winner (last month is read once per phone, see leaderboard.js).
+// Above it, the whole month long, last month's winner: from winners.json (tools/winner.py), not the database.
 const totalView = { period: 'month' };
 let totalLoad = 0;
 $('total-period').addEventListener('change', (e) => { totalView.period = e.target.value; renderTotal(); });
@@ -1092,14 +1093,10 @@ async function renderTotal() {
   const period = totalView.period;
   if (list.dataset.view !== period) list.innerHTML = `<li class="board-note">${escapeHtml(t('board.loading'))}</li>`;
   let rows;
-  let prev;
   try {
-    // last month's board is needed for the winner anyway
-    prev = board.totalRuns(board.prevMonth());
     // this month's is needed for the game cards anyway
     const now = board.totalRuns(board.monthOf());
     rows = await (period === 'month' ? now : board.totalRuns(null));
-    prev = await prev;
     const me = (await now).find((r) => r.name.toLocaleLowerCase() === myName());
     myMonth = me ? me.games : {};
   } catch (e) {
@@ -1119,15 +1116,22 @@ async function renderTotal() {
   list.innerHTML = rows.length
     ? topAndMe(rows, myIndex, (r, i) => `<li class="board-row${i === myIndex ? ' is-me' : ''}${i === myIndex && r.total > 0 ? ' has-share' : ''}"><span class="board-rank">${i + 1}.</span><span class="board-name"><span>${escapeHtml(r.name)}</span>${i === myIndex && r.total > 0 ? rowShareButton() : ''}</span><b class="board-total">${fmtPoints(r.total)}</b><span class="board-detail">${escapeHtml(games(r))}</span></li>`)
     : `<li class="board-note">${escapeHtml(t('board.empty'))}</li>`;
-  const winner = $('winner');
-  winner.hidden = !prev.length;
-  if (prev.length) {
-    const [y, m] = board.prevMonth().split('-').map(Number);
-    const month = new Date(y, m - 1, 1).toLocaleDateString(lang === 'en' ? 'en-GB' : 'sr-Latn', { month: 'long' });
-    winner.textContent = t('winner', { month, name: prev[0].name, total: fmtPoints(prev[0].total) });
-  }
 }
 renderTotal();
+
+// last month's winner, saved once a month by tools/winner.py
+let winners = {};
+function renderWinner() {
+  const w = winners[board.prevMonth()];
+  const el = $('winner');
+  el.hidden = !w;
+  if (!w) return;
+  const [y, m] = board.prevMonth().split('-').map(Number);
+  const month = new Date(y, m - 1, 1).toLocaleDateString(lang === 'en' ? 'en-GB' : 'sr-Latn', { month: 'long' });
+  el.textContent = t('winner', { month, name: w.name, total: fmtPoints(w.total) });
+}
+fetch('winners.json', { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : {})).then((data) => { winners = data || {}; renderWinner(); })
+  .catch(() => { /* no winner shown */ });
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

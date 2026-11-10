@@ -81,13 +81,11 @@ const MAX_PAGES = 20; // up to 1000 games: far more than the club plays in a mon
 // the rows kept on the phone are shown, and the player's own games are added to them on the phone
 // (addOwnRun), so a finished game shows on the leaderboard at once without reading it again.
 // The rows are kept in localStorage, so a reload (a new version of the app) does not read them again.
-// A month that is over does not change any more: it is read only once (if read a day after it ended,
-// so the games started on its last evening are finished).
+// Past months are not read: last month's winner comes from winners.json (tools/winner.py).
 export const FRESH_MS = 10 * 60 * 1000;
 const cache = new Map(); // key -> { rows, readAt }
 const cacheKey = (mode, month) => `${mode}/${month || 'all'}`;
 const STORE_KEY = 'vezbaj.tabela.';
-const isPast = (month) => !!month && month < monthOf();
 function load(key) {
   if (cache.has(key)) return cache.get(key);
   let kept = null;
@@ -99,13 +97,8 @@ function keep(key, entry) {
   cache.set(key, entry);
   try { localStorage.setItem(STORE_KEY + key, JSON.stringify(entry)); } catch (e) { /* storage full or blocked */ }
 }
-const endedLongAgo = (month) => {
-  const [y, m] = month.split('-').map(Number);
-  return Date.now() >= new Date(y, m, 2).getTime(); // the 2nd of the month after
-};
-function isFresh(entry, month) {
+function isFresh(entry) {
   if (!entry) return false;
-  if (entry.final) return true;
   return Date.now() - entry.readAt < FRESH_MS && entry.readAt <= Date.now();
 }
 // the rows kept on the phone, however old, so a leaderboard shows at once; null if never read
@@ -115,12 +108,11 @@ const reading = new Map();
 export function topRuns(mode, month = null) {
   const key = cacheKey(mode, month);
   const kept = load(key);
-  if (isFresh(kept, month)) return Promise.resolve(kept.rows);
+  if (isFresh(kept)) return Promise.resolve(kept.rows);
   if (reading.has(key)) return reading.get(key);
   const p = readTopRuns(mode, month).then((rows) => {
     // the player's own games saved since the read started are not lost
     const entry = { rows: mergeOwn(rows, mode, month), readAt: Date.now() };
-    if (isPast(month) && endedLongAgo(month)) entry.final = true;
     keep(key, entry);
     return entry.rows;
   }).finally(() => reading.delete(key));
