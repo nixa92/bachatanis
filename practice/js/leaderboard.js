@@ -73,7 +73,16 @@ const eq = (field, value) => ({ fieldFilter: { field: { fieldPath: field }, op: 
 // The rules allow at most 50 documents per query, so the games are read in pages of 50.
 const PAGE = 50;
 const MAX_PAGES = 20; // up to 1000 games: far more than the club plays in a month
+// The last rows read for each leaderboard, so a leaderboard shows at once (then is read again).
+const cache = new Map();
+const cacheKey = (mode, month) => `${mode}/${month || 'all'}`;
+export const cachedRuns = (mode, month = null) => cache.get(cacheKey(mode, month)) || null;
 export async function topRuns(mode, month = null) {
+  const out = await readTopRuns(mode, month);
+  cache.set(cacheKey(mode, month), out);
+  return out;
+}
+async function readTopRuns(mode, month) {
   const filters = [eq('mode', { stringValue: mode }), eq('named', { booleanValue: true })];
   if (month) filters.push(eq('month', { stringValue: month }));
   const seen = new Set();

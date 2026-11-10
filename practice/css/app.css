@@ -483,7 +483,7 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 .board-head { justify-self: stretch; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .pick.pick-small { width: auto; min-height: 0; height: 36px; font-size: 14px; padding: 7px 38px 7px 14px; background-position: right 14px center; }
 .board-list { justify-self: stretch; list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-.board-row { display: grid; grid-template-columns: 2em minmax(0, 1fr) auto auto; align-items: baseline; gap: 10px; padding: 10px 14px; border-radius: 14px; background: var(--paper); box-shadow: inset 0 0 0 1px var(--red-20); font-variant-numeric: tabular-nums; }
+.board-row { display: grid; grid-template-columns: 1.4em minmax(0, 1fr) auto auto; align-items: baseline; gap: 8px; padding: 10px 14px; border-radius: 14px; background: var(--paper); box-shadow: inset 0 0 0 1px var(--red-20); font-variant-numeric: tabular-nums; }
 .board-row.is-me { box-shadow: inset 0 0 0 2px var(--red); }
 .board-row.is-found { animation: found 1.2s ease-out 0.4s 2; } /* the player's row, after a game */
 @keyframes found { 0% { background: var(--red-20); } 100% { background: var(--paper); } }
@@ -493,19 +493,19 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 .board-total { font-family: var(--font-display); font-weight: 800; }
 .board-note { padding: 10px 2px; color: var(--ink-600); }
 /* total leaderboard: rank, name, total; the points of each game on a second line */
-.board-row-total { grid-template-columns: 2em minmax(0, 1fr) auto; row-gap: 2px; }
+.board-row-total { grid-template-columns: 1.4em minmax(0, 1fr) auto; row-gap: 2px; }
 .board-games { grid-column: 2 / -1; font-size: 13px; color: var(--ink-600); }
 /* last month's winner, above the game list the whole month */
 .winner { margin: 0 0 20px; padding: 14px 18px; border-radius: 20px; background: var(--red); color: var(--paper); font-family: var(--font-display); font-weight: 800; font-size: 18px; line-height: 1.3; }
 .board-me { justify-self: stretch; margin: 0; font-size: 14px; color: var(--ink-600); }
 .board-me:empty { display: none; }
-/* the player's own row: a round share button left of the points */
-.board-row.has-share { grid-template-columns: 2em minmax(0, 1fr) auto auto auto; }
-.board-row-total.has-share { grid-template-columns: 2em minmax(0, 1fr) auto auto; }
+/* the player's own row: a share icon after the name (before the level) */
+.board-row.has-share { grid-template-columns: 1.4em minmax(0, 1fr) auto auto auto; }
+.board-row-total.has-share { grid-template-columns: 1.4em minmax(0, 1fr) auto auto; }
 .board-row { align-items: center; }
-.row-share { display: grid; place-items: center; width: 34px; height: 34px; margin: -6px 0; padding: 0; border: 0; border-radius: 50%; background: var(--red); color: var(--paper); cursor: pointer; }
+.row-share { display: grid; place-items: center; width: 34px; height: 34px; margin: -6px 0; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--red); cursor: pointer; }
 .row-share:disabled { opacity: 0.5; }
-.row-share svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
+.row-share svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
 .board-gap { padding: 0 14px; line-height: 1; color: var(--ink-600); } /* between the top rows and the player's row */
 .cta-share { gap: 10px; margin-top: 6px; }
 .cta-share svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }

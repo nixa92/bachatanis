@@ -1,15 +1,15 @@
-import { Engine, CHANNELS } from './engine.js?v=20261110122126';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261110122126';
-import { KORACI } from './steps.js?v=20261110122126';
-import { FeetView } from './feet.js?v=20261110122126';
-import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, feedback, songsForGame, slowSong } from './game.js?v=20261110122126';
-import * as store from './storage.js?v=20261110122126';
-import * as board from './leaderboard.js?v=20261110122126';
-import { drawCard, shareCard, APP_URL } from './share.js?v=20261110122126';
-import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261110122126';
-import { ICONS } from './icons.js?v=20261110122126';
-import { unlocked } from './gate.js?v=20261110122126';
-import { watchUpdates } from './update.js?v=20261110122126';
+import { Engine, CHANNELS } from './engine.js?v=20261110123012';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261110123012';
+import { KORACI } from './steps.js?v=20261110123012';
+import { FeetView } from './feet.js?v=20261110123012';
+import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, feedback, songsForGame, slowSong } from './game.js?v=20261110123012';
+import * as store from './storage.js?v=20261110123012';
+import * as board from './leaderboard.js?v=20261110123012';
+import { drawCard, shareCard, APP_URL } from './share.js?v=20261110123012';
+import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261110123012';
+import { ICONS } from './icons.js?v=20261110123012';
+import { unlocked } from './gate.js?v=20261110123012';
+import { watchUpdates } from './update.js?v=20261110123012';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -727,6 +727,9 @@ function addToRun(r) {
   // the leaderboard shown after the game waits for this save
   run.saving = board.submitRun({ docId: run.docId, name: run.name, mode: run.mode, points, month: run.month })
     .catch((e) => console.warn('[tabela] not saved:', e.message));
+  // read the leaderboard in the background, so it shows at once when the game ends
+  const { mode, month } = run;
+  run.saving.then(() => board.topRuns(mode, month)).catch(() => {});
 }
 $('test-start').addEventListener('click', () => {
   const name = $('player-name').value.trim();
@@ -1021,7 +1024,10 @@ async function renderBoard(opts = {}) {
   const load = ++boardLoad;
   const list = $('board-list');
   const month = periodMonth(boardView.period);
-  if (!list.children.length || list.dataset.view !== `${boardView.mode}/${boardView.period}`) {
+  // the rows read last time (after each level they are read in the background) show at once
+  const cached = board.cachedRuns(boardView.mode, month);
+  if (cached) drawBoard(cached, opts.findMe);
+  else if (!list.children.length || list.dataset.view !== `${boardView.mode}/${boardView.period}`) {
     list.innerHTML = `<li class="board-note">${escapeHtml(t('board.loading'))}</li>`;
   }
   let rows;
@@ -1030,10 +1036,14 @@ async function renderBoard(opts = {}) {
     rows = await board.topRuns(boardView.mode, month);
   } catch (e) {
     console.warn('[tabela]', e.message);
-    if (load === boardLoad) list.innerHTML = `<li class="board-note">${escapeHtml(t('board.error'))}</li>`;
+    if (load === boardLoad && !cached) list.innerHTML = `<li class="board-note">${escapeHtml(t('board.error'))}</li>`;
     return;
   }
   if (load !== boardLoad) return;
+  drawBoard(rows, opts.findMe && !cached);
+}
+function drawBoard(rows, findMe) {
+  const list = $('board-list');
   list.dataset.view = `${boardView.mode}/${boardView.period}`;
   // the player's row: the row of the player's name (the same row the total leaderboard counts)
   const name = myName();
@@ -1042,12 +1052,12 @@ async function renderBoard(opts = {}) {
   list.innerHTML = rows.length
     ? topAndMe(rows, myRank - 1, (r, i) => {
       const mine = r === best && r.total > 0;
-      return `<li class="board-row${r === best ? ' is-me' : ''}${mine ? ' has-share' : ''}"><span class="board-rank">${i + 1}.</span><span class="board-name">${escapeHtml(r.name)}</span><span class="board-level">${escapeHtml(t('board.level', { level: r.level }))}</span>${mine ? rowShareButton() : ''}<b class="board-total">${fmtPoints(r.total)}</b></li>`;
+      return `<li class="board-row${r === best ? ' is-me' : ''}${mine ? ' has-share' : ''}"><span class="board-rank">${i + 1}.</span><span class="board-name">${escapeHtml(r.name)}</span>${mine ? rowShareButton() : ''}<span class="board-level">${escapeHtml(t('board.level', { level: r.level }))}</span><b class="board-total">${fmtPoints(r.total)}</b></li>`;
     })
     : `<li class="board-note">${escapeHtml(t(boardView.period === 'prev' ? 'board.emptyPrev' : 'board.empty'))}</li>`;
   shareBoard.prepare(best && best.total > 0 ? { mode: t(`mode.${boardView.mode}`), total: best.total, levelText: t('share.level', { n: best.level }), rank: rankText(myRank, boardView.period) } : null);
   // after a game: to the player's row if they are on the list, otherwise to the top of the leaderboard
-  if (opts.findMe) {
+  if (findMe) {
     const myRow = list.querySelector('.is-me');
     if (myRow) {
       myRow.classList.add('is-found');
