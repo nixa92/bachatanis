@@ -1,4 +1,4 @@
-import { t } from './i18n.js?v=20261110125216';
+import { t } from './i18n.js?v=20261110125405';
 
 // Test sluha: the music starts at once and every tap counts. A level ends when the player
 // lands enough hits in a row; the faster that happens, the more points.
@@ -276,28 +276,12 @@ function std(a) {
   return Math.sqrt(a.reduce((s, x) => s + (x - m) * (x - m), 0) / (a.length - 1));
 }
 
-// a random message of the band, never the same one twice in a row
-let lastMessage = '';
-// these messages send the player to practice on the Muzika screen
-const SENDS_AWAY = ['fb.low.1', 'fb.low.3'];
-// only a big timing error is worth leaving the game for; smaller ones are practiced right here
-const PRACTICE_MS = 150;
-
-function pickMessage(band, sendAway) {
-  const options = [1, 2, 3, 4].map((i) => `fb.${band}.${i}`)
-    .filter((k) => sendAway || !SENDS_AWAY.includes(k))
-    .map((k) => t(k)).filter((m) => m !== lastMessage);
-  lastMessage = options[Math.floor(Math.random() * options.length)];
-  return lastMessage;
-}
-
-// Friendly feedback in the current language
+// Advice after a level, in the current language (no praise: the screen already shows the points)
 export function feedback(r) {
   const off = r.avgOffsetMs;
-  // timing within about 50 ms is good: only praise, whatever the points
+  // timing within about 50 ms is good: no advice about it
   const onTime = Math.abs(off) < 75;
-  const band = r.points >= 95 ? 'perfect' : r.points >= 85 || onTime ? 'great' : r.points >= 65 ? 'good' : r.points >= 40 ? 'ok' : 'low';
-  const lines = [pickMessage(band, Math.abs(off) >= PRACTICE_MS)];
+  const lines = [];
 
   // up to about 50 ms is a good result: no advice about rushing or dragging
   if (off <= -75) lines.push(t('fb.early', { ms: roundMs(-off) }));
