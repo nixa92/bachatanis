@@ -1,0 +1,32 @@
+# On the 1st of each month: archives last month of the practice app's leaderboards (winner, all-time bests)
+# into practice/data/archive.json, commits it and rebuilds the site. See .github/scripts/month.py.
+name: Arhiva tabela
+on:
+  schedule:
+    - cron: '0 6 1 * *' # 06:00 UTC = 07:00/08:00 in Serbia; last month's last games are long finished
+  workflow_dispatch:
+    inputs:
+      month:
+        description: 'Mesec, npr. 2026-10 (prazno: prošli mesec)'
+        required: false
+permissions:
+  contents: write
+  pages: write
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 .github/scripts/month.py ${{ inputs.month }}
+      - name: Commit and rebuild the site
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git add practice/data/archive.json
+          if git diff --cached --quiet; then echo "nothing new"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Vežbe: arhiva tabela za prošli mesec"
+          git push
+          # a push made with the workflow's token does not start a Pages build by itself
+          gh api -X POST "repos/${{ github.repository }}/pages/builds"
