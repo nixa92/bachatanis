@@ -134,7 +134,7 @@ const DICT = {
     'board.emptyPrev': 'Prošlog meseca nije bilo rezultata.',
     'total.title': 'Ukupna tabela',
     'total.help': 'Zbir najboljih rezultata iz sve tri igre. Igraj sve tri pod istim imenom.',
-    'total.games': 'ritam {puls} · tap {tap} · jedinica {jedan}',
+    'total.games': 'rit. {puls} · tap {tap} · jed. {jedan}',
     'winner': 'Pobednik za {month}: {name}, {total} bodova',
     'board.loading': 'Učitavam tabelu…',
     'board.empty': 'Još nema rezultata. Budi prvi.',

@@ -1,15 +1,15 @@
-import { Engine, CHANNELS } from './engine.js?v=20261110130235';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261110130235';
-import { KORACI } from './steps.js?v=20261110130235';
-import { FeetView } from './feet.js?v=20261110130235';
-import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, songsForGame, slowSong } from './game.js?v=20261110130235';
-import * as store from './storage.js?v=20261110130235';
-import * as board from './leaderboard.js?v=20261110130235';
-import { drawCard, shareCard, APP_URL } from './share.js?v=20261110130235';
-import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261110130235';
-import { ICONS } from './icons.js?v=20261110130235';
-import { unlocked } from './gate.js?v=20261110130235';
-import { watchUpdates } from './update.js?v=20261110130235';
+import { Engine, CHANNELS } from './engine.js?v=20261110131819';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261110131819';
+import { KORACI } from './steps.js?v=20261110131819';
+import { FeetView } from './feet.js?v=20261110131819';
+import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, songsForGame, slowSong } from './game.js?v=20261110131819';
+import * as store from './storage.js?v=20261110131819';
+import * as board from './leaderboard.js?v=20261110131819';
+import { drawCard, shareCard, APP_URL } from './share.js?v=20261110131819';
+import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261110131819';
+import { ICONS } from './icons.js?v=20261110131819';
+import { unlocked } from './gate.js?v=20261110131819';
+import { watchUpdates } from './update.js?v=20261110131819';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -1011,7 +1011,7 @@ $('res-share').addEventListener('click', () => shareResult.share($('res-share'),
 $('board-list').addEventListener('click', (e) => { const b = e.target.closest('.row-share'); if (b) shareBoard.share(b); });
 $('total-list').addEventListener('click', (e) => { const b = e.target.closest('.row-share'); if (b) shareTotal.share(b); });
 const rowShareButton = () => `<button class="row-share" type="button" aria-label="${escapeHtml(t('share.btn'))}" title="${escapeHtml(t('share.btn'))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button>`;
-const fmtPoints = (n) => n.toLocaleString(lang === 'en' ? 'en-GB' : 'sr-Latn');
+const fmtPoints = (n) => String(n); // no thousands separator (owner)
 const rankText = (rank, period) => (rank ? t(`share.rank.${period}`, { n: rank }) : '');
 
 // ------------------------------------------------------------ leaderboard
@@ -1064,7 +1064,7 @@ function drawBoard(rows, findMe) {
   list.innerHTML = rows.length
     ? topAndMe(rows, myRank - 1, (r, i) => {
       const mine = r === best && r.total > 0;
-      return `<li class="board-row${r === best ? ' is-me' : ''}${mine ? ' has-share' : ''}"><span class="board-rank">${i + 1}.</span><span class="board-name">${escapeHtml(r.name)}</span>${mine ? rowShareButton() : ''}<span class="board-level">${escapeHtml(t('board.level', { level: r.level }))}</span><b class="board-total">${fmtPoints(r.total)}</b></li>`;
+      return `<li class="board-row${r === best ? ' is-me' : ''}${mine ? ' has-share' : ''}"><span class="board-rank">${i + 1}.</span><span class="board-name">${escapeHtml(r.name)}</span>${mine ? rowShareButton() : ''}<b class="board-total">${fmtPoints(r.total)}</b><span class="board-detail">${escapeHtml(t('board.level', { level: r.level }))}</span></li>`;
     })
     : `<li class="board-note">${escapeHtml(t(boardView.period === 'prev' ? 'board.emptyPrev' : 'board.empty'))}</li>`;
   shareBoard.prepare(best && best.total > 0 ? { mode: t(`mode.${boardView.mode}`), total: best.total, levelText: t('share.level', { n: best.level }), rank: rankText(myRank, boardView.period) } : null);
@@ -1118,7 +1118,7 @@ async function renderTotal() {
   const mine = rows[myIndex];
   shareTotal.prepare(mine && mine.total > 0 ? { mode: t('total.all'), total: mine.total, levelText: games(mine), rank: rankText(myIndex + 1, period) } : null);
   list.innerHTML = rows.length
-    ? topAndMe(rows, myIndex, (r, i) => `<li class="board-row board-row-total${i === myIndex ? ' is-me' : ''}${i === myIndex && r.total > 0 ? ' has-share' : ''}"><span class="board-rank">${i + 1}.</span><span class="board-name">${escapeHtml(r.name)}</span>${i === myIndex && r.total > 0 ? rowShareButton() : ''}<b class="board-total">${fmtPoints(r.total)}</b><span class="board-games">${escapeHtml(games(r))}</span></li>`)
+    ? topAndMe(rows, myIndex, (r, i) => `<li class="board-row${i === myIndex ? ' is-me' : ''}${i === myIndex && r.total > 0 ? ' has-share' : ''}"><span class="board-rank">${i + 1}.</span><span class="board-name">${escapeHtml(r.name)}</span>${i === myIndex && r.total > 0 ? rowShareButton() : ''}<b class="board-total">${fmtPoints(r.total)}</b><span class="board-detail">${escapeHtml(games(r))}</span></li>`)
     : `<li class="board-note">${escapeHtml(t(period === 'prev' ? 'board.emptyPrev' : 'board.empty'))}</li>`;
   const winner = $('winner');
   winner.hidden = !prev.length;
