@@ -502,17 +502,20 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 .board-row.is-me { box-shadow: inset 0 0 0 2px var(--red); }
 .board-row.is-found { animation: found 1.2s ease-out 0.4s 2; } /* the player's row, after a game */
 @keyframes found { 0% { background: var(--red-20); } 100% { background: var(--paper); } }
-.board-rank { grid-column: 1; grid-row: 1; font-family: var(--font-display); font-weight: 800; color: var(--red); }
-.board-name { grid-column: 2; grid-row: 1; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.board-total { grid-column: 3; grid-row: 1; font-family: var(--font-display); font-weight: 800; justify-self: end; white-space: nowrap; }
+.board-rank { grid-column: 1; grid-row: 1 / 3; align-self: center; font-family: var(--font-display); font-weight: 800; color: var(--red); }
+/* the name, and in the player's own row the share icon right after it */
+.board-name { grid-column: 2; grid-row: 1; display: flex; align-items: center; gap: 6px; min-width: 0; font-weight: 600; }
+.board-name > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* rank and points in the middle of the card, between the name and the detail under it */
+.board-total { grid-column: 3; grid-row: 1 / 3; align-self: center; font-family: var(--font-display); font-weight: 800; justify-self: end; white-space: nowrap; }
 .board-note { padding: 10px 2px; color: var(--ink-600); }
 .board-detail { grid-column: 2; grid-row: 2; font-size: 13px; color: var(--ink-600); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* last month's winner, above the game list the whole month */
 .winner { margin: 0 0 20px; padding: 14px 18px; border-radius: 20px; background: var(--red); color: var(--paper); font-family: var(--font-display); font-weight: 800; font-size: 18px; line-height: 1.3; }
 .board-me { justify-self: stretch; margin: 0; font-size: 14px; color: var(--ink-600); }
 .board-me:empty { display: none; }
-/* the player's own row: a share icon under the points */
-.row-share { grid-column: 3; grid-row: 2; justify-self: end; align-self: center; display: grid; place-items: center; width: 30px; height: 16px; margin: 0 -6px 0 0; padding: 0; overflow: visible; border: 0; border-radius: 50%; background: none; color: var(--red); cursor: pointer; }
+/* the player's own row: a share icon after the name */
+.row-share { flex: none; display: grid; place-items: center; width: 28px; height: 18px; margin: 0; padding: 0; overflow: visible; border: 0; border-radius: 50%; background: none; color: var(--red); cursor: pointer; }
 .row-share:disabled { opacity: 0.5; }
 .row-share svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
 .board-gap { padding: 0 14px; line-height: 1; color: var(--ink-600); } /* between the top rows and the player's row */

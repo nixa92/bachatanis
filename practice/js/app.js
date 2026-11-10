@@ -1,15 +1,15 @@
-import { Engine, CHANNELS } from './engine.js?v=20261110131819';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261110131819';
-import { KORACI } from './steps.js?v=20261110131819';
-import { FeetView } from './feet.js?v=20261110131819';
-import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, songsForGame, slowSong } from './game.js?v=20261110131819';
-import * as store from './storage.js?v=20261110131819';
-import * as board from './leaderboard.js?v=20261110131819';
-import { drawCard, shareCard, APP_URL } from './share.js?v=20261110131819';
-import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261110131819';
-import { ICONS } from './icons.js?v=20261110131819';
-import { unlocked } from './gate.js?v=20261110131819';
-import { watchUpdates } from './update.js?v=20261110131819';
+import { Engine, CHANNELS } from './engine.js?v=20261110132154';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261110132154';
+import { KORACI } from './steps.js?v=20261110132154';
+import { FeetView } from './feet.js?v=20261110132154';
+import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, songsForGame, slowSong } from './game.js?v=20261110132154';
+import * as store from './storage.js?v=20261110132154';
+import * as board from './leaderboard.js?v=20261110132154';
+import { drawCard, shareCard, APP_URL } from './share.js?v=20261110132154';
+import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261110132154';
+import { ICONS } from './icons.js?v=20261110132154';
+import { unlocked } from './gate.js?v=20261110132154';
+import { watchUpdates } from './update.js?v=20261110132154';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -1064,7 +1064,7 @@ function drawBoard(rows, findMe) {
   list.innerHTML = rows.length
     ? topAndMe(rows, myRank - 1, (r, i) => {
       const mine = r === best && r.total > 0;
-      return `<li class="board-row${r === best ? ' is-me' : ''}${mine ? ' has-share' : ''}"><span class="board-rank">${i + 1}.</span><span class="board-name">${escapeHtml(r.name)}</span>${mine ? rowShareButton() : ''}<b class="board-total">${fmtPoints(r.total)}</b><span class="board-detail">${escapeHtml(t('board.level', { level: r.level }))}</span></li>`;
+      return `<li class="board-row${r === best ? ' is-me' : ''}${mine ? ' has-share' : ''}"><span class="board-rank">${i + 1}.</span><span class="board-name"><span>${escapeHtml(r.name)}</span>${mine ? rowShareButton() : ''}</span><b class="board-total">${fmtPoints(r.total)}</b><span class="board-detail">${escapeHtml(t('board.level', { level: r.level }))}</span></li>`;
     })
     : `<li class="board-note">${escapeHtml(t(boardView.period === 'prev' ? 'board.emptyPrev' : 'board.empty'))}</li>`;
   shareBoard.prepare(best && best.total > 0 ? { mode: t(`mode.${boardView.mode}`), total: best.total, levelText: t('share.level', { n: best.level }), rank: rankText(myRank, boardView.period) } : null);
@@ -1118,7 +1118,7 @@ async function renderTotal() {
   const mine = rows[myIndex];
   shareTotal.prepare(mine && mine.total > 0 ? { mode: t('total.all'), total: mine.total, levelText: games(mine), rank: rankText(myIndex + 1, period) } : null);
   list.innerHTML = rows.length
-    ? topAndMe(rows, myIndex, (r, i) => `<li class="board-row${i === myIndex ? ' is-me' : ''}${i === myIndex && r.total > 0 ? ' has-share' : ''}"><span class="board-rank">${i + 1}.</span><span class="board-name">${escapeHtml(r.name)}</span>${i === myIndex && r.total > 0 ? rowShareButton() : ''}<b class="board-total">${fmtPoints(r.total)}</b><span class="board-detail">${escapeHtml(games(r))}</span></li>`)
+    ? topAndMe(rows, myIndex, (r, i) => `<li class="board-row${i === myIndex ? ' is-me' : ''}${i === myIndex && r.total > 0 ? ' has-share' : ''}"><span class="board-rank">${i + 1}.</span><span class="board-name"><span>${escapeHtml(r.name)}</span>${i === myIndex && r.total > 0 ? rowShareButton() : ''}</span><b class="board-total">${fmtPoints(r.total)}</b><span class="board-detail">${escapeHtml(games(r))}</span></li>`)
     : `<li class="board-note">${escapeHtml(t(period === 'prev' ? 'board.emptyPrev' : 'board.empty'))}</li>`;
   const winner = $('winner');
   winner.hidden = !prev.length;
