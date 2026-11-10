@@ -76,39 +76,88 @@ const eq = (field, value) => ({ fieldFilter: { field: { fieldPath: field }, op: 
 // Only games with points are read: a game saved at its start (level 0) has none and is never shown.
 const PAGE = 50;
 const MAX_PAGES = 20; // up to 1000 games: far more than the club plays in a month
-// The last rows read for each leaderboard, so a leaderboard shows at once (then is read again).
-const cache = new Map();
+// Reading is what the free plan limits (50,000 documents a day), and each leaderboard read costs about one
+// read per game with points. So a leaderboard is read at most once every FRESH_MS on a phone; in between,
+// the rows kept on the phone are shown, and the player's own games are added to them on the phone
+// (addOwnRun), so a finished game shows on the leaderboard at once without reading it again.
+// The rows are kept in localStorage, so a reload (a new version of the app) does not read them again.
+// A month that is over does not change any more: it is read only once (if read a day after it ended,
+// so the games started on its last evening are finished).
+export const FRESH_MS = 10 * 60 * 1000;
+const cache = new Map(); // key -> { rows, readAt }
 const cacheKey = (mode, month) => `${mode}/${month || 'all'}`;
-export const cachedRuns = (mode, month = null) => cache.get(cacheKey(mode, month)) || null;
-// A month that is over does not change any more: its leaderboard is kept on the phone and read only once.
-// It is kept only if it was read a day after the month ended (games started on the last evening may still be finishing).
-const PAST_KEY = 'vezbaj.tabela.';
-const isPast = (month) => month && month < monthOf();
-function readPast(mode, month) {
-  try { return JSON.parse(localStorage.getItem(`${PAST_KEY}${mode}/${month}`) || 'null'); } catch (e) { return null; }
+const STORE_KEY = 'vezbaj.tabela.';
+const isPast = (month) => !!month && month < monthOf();
+function load(key) {
+  if (cache.has(key)) return cache.get(key);
+  let kept = null;
+  try { kept = JSON.parse(localStorage.getItem(STORE_KEY + key) || 'null'); } catch (e) { /* private mode */ }
+  if (kept && Array.isArray(kept.rows)) cache.set(key, kept);
+  return cache.get(key) || null;
 }
-function keepPast(mode, month, rows) {
+function keep(key, entry) {
+  cache.set(key, entry);
+  try { localStorage.setItem(STORE_KEY + key, JSON.stringify(entry)); } catch (e) { /* storage full or blocked */ }
+}
+const endedLongAgo = (month) => {
   const [y, m] = month.split('-').map(Number);
-  if (Date.now() < new Date(y, m, 2).getTime()) return; // new Date(y, m, 2): the 2nd of the month after
-  try { localStorage.setItem(`${PAST_KEY}${mode}/${month}`, JSON.stringify(rows)); } catch (e) { /* storage full or blocked */ }
+  return Date.now() >= new Date(y, m, 2).getTime(); // the 2nd of the month after
+};
+function isFresh(entry, month) {
+  if (!entry) return false;
+  if (entry.final) return true;
+  return Date.now() - entry.readAt < FRESH_MS && entry.readAt <= Date.now();
 }
+// the rows kept on the phone, however old, so a leaderboard shows at once; null if never read
+export const cachedRuns = (mode, month = null) => (load(cacheKey(mode, month)) || {}).rows || null;
 // The same leaderboard asked for twice at once (the game list and the game cards) is read once.
 const reading = new Map();
 export function topRuns(mode, month = null) {
   const key = cacheKey(mode, month);
-  if (isPast(month)) {
-    const kept = readPast(mode, month);
-    if (kept) { cache.set(key, kept); return Promise.resolve(kept); }
-  }
+  const kept = load(key);
+  if (isFresh(kept, month)) return Promise.resolve(kept.rows);
   if (reading.has(key)) return reading.get(key);
-  const p = readTopRuns(mode, month).then((out) => {
-    cache.set(key, out);
-    if (isPast(month)) keepPast(mode, month, out);
-    return out;
+  const p = readTopRuns(mode, month).then((rows) => {
+    // the player's own games saved since the read started are not lost
+    const entry = { rows: mergeOwn(rows, mode, month), readAt: Date.now() };
+    if (isPast(month) && endedLongAgo(month)) entry.final = true;
+    keep(key, entry);
+    return entry.rows;
   }).finally(() => reading.delete(key));
   reading.set(key, p);
   return p;
 }
+
+// The player's own games, as saved on this phone after each level, so they show on the leaderboards
+// without reading them again. Only this session's games: older ones are already in a later read.
+const own = [];
+function place(rows, run) {
+  const k = run.name.toLocaleLowerCase();
+  const i = rows.findIndex((r) => r.name.toLocaleLowerCase() === k);
+  if (i >= 0 && (rows[i].total > run.total || rows[i].id === run.id && rows[i].total === run.total && rows[i].level === run.level)) return rows;
+  const out = rows.filter((_, j) => j !== i);
+  const row = { id: run.id, name: run.name, level: run.level, total: run.total, date: run.date };
+  // after the rows with more points, or as many (they were there first)
+  const at = out.findIndex((r) => r.total < row.total);
+  out.splice(at < 0 ? out.length : at, 0, row);
+  return out;
+}
+function mergeOwn(rows, mode, month) {
+  return own.filter((r) => r.mode === mode && (!month || r.month === month)).reduce(place, rows);
+}
+// run: { id (the document id), name, mode, month, level, total }; called after each level is saved
+export function addOwnRun(run) {
+  if (!run.name || !run.total) return;
+  const r = { ...run, date: Date.now() };
+  const i = own.findIndex((o) => o.id === r.id);
+  if (i >= 0) own[i] = r; else own.push(r);
+  for (const month of [r.month, null]) {
+    const key = cacheKey(r.mode, month);
+    const kept = load(key);
+    if (kept) keep(key, { ...kept, rows: place(kept.rows, r) });
+  }
+}
+
 async function readTopRuns(mode, month) {
   const filters = [
     eq('mode', { stringValue: mode }),
