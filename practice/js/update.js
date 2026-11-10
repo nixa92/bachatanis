@@ -3,7 +3,7 @@
 // The app reads version.json when it comes back to the screen and every 10 minutes. When a new version is out:
 // if nothing plays, the page reloads at once (the player only sees the app open again);
 // otherwise a bar offers to reload. During a game nothing shows; the bar waits for the game to end.
-import { t } from './i18n.js?v=20261110125405';
+import { t } from './i18n.js?v=20261110125833';
 
 const MINE = new URL(import.meta.url).searchParams.get('v'); // null when run locally (not published)
 const EVERY_MS = 10 * 60 * 1000;

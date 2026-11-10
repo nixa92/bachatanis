@@ -425,7 +425,7 @@ body.is-game { padding-bottom: 0; }
 body.is-game .test-run { display: flex; flex-direction: column; height: calc(100vh - 24px); height: calc(100dvh - 24px); }
 body.is-game .run-title { font-size: 20px; }
 /* under the game's name: "Nivo 3 · 120 BPM" */
-.run-sub { margin: 4px 0 0; font-size: 15px; font-weight: 600; color: var(--ink-600); font-variant-numeric: tabular-nums; }
+.run-sub { margin: 2px 0 0; font-size: 15px; font-weight: 600; color: var(--ink-600); font-variant-numeric: tabular-nums; }
 body.is-game .run-sub { font-size: 14px; }
 body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 .run-instr { margin: 8px 0 14px; font-size: 17px; max-width: 30em; }
@@ -473,18 +473,18 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
   0% { transform: translateX(0); } 20% { transform: translateX(-8px); } 45% { transform: translateX(7px); } 70% { transform: translateX(-4px); } 100% { transform: translateX(0); }
 }
 
+.test-result .run-sub { margin-bottom: 16px; } /* close to the game's name, away from the points */
 .result-score { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
 #res-score { font-family: var(--font-display); font-weight: 800; font-size: 72px; line-height: 1; letter-spacing: -0.03em; color: var(--red); white-space: nowrap; }
 .result-score small { font-size: 15px; color: var(--ink-600); }
-#res-level { margin-bottom: 14px; }
-.result-run { margin: 10px 0 22px; font-weight: 600; }
+.result-run { margin: 6px 0 20px; font-weight: 600; }
 #best { margin-bottom: 24px; }
 .result-stats { display: flex; flex-wrap: nowrap; margin: 0 0 26px; color: var(--ink-600); } /* all three in one row, quieter than the score */
-.result-stats div { min-width: 0; padding: 0 8px; border-right: 1px solid var(--ink-15); }
+.result-stats div { min-width: 0; padding: 0 16px; border-right: 1px solid var(--ink-15); }
 .result-stats div:first-child { padding-left: 0; }
 .result-stats div:last-child { padding-right: 0; border-right: 0; }
-.result-stats dt { font-size: 11px; line-height: 1.3; }
-.result-stats dd { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 14px; white-space: nowrap; }
+.result-stats dt { font-size: 13px; line-height: 1.3; }
+.result-stats dd { margin: 2px 0 0; font-family: var(--font-display); font-weight: 700; font-size: 20px; color: var(--ink); white-space: nowrap; }
 .result-msg { max-width: 34em; font-size: 17px; }
 .result-msg p { margin: 0 0 14px; }
 .result-actions { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: center; margin-top: 26px; }
