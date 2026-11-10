@@ -485,8 +485,6 @@ body.is-game .tap-pad { flex: 1; height: auto; min-height: 0; }
 .result-stats div:last-child { padding-right: 0; border-right: 0; }
 .result-stats dt { font-size: 13px; line-height: 1.3; }
 .result-stats dd { margin: 2px 0 0; font-family: var(--font-display); font-weight: 700; font-size: 20px; color: var(--ink); white-space: nowrap; }
-.result-msg { max-width: 34em; font-size: 17px; }
-.result-msg p { margin: 0 0 14px; }
 .result-actions { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: center; margin-top: 26px; }
 .result-actions button:disabled { opacity: 0.4; transition: opacity var(--dur) var(--ease); } /* the first second after a level */
 

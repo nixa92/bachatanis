@@ -1,4 +1,4 @@
-import { t } from './i18n.js?v=20261110125833';
+import { t } from './i18n.js?v=20261110125944';
 
 // Test sluha: the music starts at once and every tap counts. A level ends when the player
 // lands enough hits in a row; the faster that happens, the more points.
@@ -274,27 +274,4 @@ function std(a) {
   if (a.length < 2) return 0;
   const m = mean(a);
   return Math.sqrt(a.reduce((s, x) => s + (x - m) * (x - m), 0) / (a.length - 1));
-}
-
-// Advice after a level, in the current language (no praise: the screen already shows the points)
-export function feedback(r) {
-  const off = r.avgOffsetMs;
-  // timing within about 50 ms is good: no advice about it
-  const onTime = Math.abs(off) < 75;
-  const lines = [];
-
-  // up to about 50 ms is a good result: no advice about rushing or dragging
-  if (off <= -75) lines.push(t('fb.early', { ms: roundMs(-off) }));
-  else if (off >= 75) lines.push(t('fb.late', { ms: roundMs(off) }));
-
-  if (r.mode === 'puls' && r.spreadMs > 100 && !onTime) lines.push(t('fb.spread'));
-
-  const wc = Object.entries(r.wrongCounts || {}).sort((a, b) => b[1] - a[1]);
-  if (wc.length && wc[0][1] >= 2) {
-    const c = Number(wc[0][0]);
-    if (r.mode === 'jedan' && c === 5) lines.push(t('fb.five'));
-    else if (r.mode === 'jedan') lines.push(t('fb.wrong1', { c }));
-    else if (r.mode === 'tap') lines.push(t('fb.wrongTap', { c }));
-  }
-  return lines;
 }

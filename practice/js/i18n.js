@@ -171,12 +171,6 @@ const DICT = {
     'res.board': 'Vidi tabelu',
     'res.quit': 'Odustani',
 
-    'fb.early': 'U proseku žuriš oko {ms} ms. Sačekaj udarac, nemoj da ga juriš.',
-    'fb.late': 'U proseku kasniš oko {ms} ms. Probaj da tapneš zajedno sa udarcem, ne posle njega.',
-    'fb.spread': 'Tapovi su neujednačeni. Prvo samo slušaj güiru, ona svira na svaki broj.',
-    'fb.five': 'Često tapkaš na 5 umesto na 1. To se lako pomeša, bas je najjači baš na jedinici.',
-    'fb.wrong1': 'Često tapkaš na {c}. Jedinica dolazi odmah posle tapa na 8.',
-    'fb.wrongTap': 'Često tapkaš na {c}. Tap je tamo gde bongo udari najjače.',
 
     'play': 'Pusti',
     'pause': 'Pauza',
@@ -356,12 +350,6 @@ const DICT = {
     'res.board': 'See the leaderboard',
     'res.quit': 'Quit',
 
-    'fb.early': 'On average you rush by about {ms} ms. Wait for the beat, don\'t chase it.',
-    'fb.late': 'On average you are about {ms} ms late. Try to tap together with the beat, not after it.',
-    'fb.spread': 'Your taps are uneven. First just listen to the güira, it plays on every count.',
-    'fb.five': 'You often tap on 5 instead of 1. They are easy to mix up; the bass is strongest exactly on the 1.',
-    'fb.wrong1': 'You often tap on {c}. The 1 comes right after the tap on 8.',
-    'fb.wrongTap': 'You often tap on {c}. The tap is where the bongo hits hardest.',
 
     'play': 'Play',
     'pause': 'Pause',

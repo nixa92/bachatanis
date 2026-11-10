@@ -1,15 +1,15 @@
-import { Engine, CHANNELS } from './engine.js?v=20261110125833';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261110125833';
-import { KORACI } from './steps.js?v=20261110125833';
-import { FeetView } from './feet.js?v=20261110125833';
-import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, feedback, songsForGame, slowSong } from './game.js?v=20261110125833';
-import * as store from './storage.js?v=20261110125833';
-import * as board from './leaderboard.js?v=20261110125833';
-import { drawCard, shareCard, APP_URL } from './share.js?v=20261110125833';
-import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261110125833';
-import { ICONS } from './icons.js?v=20261110125833';
-import { unlocked } from './gate.js?v=20261110125833';
-import { watchUpdates } from './update.js?v=20261110125833';
+import { Engine, CHANNELS } from './engine.js?v=20261110125944';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261110125944';
+import { KORACI } from './steps.js?v=20261110125944';
+import { FeetView } from './feet.js?v=20261110125944';
+import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, songsForGame, slowSong } from './game.js?v=20261110125944';
+import * as store from './storage.js?v=20261110125944';
+import * as board from './leaderboard.js?v=20261110125944';
+import { drawCard, shareCard, APP_URL } from './share.js?v=20261110125944';
+import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261110125944';
+import { ICONS } from './icons.js?v=20261110125944';
+import { unlocked } from './gate.js?v=20261110125944';
+import { watchUpdates } from './update.js?v=20261110125944';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -649,7 +649,7 @@ const showStreak = (n) => {
   [...dots.children].forEach((d, i) => d.classList.toggle('is-on', i < n));
 };
 // What a tap did: the text over the pad (green for a hit, red otherwise) fades out after a moment,
-// the pad flashes green or red (and shakes on a miss), and the phone gives a short tick (two on a miss).
+// the pad flashes green or red (and shakes on a miss).
 const FEEDBACK_MS = 900;
 let feedbackTimer = 0;
 function showTapFeedback(text, ok, { pad = true } = {}) {
@@ -663,21 +663,6 @@ function showTapFeedback(text, ok, { pad = true } = {}) {
   p.classList.remove('is-hit', 'is-miss');
   void p.offsetWidth; // restart the animation
   p.classList.add(ok ? 'is-hit' : 'is-miss');
-  haptic(ok);
-}
-// Android: the vibration API. iPhone (Safari 18+): no vibration API, but tapping a switch gives a haptic tick.
-let hapticSwitch = null;
-function haptic(ok) {
-  if (navigator.vibrate) { navigator.vibrate(ok ? 12 : [35, 45, 35]); return; }
-  if (!hapticSwitch) {
-    hapticSwitch = document.createElement('label');
-    hapticSwitch.setAttribute('aria-hidden', 'true');
-    hapticSwitch.style.cssText = 'position:fixed;left:-100px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none';
-    hapticSwitch.innerHTML = '<input type="checkbox" switch tabindex="-1">';
-    document.body.appendChild(hapticSwitch);
-  }
-  hapticSwitch.click();
-  if (!ok) setTimeout(() => hapticSwitch.click(), 90);
 }
 const seconds = (s) => `${s.toFixed(1).replace('.', t('decimal'))} s`;
 
@@ -893,7 +878,6 @@ function showResult(r) {
   $('res-timing').textContent = `${r.accuracyPct}%`;
   $('res-misses').textContent = r.penalty ? `−${r.penalty}` : '0';
   const last = state.level === LEVELS.length;
-  const lines = feedback(r);
   $('res-level').textContent = t(`mode.${r.mode}`);
   $('res-sub').textContent = t('level.bpm', { n: r.level, bpm: r.bpm });
   $('res-next').hidden = last;
@@ -904,7 +888,6 @@ function showResult(r) {
   $('res-share').hidden = !last;
   shareResult.prepare(null);
   if (last) shareGame();
-  $('res-msg').innerHTML = lines.map((l) => `<p>${escapeHtml(l)}</p>`).join('');
   // The level ends on a finger down on the pad; the same tap's click (and the next tap in rhythm) would land on
   // whatever button is now under the finger, often Odustani. So the buttons wait a moment.
   const buttons = $('test-result').querySelectorAll('.result-actions button');
