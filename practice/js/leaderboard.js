@@ -3,7 +3,8 @@
 // The web config is not a secret: the database is protected by its rules (tools/firestore.rules).
 //
 // Two collections:
-// "runs": one document per game, updated after every level (the record of each game; the app does not read it):
+// "runs": one document per game, updated after every level (the record of each game; the app reads it only to
+// check a denied save, savedLevel):
 //   name, named (true when there is a name), mode, level (highest level played), total (points summed over the levels),
 //   points (the points of each level), month ("2026-11"), date (server time).
 //   A game is first saved when it starts, with level 0 (no points), so the games that end inside level 1 are counted.
@@ -34,13 +35,14 @@ export function newRunId() {
   return Array.from(bytes, (b) => abc[b % abc.length]).join('');
 }
 
+// body: sent with POST; without it the request is a GET
 async function post(path, body) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
     let res;
     try {
-      res = await fetch(`${BASE}${path}?key=${API_KEY}`, {
+      res = await fetch(`${BASE}${path}${path.includes('?') ? '&' : '?'}key=${API_KEY}`, body === undefined ? { signal: ctrl.signal } : {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -94,6 +96,17 @@ function writeRun(docId, { name, mode, month, points }, level) {
       updateTransforms: [{ fieldPath: 'date', setToServerValue: 'REQUEST_TIME' }],
     }],
   });
+}
+
+// the level a game is saved up to in the database; -1 if the game is not there (one read)
+async function savedLevel(docId) {
+  try {
+    const doc = await post(`/runs/${docId}?mask.fieldPaths=level`);
+    return Number(doc.fields.level.integerValue);
+  } catch (e) {
+    if (e.denied) return -1;
+    throw e;
+  }
 }
 
 // the player's best of a game, as one number: points first, then the level
@@ -154,10 +167,13 @@ function keepOutbox() {
 }
 // One save. It returns when the entry is saved or given up on, and throws when it has to be tried again later.
 // entry(): the entry in the outbox now (the outbox is read again after every wait).
-async function save(write, entry) {
+// isSaved(): asked when the save is denied. A save that reached the database but lost its answer (weak signal) is
+// denied when it is sent again; it is then saved already, and must not wait for DENIED_MAX tries.
+async function save(write, entry, isSaved = null) {
   try {
     await write();
   } catch (e) {
+    if (e.denied && isSaved && await isSaved()) return;
     let giveUp = !e.again && !e.denied; // not an answer of the database: the entry itself cannot be sent
     if (e.denied) {
       refresh();
@@ -181,9 +197,9 @@ async function sendAll() {
         const r = outbox.runs[id];
         if (!r || r.sent >= r.points.length) break;
         const level = r.sent + 1;
-        // A level given up on counts as saved: most often it was saved and only the answer was lost, so the next
-        // level has to follow it.
-        await save(() => writeRun(id, r, level), () => outbox.runs[id]);
+        // A denied level is looked up in the database (one read): if it is there, only the answer was lost.
+        // A level given up on also counts as saved, so the next level can follow it.
+        await save(() => writeRun(id, r, level), () => outbox.runs[id], async () => (await savedLevel(id)) >= level);
         refresh();
         const now = outbox.runs[id];
         if (now && now.sent < level) { now.sent = level; delete now.denied; keepOutbox(); }
@@ -212,8 +228,18 @@ async function sendAll() {
   }
   if (failed) throw failed;
 }
-// one page sends at a time (where the browser has locks), so two open pages do not send the same level twice
-const alone = (fn) => (navigator.locks ? navigator.locks.request(OUT_KEY, fn) : fn());
+// One page sends at a time (where the browser has locks), so two open pages do not send the same level twice.
+// The other page can be frozen by the phone while it holds the lock, so the wait has a limit: after LOCK_WAIT_MS
+// this page sends anyway. A level sent twice does no harm: the second save is denied and found saved (savedLevel).
+const LOCK_WAIT_MS = 15000;
+function alone(fn) {
+  if (!navigator.locks) return fn();
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), LOCK_WAIT_MS);
+  let got = false;
+  return navigator.locks.request(OUT_KEY, { signal: ctrl.signal }, () => { got = true; clearTimeout(timer); return fn(); })
+    .catch((e) => { if (got) throw e; clearTimeout(timer); return fn(); });
+}
 let sending = false;
 let sendAgain = false; // something was added while sending
 let tries = 0;

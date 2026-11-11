@@ -1,15 +1,15 @@
-import { Engine, CHANNELS } from './engine.js?v=20261111133022';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261111133022';
-import { KORACI } from './steps.js?v=20261111133022';
-import { FeetView } from './feet.js?v=20261111133022';
-import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, songsForGame, slowSong } from './game.js?v=20261111133022';
-import * as store from './storage.js?v=20261111133022';
-import * as board from './leaderboard.js?v=20261111133022';
-import { drawCard, shareCard, APP_URL } from './share.js?v=20261111133022';
-import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261111133022';
-import { ICONS } from './icons.js?v=20261111133022';
-import { unlocked } from './gate.js?v=20261111133022';
-import { watchUpdates } from './update.js?v=20261111133022';
+import { Engine, CHANNELS } from './engine.js?v=20261111143019';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261111143019';
+import { KORACI } from './steps.js?v=20261111143019';
+import { FeetView } from './feet.js?v=20261111143019';
+import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, songsForGame, slowSong } from './game.js?v=20261111143019';
+import * as store from './storage.js?v=20261111143019';
+import * as board from './leaderboard.js?v=20261111143019';
+import { drawCard, shareCard, APP_URL } from './share.js?v=20261111143019';
+import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261111143019';
+import { ICONS } from './icons.js?v=20261111143019';
+import { unlocked } from './gate.js?v=20261111143019';
+import { watchUpdates } from './update.js?v=20261111143019';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -697,10 +697,27 @@ function loadGameSong(meta) {
     // asked for without the list's version would be downloaded again and would empty the phone's song cache.
     // Without the list (it could not be read, or the read hangs) no song is loaded, and the level plays the
     // generated music.
-    const listRead = Promise.race([songsRead, new Promise((done) => { setTimeout(() => done(false), SONGS_WAIT_MS); })]);
-    gameSongs.set(meta.id, listRead.then((ok) => (ok ? engine.loadSong(meta) : null)).catch((e) => { console.warn('[igra] song load failed:', e); return null; }));
+    const p = songListRead().then((ok) => {
+      if (ok) return engine.loadSong(meta);
+      // not kept: the list can still be read later, and then the song is asked for again
+      if (gameSongs.get(meta.id) === p) gameSongs.delete(meta.id);
+      return null;
+    }).catch((e) => { console.warn('[igra] song load failed:', e); return null; });
+    gameSongs.set(meta.id, p);
   }
   return gameSongs.get(meta.id);
+}
+// One wait for the song list, shared by all the songs asked for meanwhile, so a level that tries every song of
+// the game waits SONGS_WAIT_MS once, not once per song. A wait that ran out is started again only by the next
+// level start (startTest).
+let songsWait = null; // { promise, over }
+function songListRead() {
+  if (!songsWait) {
+    const wait = { over: false };
+    wait.promise = Promise.race([songsRead, new Promise((done) => { setTimeout(() => { wait.over = true; done(false); }, SONGS_WAIT_MS); })]);
+    songsWait = wait;
+  }
+  return songsWait.promise;
 }
 // The next game's songs are picked as soon as a game is opened (and after a game), and the first level's
 // song loads while the player reads the rules and types the name, so Kreni starts at once.
@@ -727,7 +744,14 @@ function endLevelStart(start) {
   if (start.btn) { start.btn.disabled = false; start.btn.textContent = start.label; }
   return true;
 }
-function cancelLevelStart() { if (levelStart) endLevelStart(levelStart); }
+function cancelLevelStart() {
+  if (!levelStart) return;
+  const again = !levelStart.btn;
+  endLevelStart(levelStart);
+  // A level that was starting again by itself (the song ran out) has no game running at this moment, but the
+  // game's screen is still up: the game ends, as it does when the player leaves during a level.
+  if (again) abortTest();
+}
 // btn: the button tapped (none when a level starts again by itself)
 // level: the level to start; it becomes the game's level only when it starts, so a start that fails or is
 // cancelled does not skip a level
@@ -742,6 +766,7 @@ async function startTest(modeId, btn = null, level = state.level) {
     await engine.samples.whenReady();
     if (level <= run.songs.length && levelStart === start) {
       if (btn) btn.textContent = t('song.loadingShort');
+      if (songsWait && songsWait.over) songsWait = null; // this level waits for the song list again, once
       // this level's song; if it cannot load, another song of the game, before falling back to the generated music
       const order = [run.songs[level - 1], ...run.songs.filter((_, i) => i !== level - 1)];
       for (const meta of order) {
