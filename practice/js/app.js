@@ -1,15 +1,15 @@
-import { Engine, CHANNELS } from './engine.js?v=20261110230436';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261110230436';
-import { KORACI } from './steps.js?v=20261110230436';
-import { FeetView } from './feet.js?v=20261110230436';
-import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, songsForGame, slowSong } from './game.js?v=20261110230436';
-import * as store from './storage.js?v=20261110230436';
-import * as board from './leaderboard.js?v=20261110230436';
-import { drawCard, shareCard, APP_URL } from './share.js?v=20261110230436';
-import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261110230436';
-import { ICONS } from './icons.js?v=20261110230436';
-import { unlocked } from './gate.js?v=20261110230436';
-import { watchUpdates } from './update.js?v=20261110230436';
+import { Engine, CHANNELS } from './engine.js?v=20261111112658';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261111112658';
+import { KORACI } from './steps.js?v=20261111112658';
+import { FeetView } from './feet.js?v=20261111112658';
+import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, songsForGame, slowSong } from './game.js?v=20261111112658';
+import * as store from './storage.js?v=20261111112658';
+import * as board from './leaderboard.js?v=20261111112658';
+import { drawCard, shareCard, APP_URL } from './share.js?v=20261111112658';
+import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261111112658';
+import { ICONS } from './icons.js?v=20261111112658';
+import { unlocked } from './gate.js?v=20261111112658';
+import { watchUpdates } from './update.js?v=20261111112658';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -748,8 +748,11 @@ function addToRun(r) {
   // the leaderboard shown after the game waits for this save
   run.saving = board.submitRun({ docId: run.docId, name: run.name, mode: run.mode, points, month: run.month })
     .catch((e) => console.warn('[tabela] not saved:', e.message));
+  // the player's best (what the leaderboards read): the database keeps the bigger of the old best and this game
+  const best = { name: run.name, mode: run.mode, month: run.month, level: points.length, total: run.total };
+  board.submitBest(best).catch((e) => console.warn('[tabela] best not saved:', e.message));
   // the game is added to the leaderboards kept on the phone, so it shows without reading them again
-  board.addOwnRun({ id: run.docId, name: run.name, mode: run.mode, month: run.month, level: points.length, total: run.total });
+  board.addOwnRun(best);
 }
 $('test-start').addEventListener('click', () => {
   const name = $('player-name').value.trim();
@@ -906,7 +909,8 @@ async function shareGame() {
   try {
     await game.saving;
     const rows = await board.topRuns(game.mode, game.month);
-    const rank = rows.findIndex((r) => r.id === game.docId) + 1;
+    // the place, if this game is the player's best of the month
+    const rank = rows.findIndex((r) => r.name.toLocaleLowerCase() === game.name.toLocaleLowerCase() && r.total === game.total) + 1;
     if (rank && game === run && !$('test-result').hidden) shareResult.prepare({ ...card, rank: rankText(rank, 'month') });
   } catch (e) { /* the picture without the place */ }
 }
@@ -1082,7 +1086,7 @@ function drawBoard(rows, findMe) {
 renderBoard();
 
 // The total leaderboard on the game list: each name's best game of each of the three games added up.
-// Above it, the whole month long, last month's winner: from winners.json (tools/winner.py), not the database.
+// Above it, the whole month long, last month's winner: from the archive (data/archive.json), not the database.
 const totalView = { period: 'month' };
 let totalLoad = 0;
 $('total-period').addEventListener('change', (e) => { totalView.period = e.target.value; renderTotal(); });
@@ -1119,7 +1123,7 @@ async function renderTotal() {
 }
 renderTotal();
 
-// last month's winner, saved once a month by tools/winner.py
+// last month's winner, archived on the 1st of each month (Website/.github/scripts/month.py)
 let winners = {};
 function renderWinner() {
   const w = winners[board.prevMonth()];
@@ -1130,8 +1134,7 @@ function renderWinner() {
   const month = new Date(y, m - 1, 1).toLocaleDateString(lang === 'en' ? 'en-GB' : 'sr-Latn', { month: 'long' });
   el.textContent = t('winner', { month, name: w.name, total: fmtPoints(w.total) });
 }
-fetch('winners.json', { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : {})).then((data) => { winners = data || {}; renderWinner(); })
-  .catch(() => { /* no winner shown */ });
+board.archive().then((a) => { winners = a.winners || {}; renderWinner(); });
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
