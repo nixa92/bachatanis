@@ -38,18 +38,27 @@ async function post(path, body) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
-    const res = await fetch(`${BASE}${path}?key=${API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-      signal: ctrl.signal,
-    });
+    let res;
+    try {
+      res = await fetch(`${BASE}${path}?key=${API_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: ctrl.signal,
+      });
+    } catch (e) {
+      e.again = true; // no network, or a timeout
+      throw e;
+    }
     const data = await res.json().catch(() => null);
     if (!res.ok) {
       const err = new Error((data && data[0] && data[0].error && data[0].error.message) || (data && data.error && data.error.message) || `HTTP ${res.status}`);
-      // refused by the rules (or a bad request): sending it again cannot help. Anything else (no network, a timeout,
-      // the day's quota used up, a server error) can pass on a later try.
-      err.refused = [400, 403, 404].includes(res.status);
+      // denied: most often the rules refuse the save, and then sending it again cannot help. But a wrong setting of
+      // the project (the key, the rules not published yet) gives the same answer, so a denied save is tried a few
+      // times before it is dropped (DENIED_MAX). again: anything else (the day's quota used up, a server error)
+      // can pass on a later try.
+      err.denied = [400, 403, 404].includes(res.status);
+      err.again = !err.denied;
       throw err;
     }
     return data;
@@ -57,6 +66,8 @@ async function post(path, body) {
     clearTimeout(timer);
   }
 }
+
+export const MODE_IDS = ['puls', 'tap', 'jedan'];
 
 const int = (n) => ({ integerValue: String(Math.round(n)) });
 
@@ -101,47 +112,108 @@ function writeBest({ name, mode, month, level, total }) {
 }
 
 // What is not saved in the database yet. It is kept in localStorage, so a save that failed (weak signal, a timeout,
-// the app closed) is sent again: after a short wait, when the network or the app comes back, and when the page
-// opens the next time.
+// the app closed) is sent again: after a short wait, then every few minutes while the page is open, when the network
+// or the app comes back, and when the page opens the next time.
 //   runs:  { docId: { name, mode, month, points, sent } }  sent: the highest level saved (-1: not even the start)
 //   bests: [ { name, mode, month, level, total } ]
+//   (an entry also counts its denied tries, in `denied`)
 // A game is sent one level at a time, in order, because the rules let its document grow only by one level.
+// The app can be open in two pages at once, so localStorage is the list and `outbox` only its copy: it is read
+// again (refresh) before every change and written (keepOutbox) right after it.
 const OUT_KEY = 'vezbaj.neposlato';
-const RETRY_MS = [5000, 20000, 60000];
-const outbox = { runs: {}, bests: [] };
-try {
-  const kept = JSON.parse(localStorage.getItem(OUT_KEY) || 'null');
-  if (kept && kept.runs && Array.isArray(kept.bests)) {
-    outbox.runs = Object.fromEntries(Object.entries(kept.runs).filter(([, r]) => r && Array.isArray(r.points) && Number.isInteger(r.sent)));
-    outbox.bests = kept.bests.filter((b) => b && typeof b.name === 'string' && b.total > 0);
-  }
-} catch (e) { /* private mode */ }
-function keepOutbox() {
-  try { localStorage.setItem(OUT_KEY, JSON.stringify(outbox)); } catch (e) { /* storage full or blocked */ }
+const RETRY_MS = [5000, 20000, 60000, 300000]; // the last wait repeats
+const DENIED_MAX = 5;
+// an entry that could not be sent (damaged storage, another version's format) is not kept
+const isRun = (r) => !!r && typeof r.name === 'string' && MODE_IDS.includes(r.mode) && typeof r.month === 'string'
+  && Array.isArray(r.points) && r.points.every((p) => Number.isFinite(p)) && Number.isInteger(r.sent);
+const isBest = (b) => !!b && typeof b.name === 'string' && MODE_IDS.includes(b.mode) && typeof b.month === 'string'
+  && Number.isInteger(b.level) && Number.isFinite(b.total) && b.total > 0;
+const bestKey = (b) => JSON.stringify([b.name, b.mode, b.month, b.level, b.total]);
+// the list in localStorage; null if it cannot be read
+function storedOutbox() {
+  try {
+    const kept = JSON.parse(localStorage.getItem(OUT_KEY) || 'null');
+    if (!kept || !kept.runs || !Array.isArray(kept.bests)) return { runs: {}, bests: [] };
+    return {
+      runs: Object.fromEntries(Object.entries(kept.runs).filter(([, r]) => isRun(r))),
+      bests: kept.bests.filter(isBest),
+    };
+  } catch (e) { return null; } // private mode
 }
-// a save the rules refuse is dropped; any other error stops the sending until the next try
-const unlessRefused = (saving) => saving.catch((e) => {
-  if (!e.refused) throw e;
-  console.warn('[tabela] refused:', e.message);
-});
+let outbox = storedOutbox() || { runs: {}, bests: [] };
+let outboxKept = true; // false: the last write failed, so the copy here is the only one
+function refresh() {
+  const stored = outboxKept ? storedOutbox() : null;
+  if (stored) outbox = stored;
+}
+function keepOutbox() {
+  try {
+    localStorage.setItem(OUT_KEY, JSON.stringify(outbox));
+    outboxKept = true;
+  } catch (e) { outboxKept = false; } // storage full or blocked
+}
+// One save. It returns when the entry is saved or given up on, and throws when it has to be tried again later.
+// entry(): the entry in the outbox now (the outbox is read again after every wait).
+async function save(write, entry) {
+  try {
+    await write();
+  } catch (e) {
+    let giveUp = !e.again && !e.denied; // not an answer of the database: the entry itself cannot be sent
+    if (e.denied) {
+      refresh();
+      const now = entry();
+      if (now) { now.denied = (now.denied || 0) + 1; keepOutbox(); }
+      giveUp = !now || now.denied >= DENIED_MAX;
+    }
+    if (!giveUp) throw e;
+    console.warn('[tabela] dropped:', e.message);
+  }
+}
+// The games and the bests do not wait for each other, and a denied entry does not stop the ones after it.
+// An error that is not about one entry (no network, the quota) stops the list it is in.
 async function sendAll() {
+  let failed = null;
+  refresh();
   for (const id of Object.keys(outbox.runs)) {
-    for (let r = outbox.runs[id]; r && r.sent < r.points.length; r = outbox.runs[id]) {
-      const level = r.sent + 1;
-      // A refused level counts as saved: most often it was saved and only the answer was lost, so the next level
-      // has to follow it. (If the game is really refused, each level is tried once and then it is dropped.)
-      await unlessRefused(writeRun(id, r, level));
-      if (outbox.runs[id]) outbox.runs[id].sent = level;
-      keepOutbox();
+    try {
+      for (;;) {
+        refresh();
+        const r = outbox.runs[id];
+        if (!r || r.sent >= r.points.length) break;
+        const level = r.sent + 1;
+        // A level given up on counts as saved: most often it was saved and only the answer was lost, so the next
+        // level has to follow it.
+        await save(() => writeRun(id, r, level), () => outbox.runs[id]);
+        refresh();
+        const now = outbox.runs[id];
+        if (now && now.sent < level) { now.sent = level; delete now.denied; keepOutbox(); }
+      }
+    } catch (e) {
+      failed = failed || e;
+      if (e.again) break;
     }
   }
-  while (outbox.bests.length) {
-    const best = outbox.bests[0];
-    await unlessRefused(writeBest(best));
-    outbox.bests = outbox.bests.filter((b) => b !== best);
-    keepOutbox();
+  refresh();
+  for (const key of outbox.bests.map(bestKey)) {
+    const find = () => outbox.bests.findIndex((b) => bestKey(b) === key);
+    refresh();
+    const best = outbox.bests[find()];
+    if (!best) continue;
+    try {
+      await save(() => writeBest(best), () => outbox.bests[find()]);
+    } catch (e) {
+      failed = failed || e;
+      if (e.again) break;
+      continue;
+    }
+    refresh();
+    const i = find();
+    if (i >= 0) { outbox.bests.splice(i, 1); keepOutbox(); }
   }
+  if (failed) throw failed;
 }
+// one page sends at a time (where the browser has locks), so two open pages do not send the same level twice
+const alone = (fn) => (navigator.locks ? navigator.locks.request(OUT_KEY, fn) : fn());
 let sending = false;
 let sendAgain = false; // something was added while sending
 let tries = 0;
@@ -151,11 +223,12 @@ async function send() {
   if (sending) { sendAgain = true; return; }
   sending = true;
   try {
-    do { sendAgain = false; await sendAll(); } while (sendAgain);
+    do { sendAgain = false; await alone(sendAll); } while (sendAgain);
     tries = 0;
   } catch (e) {
     console.warn('[tabela] not saved yet:', e.message);
-    if (tries < RETRY_MS.length) retryTimer = setTimeout(send, RETRY_MS[tries++]);
+    // tried again for as long as the page is open: a timeout or a used-up quota gives no "online" event
+    retryTimer = setTimeout(send, RETRY_MS[Math.min(tries++, RETRY_MS.length - 1)]);
   } finally {
     sending = false;
   }
@@ -166,6 +239,7 @@ send(); // what the last visit could not save
 // Saves the game after a level (points: the points of the levels played; none when the game starts).
 // The same document is updated on the next level.
 export function submitRun({ docId, name, mode, points, month }) {
+  refresh();
   // the games saved to the end are forgotten; only the game in play keeps its place
   for (const [id, r] of Object.entries(outbox.runs)) if (id !== docId && r.sent >= r.points.length) delete outbox.runs[id];
   const old = outbox.runs[docId];
@@ -180,6 +254,7 @@ export function submitRun({ docId, name, mode, points, month }) {
 export function submitBest({ name, mode, month, level, total }) {
   const clean = cleanName(name);
   if (!clean || !total) return;
+  refresh();
   outbox.bests = [...outbox.bests, { name: clean, mode, month, level, total }].slice(-50);
   keepOutbox();
   tries = 0;
@@ -229,9 +304,7 @@ const archivedPlayers = (a) => Object.values(a.players || {}).map((p) => ({
 // players as one entry per game played: [{ name, mode, total, level }]
 const asBests = (list) => list.flatMap((p) => Object.entries(p.games).map(([mode, g]) => ({ name: p.name, mode, ...g })));
 // all time: the archive with this month added (the better of the two for each game)
-const withMonth = (arch, list) => asBests(list).reduce(place, archivedPlayers(arch));
-
-export const MODE_IDS = ['puls', 'tap', 'jedan'];
+const withMonth = (arch, list) => merge(archivedPlayers(arch), asBests(list));
 
 // all players of a month (or "all"), as { name, games: { puls: { total, level }, ... } }
 // The rules allow at most 50 documents per query, so they are read in pages of 50.
@@ -264,7 +337,7 @@ async function readPlayers(month) {
   // One name, one row. The rules cannot tie a document's id to its name, so a name can have a second document
   // (written by hand with the public key, or by a phone that lower-cases differently): the better result of each
   // game counts, so a second document can neither show the name twice nor lower its result.
-  return asBests(out).reduce(place, []);
+  return merge([], asBests(out));
 }
 
 // The month's players are read once per page load, when a leaderboard is first shown (choosing a game, going back
@@ -296,7 +369,7 @@ function players(month) {
   if (reading.has(key)) return reading.get(key);
   const p = readPlayers(key).then((list) => {
     // the player's own games are not lost: the ones played since the read started, and the ones not saved yet
-    const entry = { players: [...outbox.bests, ...own].filter((r) => r.month === month).reduce(place, list), readAt: Date.now() };
+    const entry = { players: merge(list, [...outbox.bests, ...own].filter((r) => r.month === month)), readAt: Date.now() };
     keep(key, entry);
     return entry.players;
   }).finally(() => reading.delete(key));
@@ -306,21 +379,25 @@ function players(month) {
 
 // The player's own games of this session, so they show on the leaderboards without reading them again.
 const own = [];
-function place(list, run) {
-  const k = nameKey(run.name);
-  const i = list.findIndex((p) => nameKey(p.name) === k);
-  const old = i >= 0 ? list[i].games[run.mode] : null;
-  if (old && old.total * SCORE + old.level >= run.total * SCORE + run.level) return list;
-  const p = i >= 0 ? list[i] : { name: run.name, games: {} };
-  const next = { ...p, games: { ...p.games, [run.mode]: { total: run.total, level: run.level } } };
-  return i >= 0 ? list.map((q, j) => (j === i ? next : q)) : [...list, next];
+// list with the runs added: one entry per name (in any case of letters), with the better result of each game.
+// runs: [{ name, mode, total, level }]. The list keeps its order; new names go to the end.
+function merge(list, runs) {
+  const byName = new Map(list.map((p) => [nameKey(p.name), p]));
+  for (const run of runs) {
+    const k = nameKey(run.name);
+    const p = byName.get(k) || { name: run.name, games: {} };
+    const old = p.games[run.mode];
+    if (old && old.total * SCORE + old.level >= run.total * SCORE + run.level) continue;
+    byName.set(k, { ...p, games: { ...p.games, [run.mode]: { total: run.total, level: run.level } } });
+  }
+  return [...byName.values()];
 }
 // run: { name, mode, month, level, total }; called after each level
 export function addOwnRun(run) {
   if (!run.name || !run.total) return;
   own.push(run);
   const kept = load(run.month);
-  if (kept) keep(run.month, { ...kept, players: place(kept.players, run) });
+  if (kept) keep(run.month, { ...kept, players: merge(kept.players, [run]) });
 }
 
 // Equal points: by name, in the order the monthly archive uses for the winner (month.py: lower case, by character

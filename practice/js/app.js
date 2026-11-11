@@ -1,15 +1,15 @@
-import { Engine, CHANNELS } from './engine.js?v=20261111131407';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261111131407';
-import { KORACI } from './steps.js?v=20261111131407';
-import { FeetView } from './feet.js?v=20261111131407';
-import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, songsForGame, slowSong } from './game.js?v=20261111131407';
-import * as store from './storage.js?v=20261111131407';
-import * as board from './leaderboard.js?v=20261111131407';
-import { drawCard, shareCard, APP_URL } from './share.js?v=20261111131407';
-import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261111131407';
-import { ICONS } from './icons.js?v=20261111131407';
-import { unlocked } from './gate.js?v=20261111131407';
-import { watchUpdates } from './update.js?v=20261111131407';
+import { Engine, CHANNELS } from './engine.js?v=20261111133022';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261111133022';
+import { KORACI } from './steps.js?v=20261111133022';
+import { FeetView } from './feet.js?v=20261111133022';
+import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, songsForGame, slowSong } from './game.js?v=20261111133022';
+import * as store from './storage.js?v=20261111133022';
+import * as board from './leaderboard.js?v=20261111133022';
+import { drawCard, shareCard, APP_URL } from './share.js?v=20261111133022';
+import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261111133022';
+import { ICONS } from './icons.js?v=20261111133022';
+import { unlocked } from './gate.js?v=20261111133022';
+import { watchUpdates } from './update.js?v=20261111133022';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -83,6 +83,7 @@ const seg = (name) => document.querySelector(`.seg[data-name="${name}"]`);
 const SCREENS = ['ritam', 'koraci', 'test'];
 function showScreen(id) {
   if (test.running) abortTest();
+  cancelLevelStart();
   state.screen = id;
   for (const s of SCREENS) {
     $(s).hidden = s !== id;
@@ -457,7 +458,7 @@ async function pickMusic(id) {
 }
 musicSel.addEventListener('change', () => pickMusic(musicSel.value));
 renderMusicPicker();
-// settles when the song list is read (or cannot be); a song's file address needs the list's version (engine.songVersion)
+// settles when the song list is read (true) or cannot be (false); a song's file address needs the list's version (engine.songVersion)
 const songsRead = fetch('songs/songs.json', { cache: 'no-cache' }).then((r) => r.json()).then((data) => {
   songList = data.songs;
   engine.songVersion = data.version || '';
@@ -473,7 +474,8 @@ const songsRead = fetch('songs/songs.json', { cache: 'no-cache' }).then((r) => r
     musicSel.value = pick;
     pickMusic(pick);
   }
-}).catch(() => { /* no songs: only the generated music */ });
+  return true;
+}).catch(() => false); // no songs: only the generated music
 
 // ------------------------------------------------------------ song seek bar
 // One segment per block of the song (intro, derecho, majao, mambo), filled as it plays. Seeking lands on a count 1.
@@ -622,21 +624,29 @@ function setGameView(on) {
 }
 // Runs fn once the history step that setGameView takes back is done. The browser then puts the page's old scroll
 // position back, which would stop a scroll started before it.
+// The same when the level was quit with the back gesture: fn is then called inside that step (inPop).
+let inPop = false;
 function afterGameView(fn) {
   if (ignoreNextPop) window.addEventListener('popstate', () => setTimeout(fn, 0), { once: true });
+  else if (inPop) setTimeout(fn, 0);
   else fn();
 }
 // the back gesture during a level asks first, like Odustani; a second back while it asks quits
 window.addEventListener('popstate', () => {
   if (ignoreNextPop) { ignoreNextPop = false; return; }
   if (!test.running) return;
-  if ($('quit-confirm').open) { abortTest(); return; }
+  if ($('quit-confirm').open) {
+    inPop = true;
+    try { abortTest(); } finally { inPop = false; }
+    return;
+  }
   history.pushState({ game: true }, '', location.href); // the game keeps its history step
   askQuit();
 });
 
 // opts.board: passed to renderBoard when the intro (with the leaderboard) opens
 function showTestPart(part, opts = {}) {
+  if (part !== 'run') cancelLevelStart(); // the player left while a level was being prepared
   if (part !== 'run') setNumera(numeraSel.value); // back to the player's own pick
   setGameView(part === 'run');
   $('test-setup').hidden = part !== 'setup';
@@ -678,13 +688,17 @@ const seconds = (s) => `${s.toFixed(1).replace('.', t('decimal'))} s`;
 // The game plays the real songs: the first level's song loads while the game's page is open (prepareNextGame),
 // and the next level's song loads while the result shows; if it is not ready yet, the button shows "Učitavam…". If a song cannot load, another song is
 // tried; only if none loads does the generated music play.
+const SONGS_WAIT_MS = 8000; // how long a level waits for the song list
 const gameSongs = new Map(); // song id -> promise of the loaded song (this level's and the next one)
 function loadGameSong(meta) {
   if (!meta) return Promise.resolve(null);
   if (!gameSongs.has(meta.id)) {
     // After the song list: a game restored on page load asks for its song before the list is read, and a file
     // asked for without the list's version would be downloaded again and would empty the phone's song cache.
-    gameSongs.set(meta.id, songsRead.then(() => engine.loadSong(meta)).catch((e) => { console.warn('[igra] song load failed:', e); return null; }));
+    // Without the list (it could not be read, or the read hangs) no song is loaded, and the level plays the
+    // generated music.
+    const listRead = Promise.race([songsRead, new Promise((done) => { setTimeout(() => done(false), SONGS_WAIT_MS); })]);
+    gameSongs.set(meta.id, listRead.then((ok) => (ok ? engine.loadSong(meta) : null)).catch((e) => { console.warn('[igra] song load failed:', e); return null; }));
   }
   return gameSongs.get(meta.id);
 }
@@ -705,31 +719,43 @@ function preloadNextSong() {
 }
 // A level is starting (the sound and the song are being prepared): Kreni and Sledeći nivo do nothing until it
 // runs, or a second tap would start the level twice (two games saved, or a level skipped).
-let levelStarting = false;
+// If the player leaves meanwhile (another button, another tab, the app in the background), the start is cancelled.
+let levelStart = null; // { btn, label } while a level is starting
+function endLevelStart(start) {
+  if (levelStart !== start) return false;
+  levelStart = null;
+  if (start.btn) { start.btn.disabled = false; start.btn.textContent = start.label; }
+  return true;
+}
+function cancelLevelStart() { if (levelStart) endLevelStart(levelStart); }
 // btn: the button tapped (none when a level starts again by itself)
-async function startTest(modeId, btn = null) {
-  levelStarting = true;
-  const label = btn && btn.textContent;
+// level: the level to start; it becomes the game's level only when it starts, so a start that fails or is
+// cancelled does not skip a level
+async function startTest(modeId, btn = null, level = state.level) {
+  const start = { btn, label: btn && btn.textContent };
+  levelStart = start;
   if (btn) btn.disabled = true;
   let song = null;
+  let live = false;
   try {
     await engine.unlock();
     await engine.samples.whenReady();
-    if (state.level <= run.songs.length) {
+    if (level <= run.songs.length && levelStart === start) {
       if (btn) btn.textContent = t('song.loadingShort');
       // this level's song; if it cannot load, another song of the game, before falling back to the generated music
-      const order = [run.songs[state.level - 1], ...run.songs.filter((_, i) => i !== state.level - 1)];
+      const order = [run.songs[level - 1], ...run.songs.filter((_, i) => i !== level - 1)];
       for (const meta of order) {
         song = await loadGameSong(meta);
-        if (song) break;
+        if (song || levelStart !== start) break;
         console.warn(`[igra] ${meta.id} could not be loaded, trying another song`);
         gameSongs.delete(meta.id);
       }
     }
   } finally {
-    levelStarting = false;
-    if (btn) { btn.disabled = false; btn.textContent = label; }
+    live = endLevelStart(start);
   }
+  if (!live) return;
+  state.level = level;
   if (!song) setNumera(run.tracks[(state.level - 1) % run.tracks.length]);
   test.begin(modeId, state.level, song);
   markLevelStarted();
@@ -774,7 +800,7 @@ function addToRun(r) {
   board.addOwnRun(best);
 }
 $('test-start').addEventListener('click', () => {
-  if (levelStarting || test.running) return;
+  if (levelStart || test.running) return;
   const name = $('player-name').value.trim();
   if (!name) {
     $('name-error').textContent = t('name.missing');
@@ -782,20 +808,18 @@ $('test-start').addEventListener('click', () => {
     return;
   }
   $('name-error').textContent = '';
-  state.level = 1;
   store.setName(name);
   clearGame(); // a new game replaces the one kept from before
   run = { id: Date.now(), docId: board.newRunId(), month: board.monthOf(), name, mode: state.mode, points: {}, tracks: shuffled(NUMERE.map((n) => n.id)), songs: nextSongs || songsForGame(songList) };
   nextSongs = null;
   // "level 0": the game is saved when it starts, so the games that end inside level 1 are counted too
   board.submitRun({ docId: run.docId, name, mode: run.mode, points: [], month: run.month });
-  startTest(state.mode, $('test-start'));
+  startTest(state.mode, $('test-start'), 1);
 });
 $('player-name').addEventListener('input', () => { $('name-error').textContent = ''; });
 $('res-next').addEventListener('click', () => {
-  if (levelStarting || test.running) return;
-  state.level++;
-  startTest(state.mode, $('res-next'));
+  if (levelStart || test.running) return;
+  startTest(state.mode, $('res-next'), state.level + 1);
 });
 $('res-back').addEventListener('click', () => { clearGame(); showTestPart('setup'); });
 $('res-board').addEventListener('click', showBoardAfterGame);
@@ -1053,7 +1077,7 @@ function topAndMe(rows, myIndex, row) {
   if (myIndex >= BOARD_TOP) html.push('<li class="board-gap" aria-hidden="true">…</li>', row(rows[myIndex], myIndex));
   return html.join('');
 }
-// opts.findMe: scroll to the player's row, if they are on the list
+// opts.findMe: scroll to the player's row, if they are on the list (once: rows drawn again after the read only mark it)
 async function renderBoard(opts = {}) {
   if ($('test-intro').hidden) return;
   boardView.mode = state.mode;
@@ -1062,7 +1086,7 @@ async function renderBoard(opts = {}) {
   const month = periodMonth(boardView.period);
   // the rows kept on the phone (with the player's own games added) show at once; the database is read once per page load
   const cached = board.cachedRuns(boardView.mode, month);
-  if (cached) drawBoard(cached, opts.findMe);
+  if (cached) drawBoard(cached, opts.findMe ? 'scroll' : '');
   else if (!list.children.length || list.dataset.view !== `${boardView.mode}/${boardView.period}`) {
     list.innerHTML = `<li class="board-note">${escapeHtml(t('board.loading'))}</li>`;
   }
@@ -1076,11 +1100,13 @@ async function renderBoard(opts = {}) {
   }
   if (load !== boardLoad) return;
   // The rows on the screen are these already (the usual case): drawing them again would take the highlight off
-  // the player's row. If the read brought other rows, the player's row may have moved, so it is found again.
+  // the player's row. If the read brought other rows, the player's row is marked again but the page is not
+  // scrolled a second time: seconds may have passed, and the player may be scrolling or typing.
   if (cached && JSON.stringify(rows) === JSON.stringify(cached)) return;
-  drawBoard(rows, opts.findMe);
+  drawBoard(rows, opts.findMe ? (cached ? 'mark' : 'scroll') : '');
 }
-function drawBoard(rows, findMe) {
+// find: 'scroll' (mark the player's row and scroll to it), 'mark' (only mark it), '' (neither)
+function drawBoard(rows, find) {
   const list = $('board-list');
   list.dataset.view = `${boardView.mode}/${boardView.period}`;
   // the player's row: the row of the player's name (the same row the total leaderboard counts)
@@ -1095,17 +1121,15 @@ function drawBoard(rows, findMe) {
     : `<li class="board-note">${escapeHtml(t('board.empty'))}</li>`;
   shareBoard.prepare(best && best.total > 0 ? { mode: t(`mode.${boardView.mode}`), total: best.total, levelText: t('share.level', { n: best.level }), rank: rankText(myRank, boardView.period) } : null);
   // after a game: to the player's row if they are on the list, otherwise to the top of the leaderboard
-  if (findMe) {
-    afterGameView(() => {
-      const myRow = list.querySelector('.is-me');
-      if (myRow) {
-        myRow.classList.add('is-found');
-        myRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      } else {
-        $('board-title').scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    });
-  }
+  if (!find) return;
+  const show = () => {
+    const myRow = list.querySelector('.is-me');
+    if (myRow) myRow.classList.add('is-found');
+    if (find !== 'scroll') return;
+    if (myRow) myRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    else $('board-title').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+  if (find === 'scroll') afterGameView(show); else show();
 }
 renderBoard();
 
@@ -1249,6 +1273,7 @@ setInterval(() => { if (performance.now() - lastFrame > 120) { lastFrame = perfo
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     engine.stale = true;
+    cancelLevelStart();
     if (test.running) abortTest();
   } else if (engine.playing && engine.ctx.state !== 'running') {
     // the sound stopped in the background: show Play, so the next tap starts the sound again
