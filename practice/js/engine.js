@@ -3,9 +3,9 @@
 // and get the step that is sounding right now, so sound and picture stay locked
 // even when the tempo changes mid-play.
 
-import * as I from './instruments.js?v=20261111115549';
-import * as P from './patterns.js?v=20261111115549';
-import { SampleBank } from './samples.js?v=20261111115549';
+import * as I from './instruments.js?v=20261111131407';
+import * as P from './patterns.js?v=20261111131407';
+import { SampleBank } from './samples.js?v=20261111131407';
 
 export const STEPS_PER_PHRASE = 16;
 const LOOKAHEAD = 0.18;    // schedule this far ahead (s); a count word may start up to 0.15 s before its beat
@@ -162,7 +162,8 @@ export class Engine {
     if (!window.caches) return null;
     if (!this._cachePromise) {
       this._cachePromise = caches.open('vezbaj-pesme').then(async (cache) => {
-        // drop files of an older import
+        // drop files of an older import; not before the version is known (songs.json read), or every file would go
+        if (this.songVersion === undefined) return cache;
         for (const req of await cache.keys()) if (!req.url.endsWith(`v=${this.songVersion || 0}`)) cache.delete(req);
         return cache;
       }).catch(() => null);

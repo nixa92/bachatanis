@@ -1,4 +1,4 @@
-import { t } from './i18n.js?v=20261111115549';
+import { t } from './i18n.js?v=20261111131407';
 
 // Test sluha: the music starts at once and every tap counts. A level ends when the player
 // lands enough hits in a row; the faster that happens, the more points.

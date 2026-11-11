@@ -59,12 +59,13 @@ def from_players(month):
     for d in query({'from': [{'collectionId': 'players'}], 'where': eq('month', {'stringValue': month}),
                     'orderBy': [{'field': {'fieldPath': '__name__'}, 'direction': 'ASCENDING'}]}):
         f = d['fields']
-        p = {'name': f['name']['stringValue']}
+        # a name can have more than one entry (the rules cannot tie an entry's id to its name): the better
+        # result of each game counts, as in the app (readPlayers in practice/js/leaderboard.js)
+        p = out.setdefault(f['name']['stringValue'].lower(), {'name': f['name']['stringValue']})
         for m in MODES:
             if m in f and int(f[m]['integerValue']) > 0:
                 s = int(f[m]['integerValue'])
-                p[m] = {'total': s // 100, 'level': s % 100}
-        out[p['name'].lower()] = p
+                p[m] = better({'total': s // 100, 'level': s % 100}, p.get(m))
     return out
 
 
@@ -109,6 +110,7 @@ def main():
         for m in MODES:
             if m in p:
                 a[m] = better(p[m], a.get(m))
+    # equal points: by name (lower case, by character code), the same order as the app (byName in leaderboard.js)
     totals = sorted(({'name': p['name'], 'games': {m: p[m]['total'] for m in MODES if m in p}} for p in players.values()),
                     key=lambda p: p['name'].lower())
     for p in totals:

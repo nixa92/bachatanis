@@ -1,15 +1,15 @@
-import { Engine, CHANNELS } from './engine.js?v=20261111115549';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261111115549';
-import { KORACI } from './steps.js?v=20261111115549';
-import { FeetView } from './feet.js?v=20261111115549';
-import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, songsForGame, slowSong } from './game.js?v=20261111115549';
-import * as store from './storage.js?v=20261111115549';
-import * as board from './leaderboard.js?v=20261111115549';
-import { drawCard, shareCard, APP_URL } from './share.js?v=20261111115549';
-import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261111115549';
-import { ICONS } from './icons.js?v=20261111115549';
-import { unlocked } from './gate.js?v=20261111115549';
-import { watchUpdates } from './update.js?v=20261111115549';
+import { Engine, CHANNELS } from './engine.js?v=20261111131407';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261111131407';
+import { KORACI } from './steps.js?v=20261111131407';
+import { FeetView } from './feet.js?v=20261111131407';
+import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, songsForGame, slowSong } from './game.js?v=20261111131407';
+import * as store from './storage.js?v=20261111131407';
+import * as board from './leaderboard.js?v=20261111131407';
+import { drawCard, shareCard, APP_URL } from './share.js?v=20261111131407';
+import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261111131407';
+import { ICONS } from './icons.js?v=20261111131407';
+import { unlocked } from './gate.js?v=20261111131407';
+import { watchUpdates } from './update.js?v=20261111131407';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -92,6 +92,7 @@ function showScreen(id) {
   document.body.dataset.screen = id;
   if (id === 'test' && engine.playing) togglePlay();
   if (id === 'test' && !$('test-setup').hidden) renderTotal();
+  if (id === 'test' && !$('test-intro').hidden) renderBoard();
   if (location.hash.slice(1) !== id) history.replaceState(null, '', id === 'ritam' ? location.pathname : `#${id}`);
 }
 for (const s of SCREENS) $(`tab-${s}`).addEventListener('click', () => showScreen(s));
@@ -456,7 +457,8 @@ async function pickMusic(id) {
 }
 musicSel.addEventListener('change', () => pickMusic(musicSel.value));
 renderMusicPicker();
-fetch('songs/songs.json', { cache: 'no-cache' }).then((r) => r.json()).then((data) => {
+// settles when the song list is read (or cannot be); a song's file address needs the list's version (engine.songVersion)
+const songsRead = fetch('songs/songs.json', { cache: 'no-cache' }).then((r) => r.json()).then((data) => {
   songList = data.songs;
   engine.songVersion = data.version || '';
   // download every song's files in the background, so picking a song only has to decode it
@@ -618,6 +620,12 @@ function setGameView(on) {
     history.back();
   }
 }
+// Runs fn once the history step that setGameView takes back is done. The browser then puts the page's old scroll
+// position back, which would stop a scroll started before it.
+function afterGameView(fn) {
+  if (ignoreNextPop) window.addEventListener('popstate', () => setTimeout(fn, 0), { once: true });
+  else fn();
+}
 // the back gesture during a level asks first, like Odustani; a second back while it asks quits
 window.addEventListener('popstate', () => {
   if (ignoreNextPop) { ignoreNextPop = false; return; }
@@ -674,7 +682,9 @@ const gameSongs = new Map(); // song id -> promise of the loaded song (this leve
 function loadGameSong(meta) {
   if (!meta) return Promise.resolve(null);
   if (!gameSongs.has(meta.id)) {
-    gameSongs.set(meta.id, engine.loadSong(meta).catch((e) => { console.warn('[igra] song load failed:', e); return null; }));
+    // After the song list: a game restored on page load asks for its song before the list is read, and a file
+    // asked for without the list's version would be downloaded again and would empty the phone's song cache.
+    gameSongs.set(meta.id, songsRead.then(() => engine.loadSong(meta)).catch((e) => { console.warn('[igra] song load failed:', e); return null; }));
   }
   return gameSongs.get(meta.id);
 }
@@ -693,21 +703,31 @@ function preloadNextSong() {
   for (const id of [...gameSongs.keys()]) if (!next || id !== next.id) gameSongs.delete(id);
   loadGameSong(next);
 }
+// A level is starting (the sound and the song are being prepared): Kreni and Sledeći nivo do nothing until it
+// runs, or a second tap would start the level twice (two games saved, or a level skipped).
+let levelStarting = false;
+// btn: the button tapped (none when a level starts again by itself)
 async function startTest(modeId, btn = null) {
-  await engine.unlock();
-  await engine.samples.whenReady();
+  levelStarting = true;
+  const label = btn && btn.textContent;
+  if (btn) btn.disabled = true;
   let song = null;
-  if (state.level <= run.songs.length) {
-    const label = btn && btn.textContent;
-    if (btn) { btn.disabled = true; btn.textContent = t('song.loadingShort'); }
-    // this level's song; if it cannot load, another song of the game, before falling back to the generated music
-    const order = [run.songs[state.level - 1], ...run.songs.filter((_, i) => i !== state.level - 1)];
-    for (const meta of order) {
-      song = await loadGameSong(meta);
-      if (song) break;
-      console.warn(`[igra] ${meta.id} could not be loaded, trying another song`);
-      gameSongs.delete(meta.id);
+  try {
+    await engine.unlock();
+    await engine.samples.whenReady();
+    if (state.level <= run.songs.length) {
+      if (btn) btn.textContent = t('song.loadingShort');
+      // this level's song; if it cannot load, another song of the game, before falling back to the generated music
+      const order = [run.songs[state.level - 1], ...run.songs.filter((_, i) => i !== state.level - 1)];
+      for (const meta of order) {
+        song = await loadGameSong(meta);
+        if (song) break;
+        console.warn(`[igra] ${meta.id} could not be loaded, trying another song`);
+        gameSongs.delete(meta.id);
+      }
     }
+  } finally {
+    levelStarting = false;
     if (btn) { btn.disabled = false; btn.textContent = label; }
   }
   if (!song) setNumera(run.tracks[(state.level - 1) % run.tracks.length]);
@@ -745,16 +765,16 @@ function addToRun(r) {
   });
   // the online leaderboard: the same document grows by one level; the name stays the one the game started with
   const points = Object.keys(run.points).map(Number).sort((a, b) => a - b).map((l) => run.points[l]);
-  // the leaderboard shown after the game waits for this save
-  run.saving = board.submitRun({ docId: run.docId, name: run.name, mode: run.mode, points, month: run.month })
-    .catch((e) => console.warn('[tabela] not saved:', e.message));
+  // (a save that fails is sent again later: leaderboard.js)
+  board.submitRun({ docId: run.docId, name: run.name, mode: run.mode, points, month: run.month });
   // the player's best (what the leaderboards read): the database keeps the bigger of the old best and this game
   const best = { name: run.name, mode: run.mode, month: run.month, level: points.length, total: run.total };
-  board.submitBest(best).catch((e) => console.warn('[tabela] best not saved:', e.message));
+  board.submitBest(best);
   // the game is added to the leaderboards kept on the phone, so it shows without reading them again
   board.addOwnRun(best);
 }
 $('test-start').addEventListener('click', () => {
+  if (levelStarting || test.running) return;
   const name = $('player-name').value.trim();
   if (!name) {
     $('name-error').textContent = t('name.missing');
@@ -768,12 +788,15 @@ $('test-start').addEventListener('click', () => {
   run = { id: Date.now(), docId: board.newRunId(), month: board.monthOf(), name, mode: state.mode, points: {}, tracks: shuffled(NUMERE.map((n) => n.id)), songs: nextSongs || songsForGame(songList) };
   nextSongs = null;
   // "level 0": the game is saved when it starts, so the games that end inside level 1 are counted too
-  board.submitRun({ docId: run.docId, name, mode: run.mode, points: [], month: run.month })
-    .catch((e) => console.warn('[tabela] start not saved:', e.message));
+  board.submitRun({ docId: run.docId, name, mode: run.mode, points: [], month: run.month });
   startTest(state.mode, $('test-start'));
 });
 $('player-name').addEventListener('input', () => { $('name-error').textContent = ''; });
-$('res-next').addEventListener('click', () => { state.level++; startTest(state.mode, $('res-next')); });
+$('res-next').addEventListener('click', () => {
+  if (levelStarting || test.running) return;
+  state.level++;
+  startTest(state.mode, $('res-next'));
+});
 $('res-back').addEventListener('click', () => { clearGame(); showTestPart('setup'); });
 $('res-board').addEventListener('click', showBoardAfterGame);
 $('res-quit').addEventListener('click', showBoardAfterGame);
@@ -797,13 +820,13 @@ $('quit-no').addEventListener('click', () => { quitDialogClose(); $('tap-pad').f
 $('quit-yes').addEventListener('click', () => { if (test.running) abortTest(); else quitDialogClose(); });
 $('quit-confirm').addEventListener('cancel', () => $('tap-pad').focus()); // Esc: keep playing
 function abortTest() { quitDialogClose(); test.abort(); showBoardAfterGame(); }
-// after a game (stopped, or all levels passed): the leaderboard, loaded again once the game is saved;
+// after a game (stopped, or all levels passed): the leaderboard, with the game on it (addOwnRun);
 // it scrolls to the player's name, or to the leaderboard if they are not on it
 function showBoardAfterGame() {
   clearGame();
   const played = run && Object.keys(run.points).length > 0;
-  showTestPart('intro', { board: played ? { after: run.saving, findMe: true } : {} });
-  window.scrollTo(0, 0);
+  window.scrollTo(0, 0); // before the leaderboard is drawn: after it, this would stop the scroll to the player's row
+  showTestPart('intro', { board: { findMe: played } });
   prepareNextGame();
 }
 
@@ -845,8 +868,7 @@ function finishTest() {
 const GAME_KEY = 'vezbaj.igra';
 const GAME_MAX_AGE_MS = 6 * 60 * 60 * 1000; // an older game is not offered any more
 function saveGame(r) {
-  const { saving, ...keep } = run;
-  try { localStorage.setItem(GAME_KEY, JSON.stringify({ savedAt: Date.now(), level: state.level, run: keep, result: r })); } catch (e) { /* storage full or blocked */ }
+  try { localStorage.setItem(GAME_KEY, JSON.stringify({ savedAt: Date.now(), level: state.level, run, result: r })); } catch (e) { /* storage full or blocked */ }
 }
 // a level starts: a reload from now on ends the game
 function markLevelStarted() {
@@ -901,13 +923,12 @@ function showResult(r) {
   renderGames();
 }
 // After the last level: the game's picture to share, first without the place, then with it once the
-// game is saved and the month's leaderboard is read.
+// month's leaderboard is known (the game is on it already: addOwnRun).
 async function shareGame() {
   const game = run;
   const card = { mode: t(`mode.${game.mode}`), total: game.total, levelText: t('share.level', { n: LEVELS.length }) };
   shareResult.prepare(card);
   try {
-    await game.saving;
     const rows = await board.topRuns(game.mode, game.month);
     // the place, if this game is the player's best of the month
     const rank = rows.findIndex((r) => r.name.toLocaleLowerCase() === game.name.toLocaleLowerCase() && r.total === game.total) + 1;
@@ -1032,7 +1053,6 @@ function topAndMe(rows, myIndex, row) {
   if (myIndex >= BOARD_TOP) html.push('<li class="board-gap" aria-hidden="true">…</li>', row(rows[myIndex], myIndex));
   return html.join('');
 }
-// opts.after: a promise to wait for first (the save of the game just played)
 // opts.findMe: scroll to the player's row, if they are on the list
 async function renderBoard(opts = {}) {
   if ($('test-intro').hidden) return;
@@ -1048,7 +1068,6 @@ async function renderBoard(opts = {}) {
   }
   let rows;
   try {
-    if (opts.after) await opts.after;
     rows = await board.topRuns(boardView.mode, month);
   } catch (e) {
     console.warn('[tabela]', e.message);
@@ -1056,7 +1075,10 @@ async function renderBoard(opts = {}) {
     return;
   }
   if (load !== boardLoad) return;
-  drawBoard(rows, opts.findMe && !cached);
+  // The rows on the screen are these already (the usual case): drawing them again would take the highlight off
+  // the player's row. If the read brought other rows, the player's row may have moved, so it is found again.
+  if (cached && JSON.stringify(rows) === JSON.stringify(cached)) return;
+  drawBoard(rows, opts.findMe);
 }
 function drawBoard(rows, findMe) {
   const list = $('board-list');
@@ -1074,13 +1096,15 @@ function drawBoard(rows, findMe) {
   shareBoard.prepare(best && best.total > 0 ? { mode: t(`mode.${boardView.mode}`), total: best.total, levelText: t('share.level', { n: best.level }), rank: rankText(myRank, boardView.period) } : null);
   // after a game: to the player's row if they are on the list, otherwise to the top of the leaderboard
   if (findMe) {
-    const myRow = list.querySelector('.is-me');
-    if (myRow) {
-      myRow.classList.add('is-found');
-      myRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    } else {
-      $('board-title').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    afterGameView(() => {
+      const myRow = list.querySelector('.is-me');
+      if (myRow) {
+        myRow.classList.add('is-found');
+        myRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        $('board-title').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
   }
 }
 renderBoard();
@@ -1134,7 +1158,16 @@ function renderWinner() {
   const month = new Date(y, m - 1, 1).toLocaleDateString(lang === 'en' ? 'en-GB' : 'sr-Latn', { month: 'long' });
   el.textContent = t('winner', { month, name: w.name, total: fmtPoints(w.total) });
 }
-board.archive().then((a) => { winners = a.winners || {}; renderWinner(); });
+const readWinners = () => board.archive().then((a) => { winners = a.winners || {}; renderWinner(); });
+readWinners();
+// Back after a while in the background: the archive (a file of the site, not the database) is read again, and the
+// leaderboard on the screen is read and drawn again. On another tab nothing is read; it is when Igra opens (showScreen).
+board.onReturn(() => {
+  readWinners();
+  if (state.screen !== 'test') return;
+  renderBoard();
+  renderTotal();
+});
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
