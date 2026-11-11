@@ -150,7 +150,7 @@ async function readPlayers(month) {
 // the page open for days). The player's own games are added on the phone (addOwnRun), so a finished game shows on the
 // leaderboard at once. The players are also kept in localStorage, so a leaderboard shows at once while it is read.
 // Past months are never read from the database; all time is the archive plus this month.
-const AWAY_MS = 10 * 60 * 1000;
+const AWAY_MS = 2 * 60 * 1000;
 let readSince = Date.now(); // a read from before this is read again
 let hiddenAt = 0;
 document.addEventListener('visibilitychange', () => {
