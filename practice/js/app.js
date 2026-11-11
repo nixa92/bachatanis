@@ -1,15 +1,15 @@
-import { Engine, CHANNELS } from './engine.js?v=20261111112658';
-import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261111112658';
-import { KORACI } from './steps.js?v=20261111112658';
-import { FeetView } from './feet.js?v=20261111112658';
-import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, songsForGame, slowSong } from './game.js?v=20261111112658';
-import * as store from './storage.js?v=20261111112658';
-import * as board from './leaderboard.js?v=20261111112658';
-import { drawCard, shareCard, APP_URL } from './share.js?v=20261111112658';
-import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261111112658';
-import { ICONS } from './icons.js?v=20261111112658';
-import { unlocked } from './gate.js?v=20261111112658';
-import { watchUpdates } from './update.js?v=20261111112658';
+import { Engine, CHANNELS } from './engine.js?v=20261111115259';
+import { laneVelocity, NUMERE, setNumera, numeraId } from './patterns.js?v=20261111115259';
+import { KORACI } from './steps.js?v=20261111115259';
+import { FeetView } from './feet.js?v=20261111115259';
+import { EarTest, MODES, LEVELS, ON_BEAT_MS, roundMs, songsForGame, slowSong } from './game.js?v=20261111115259';
+import * as store from './storage.js?v=20261111115259';
+import * as board from './leaderboard.js?v=20261111115259';
+import { drawCard, shareCard, APP_URL } from './share.js?v=20261111115259';
+import { t, lang, setLang, onLangChange, applyStatic, pointsWord } from './i18n.js?v=20261111115259';
+import { ICONS } from './icons.js?v=20261111115259';
+import { unlocked } from './gate.js?v=20261111115259';
+import { watchUpdates } from './update.js?v=20261111115259';
 
 await unlocked(); // the club gate: nothing starts (no song downloads) until the code is typed
 
@@ -1040,7 +1040,7 @@ async function renderBoard(opts = {}) {
   const load = ++boardLoad;
   const list = $('board-list');
   const month = periodMonth(boardView.period);
-  // the rows kept on the phone (with the player's own games added) show at once; they are read again only when older than board.FRESH_MS
+  // the rows kept on the phone (with the player's own games added) show at once; the database is read once per page load
   const cached = board.cachedRuns(boardView.mode, month);
   if (cached) drawBoard(cached, opts.findMe);
   else if (!list.children.length || list.dataset.view !== `${boardView.mode}/${boardView.period}`) {

@@ -145,11 +145,18 @@ async function readPlayers(month) {
   return out;
 }
 
-// A leaderboard is read at most once every FRESH_MS on a phone; in between, the players kept on the phone are
-// shown, and the player's own games are added to them on the phone (addOwnRun), so a finished game shows on the
-// leaderboard at once without reading it again. They are kept in localStorage, so a reload does not read them again.
+// The month's players are read once per page load, when a leaderboard is first shown (choosing a game, going back
+// or finishing a game reads nothing), and again when the app comes back after AWAY_MS in the background (phones keep
+// the page open for days). The player's own games are added on the phone (addOwnRun), so a finished game shows on the
+// leaderboard at once. The players are also kept in localStorage, so a leaderboard shows at once while it is read.
 // Past months are never read from the database; all time is the archive plus this month.
-export const FRESH_MS = 10 * 60 * 1000;
+const AWAY_MS = 10 * 60 * 1000;
+let readSince = Date.now(); // a read from before this is read again
+let hiddenAt = 0;
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) hiddenAt = Date.now();
+  else if (hiddenAt && Date.now() - hiddenAt >= AWAY_MS) readSince = Date.now();
+});
 const cache = new Map(); // month -> { players, readAt }
 const STORE_KEY = 'vezbaj.igraci.';
 function load(key) {
@@ -163,7 +170,7 @@ function keep(key, entry) {
   cache.set(key, entry);
   try { localStorage.setItem(STORE_KEY + key, JSON.stringify(entry)); } catch (e) { /* storage full or blocked */ }
 }
-const isFresh = (entry) => !!entry && entry.readAt <= Date.now() && Date.now() - entry.readAt < FRESH_MS;
+const isFresh = (entry) => !!entry && entry.readAt >= readSince;
 // The same month asked for twice at once (the game list and the game cards) is read once.
 const reading = new Map();
 function players(month) {
